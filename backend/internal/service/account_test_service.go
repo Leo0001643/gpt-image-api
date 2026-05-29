@@ -332,6 +332,16 @@ func (s *AccountTestService) testOpenAIOAuth(ctx context.Context, account *model
 
 	info, err := s.probeChatGPTAccount(ctx, account, at, proxyURL)
 	if err != nil {
+		// 403 / HTML bot-challenge from conversation/init means the server IP
+		// is blocked by Cloudflare, or no session cookie is available. The JWT
+		// was already validated above so the credential itself is valid.
+		// Return success with plan info derived from JWT claims instead of
+		// failing the entire account test.
+		if isConvInitUnavailable(err) {
+			partial := &accountTestInfo{PlanType: planTypeFromClaims(claims)}
+			s.persistOAuthProbe(ctx, account, cid, partial)
+			return true, "", partial
+		}
 		return false, err.Error(), nil
 	}
 	if info.PlanType == "" {
@@ -1047,4 +1057,28 @@ func accountTestImageResetAt(info *accountTestInfo) int64 {
 		return 0
 	}
 	return info.ImageQuotaResetAt
+}
+
+// isConvInitUnavailable reports whether a conversation/init error is due to
+// bot-detection (Cloudflare 403 HTML page) or network-level blocking rather
+// than an invalid credential. When true the JWT-based validation is sufficient
+// and the account should not be marked as failed.
+func isConvInitUnavailable(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	// HTTP 403 with HTML Cloudflare challenge page
+	if strings.Contains(msg, "conversation/init HTTP 403") {
+		return true
+	}
+	// HTTP 429 rate-limited by the probe endpoint
+	if strings.Contains(msg, "conversation/init HTTP 429") {
+		return true
+	}
+	// Blocked by country / geo restriction
+	if strings.Contains(msg, "conversation/init HTTP 451") {
+		return true
+	}
+	return false
 }
