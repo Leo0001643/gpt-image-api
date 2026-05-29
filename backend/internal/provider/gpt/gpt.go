@@ -176,6 +176,12 @@ func (p *Provider) Generate(ctx context.Context, req *provider.Request) (*provid
 		count = 1
 	}
 
+	// gpt-image-2 and newer models do not support response_format.
+	// Only set it for legacy models (dall-e-2, dall-e-3).
+	respFmt := ""
+	if !isGPTImage2(req.ModelCode) {
+		respFmt = "url"
+	}
 	body := imgReq{
 		Model:          req.ModelCode,
 		Prompt:         req.Prompt,
@@ -183,7 +189,7 @@ func (p *Provider) Generate(ctx context.Context, req *provider.Request) (*provid
 		Size:           imageSize(req.Params, "1024x1024"),
 		Quality:        strParam(req.Params, "quality", ""),
 		Style:          strParam(req.Params, "style", ""),
-		ResponseFormat: "url",
+		ResponseFormat: respFmt,
 	}
 	payload, _ := json.Marshal(body)
 
