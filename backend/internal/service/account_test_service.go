@@ -299,22 +299,37 @@ type accountTestInfo struct {
 func (s *AccountTestService) testOpenAIOAuth(ctx context.Context, account *model.Account, proxyURL string) (bool, string, *accountTestInfo) {
 	at, err := s.decryptAccessToken(account)
 	if err != nil {
-		return false, fmt.Sprintf("瑙ｅ瘑 access_token 澶辫触: %v", err), nil
+		return false, fmt.Sprintf("è§£å¯ access_token å¤±è´¥: %v", err), nil
 	}
 	if at == "" {
-		return false, "OAuth 璐﹀彿鏈彇寰?access_token锛岃鍏堝埛鏂?RT", nil
+		return false, "OAuth è´¦å·æªåå¾ access_tokenï¼è¯·åå·æ° RT", nil
 	}
 	claims, ok := jwtpayload.ClaimsFromJWT(at)
 	if !ok {
-		return false, "access_token 涓嶆槸鍙В鏋愮殑 JWT", nil
+		return false, "access_token ä¸æ¯å¯è§£æç JWT", nil
 	}
 	exp, ok := jwtpayload.ExpUnixFromJWT(at)
 	if !ok {
-		return false, "access_token 缂哄皯 exp", nil
+		return false, "access_token ç¼ºå° exp", nil
 	}
 	if time.Now().Unix() >= exp {
-		return false, "access_token 宸茶繃鏈燂紝璇峰埛鏂?RT", nil
+		return false, "access_token å·²è¿æï¼è¯·éæ°è·å session-token æå·æ° RT", nil
 	}
+
+	// Determine whether this is a standard OpenAI OAuth2 token or a ChatGPT
+	// session token (__Secure-next-auth.session-token).
+	// Session tokens lack OpenAI-specific claims and client_id; they are valid
+	// Bearer tokens for chatgpt.com web API calls and need no further probing.
+	_, hasAuthClaim    := claims["https://api.openai.com/auth"]
+	_, hasProfileClaim := claims["https://api.openai.com/profile"]
+	isStandardOAuth := hasAuthClaim || hasProfileClaim
+
+	if !isStandardOAuth {
+		// Session-token account: JWT is valid and unexpired - that is sufficient.
+		return true, "", &accountTestInfo{PlanType: planTypeFromClaims(claims)}
+	}
+
+	// Standard OpenAI OAuth2 token path: require client_id and probe quota.
 	cid := accountOAuthClientID(account)
 	if cid == "" {
 		if cidFromToken, ok := claims["client_id"].(string); ok {
@@ -322,21 +337,12 @@ func (s *AccountTestService) testOpenAIOAuth(ctx context.Context, account *model
 		}
 	}
 	if cid == "" {
-		return false, "OAuth 元数据缺少 client_id，请重新导入或刷新账号", nil
-	}
-	if _, ok := claims["https://api.openai.com/auth"]; !ok {
-		if _, ok := claims["https://api.openai.com/profile"]; !ok {
-			return false, "access_token 缂哄皯 OpenAI OAuth 鏉冮檺淇℃伅", nil
-		}
+		return false, "OAuth åæ°æ®ç¼ºå° client_idï¼è¯·éæ°å¯¼å¥æå·æ°è´¦å·", nil
 	}
 
 	info, err := s.probeChatGPTAccount(ctx, account, at, proxyURL)
 	if err != nil {
-		// 403 / HTML bot-challenge from conversation/init means the server IP
-		// is blocked by Cloudflare, or no session cookie is available. The JWT
-		// was already validated above so the credential itself is valid.
-		// Return success with plan info derived from JWT claims instead of
-		// failing the entire account test.
+		// 403/429 bot-challenge: JWT already validated, treat as non-fatal.
 		if isConvInitUnavailable(err) {
 			partial := &accountTestInfo{PlanType: planTypeFromClaims(claims)}
 			s.persistOAuthProbe(ctx, account, cid, partial)
@@ -350,7 +356,6 @@ func (s *AccountTestService) testOpenAIOAuth(ctx context.Context, account *model
 	s.persistOAuthProbe(ctx, account, cid, info)
 	return true, "", info
 }
-
 func (s *AccountTestService) probeChatGPTAccount(ctx context.Context, account *model.Account, accessToken, proxyURL string) (*accountTestInfo, error) {
 	client, err := outbound.NewClient(outbound.Options{
 		ProxyURL: proxyURL,
@@ -956,6 +961,14 @@ func (s *AccountTestService) maybeRefresh(ctx context.Context, account *model.Ac
 		return nil
 	}
 	at, _ := s.decryptAccessToken(account)
+
+	// Session-token accounts store the ChatGPT session JWT as access_token.
+	// They cannot be refreshed via OAuth2 - the user must paste a new token manually.
+	// Skip automatic refresh; if the token is expired the test will report it.
+	if at != "" && isSessionJWT(at) && !isOpenAIOAuthJWT(at) {
+		return nil
+	}
+
 	if at == "" {
 		_, err := s.RefreshOAuth(ctx, account)
 		if err != nil {
@@ -1098,6 +1111,18 @@ func accountTestImageResetAt(info *accountTestInfo) int64 {
 func isSessionJWT(s string) bool {
 	parts := strings.SplitN(s, ".", 4)
 	return len(parts) == 3 && len(parts[0]) > 0 && len(parts[1]) > 0 && len(parts[2]) > 0
+}
+
+// isOpenAIOAuthJWT reports whether a JWT is a standard OpenAI OAuth2 token
+// (has OpenAI-specific claims). ChatGPT session tokens lack these claims.
+func isOpenAIOAuthJWT(s string) bool {
+	claims, ok := jwtpayload.ClaimsFromJWT(s)
+	if !ok {
+		return false
+	}
+	_, hasAuth    := claims["https://api.openai.com/auth"]
+	_, hasProfile := claims["https://api.openai.com/profile"]
+	return hasAuth || hasProfile
 }
 
 // isConvInitUnavailable reports whether a conversation/init error is due to
