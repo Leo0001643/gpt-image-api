@@ -29,20 +29,16 @@ func Build() map[string]provider.Provider {
 
 func buildGPT() provider.Provider {
 	mode := strings.ToLower(strings.TrimSpace(os.Getenv("GIA_PROVIDER_GPT")))
-	switch mode {
-	case "real", "live", "prod":
-		return gpt.New(strings.TrimSpace(os.Getenv("GIA_GPT_BASE_URL")))
-	default:
+	if mode == "mock" {
 		return mock.New("gpt")
 	}
+	return gpt.New(strings.TrimSpace(os.Getenv("GIA_GPT_BASE_URL")))
 }
 
 func buildGrok() provider.Provider {
 	mode := strings.ToLower(strings.TrimSpace(os.Getenv("GIA_PROVIDER_GROK")))
-	switch mode {
-	case "real", "live", "prod":
-		return grok.New(strings.TrimSpace(os.Getenv("GIA_GROK_BASE_URL")))
-	default:
+	if mode == "mock" {
 		return mock.New("grok")
 	}
+	return grok.New(strings.TrimSpace(os.Getenv("GIA_GROK_BASE_URL")))
 }
