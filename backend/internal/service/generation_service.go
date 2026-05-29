@@ -247,6 +247,14 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 			cred, derr := s.providerCredential(ctx, acc, provReq.ProxyURL)
 			if derr != nil {
 				lastErr = derr
+				log.Error("gen.credential.failed",
+					zap.String("model", t.ModelCode),
+					zap.String("provider", t.Provider),
+					zap.Uint64("account_id", acc.ID),
+					zap.String("auth_type", acc.AuthType),
+					zap.Int("attempt", attempt),
+					zap.Error(derr),
+				)
 				if isFatalOAuthRefreshError(derr) {
 					s.disableProviderAccount(ctx, acc, derr.Error())
 				} else {
@@ -272,6 +280,15 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 			break
 		}
 		lastErr = err
+		log.Error("gen.provider.failed",
+			zap.String("model", t.ModelCode),
+			zap.String("provider", t.Provider),
+			zap.Uint64("account_id", picked.ID),
+			zap.String("auth_type", picked.AuthType),
+			zap.Int("attempt", attempt),
+			zap.Int("max_attempts", maxAttempts),
+			zap.Error(err),
+		)
 		if isUsageLimitReachedError(err) {
 			s.markProviderQuotaLimited(ctx, acc, err.Error(), usageLimitResetAt(err))
 		} else if isTransientProviderPathError(t.Provider, err) {
@@ -286,7 +303,7 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 			s.failTask(ctx, t, fmt.Sprintf("provider call: %v", err))
 			return
 		}
-		log.Warn("provider retrying with next account", zap.Int("attempt", attempt), zap.Uint64("account_id", picked.ID), zap.Error(err))
+		log.Warn("gen.provider.retrying", zap.Int("attempt", attempt), zap.Uint64("account_id", picked.ID), zap.Error(err))
 		sleepBeforeRetry(ctx, retryDelay, attempt)
 	}
 	if res == nil {
@@ -632,6 +649,36 @@ func (s *GenerationService) gptOAuthAccessToken(ctx context.Context, acc *model.
 	}
 	clientID, err := oauthRefreshClientID(acc)
 	if err != nil {
+		// No OAuth2 client_id available — the credential is likely a ChatGPT
+		// session token (__Secure-next-auth.session-token) used directly as a
+		// Bearer token. If it hasn't expired, use it as-is.
+		// If it's expired the user must log in to ChatGPT and paste a fresh token.
+		candidate := at
+		if candidate == "" {
+			candidate = rt
+		}
+		if candidate != "" && !s.accessTokenNeedsRefresh(ctx, acc, candidate) {
+			logger.FromCtx(ctx).Info("gen.oauth.session_token_direct",
+				zap.Uint64("account_id", acc.ID),
+				zap.String("provider", acc.Provider),
+				zap.String("note", "no client_id; using session token directly as bearer token"),
+			)
+			return candidate, nil
+		}
+		if candidate != "" {
+			expiredErr := fmt.Errorf("ChatGPT session token expired; please update the account credential with a fresh __Secure-next-auth.session-token from your browser cookies")
+			logger.FromCtx(ctx).Error("gen.oauth.session_token_expired",
+				zap.Uint64("account_id", acc.ID),
+				zap.String("provider", acc.Provider),
+				zap.Error(expiredErr),
+			)
+			return "", expiredErr
+		}
+		logger.FromCtx(ctx).Error("gen.oauth.no_client_id",
+			zap.Uint64("account_id", acc.ID),
+			zap.String("provider", acc.Provider),
+			zap.Error(err),
+		)
 		return "", err
 	}
 	oauth := NewOpenAIOAuthService(s.cfg)
@@ -1141,6 +1188,14 @@ func extractCookieValue(cookie, name string) string {
 
 func (s *GenerationService) failTask(ctx context.Context, t *model.GenerationTask, reason string) {
 	displayReason := userFacingGenerationError(reason)
+	logger.FromCtx(ctx).Error("gen.task.failed",
+		zap.String("task", t.TaskID),
+		zap.String("model", t.ModelCode),
+		zap.String("provider", t.Provider),
+		zap.String("kind", t.Kind),
+		zap.Int64("cost_points", t.CostPoints),
+		zap.String("reason", reason),
+	)
 	if err := s.repo.SetFailed(ctx, t.TaskID, displayReason); err != nil {
 		logger.FromCtx(ctx).Warn("gen.fail.update_status", zap.Error(err))
 	}
