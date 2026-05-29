@@ -64,7 +64,7 @@ function planTypeLabel(planType?: string): string {
     case 'heavy':
       return 'Heavy';
     default:
-      return '未识别';
+      return planType ? planType : '--';
   }
 }
 
