@@ -196,18 +196,34 @@ func (p *Provider) Generate(ctx context.Context, req *provider.Request) (*provid
 	httpReq.Header.Set("User-Agent", "gpt-image-api/1.0")
 
 	start := time.Now()
+	logUpstream(ctx, req, provider.UpstreamLogEntry{
+		Provider: "gpt",
+		Stage:    "api.start",
+		Method:   "POST",
+		URL:      url,
+		Meta:     map[string]any{"model": body.Model, "size": body.Size, "n": body.N},
+	})
 	client, err := p.httpClient(req.ProxyURL)
 	if err != nil {
 		return nil, err
 	}
 	resp, err := client.Do(httpReq)
 	if err != nil {
+		logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "api.error", Error: err.Error()})
 		return nil, fmt.Errorf("gpt http: %w", err)
 	}
 	defer resp.Body.Close()
 
 	raw, _ := io.ReadAll(resp.Body)
+	latencyMs := time.Since(start).Milliseconds()
 	if resp.StatusCode >= 400 {
+		logUpstream(ctx, req, provider.UpstreamLogEntry{
+			Provider:        "gpt",
+			Stage:           "api.failed",
+			StatusCode:      resp.StatusCode,
+			DurationMs:      latencyMs,
+			ResponseExcerpt: snippet(raw, 240),
+		})
 		return nil, fmt.Errorf("gpt %d: %s", resp.StatusCode, snippet(raw, 240))
 	}
 
@@ -216,11 +232,25 @@ func (p *Provider) Generate(ctx context.Context, req *provider.Request) (*provid
 		return nil, fmt.Errorf("gpt decode: %w (raw=%s)", err, snippet(raw, 240))
 	}
 	if out.Error != nil && out.Error.Message != "" {
+		logUpstream(ctx, req, provider.UpstreamLogEntry{
+			Provider:        "gpt",
+			Stage:           "api.failed",
+			StatusCode:      resp.StatusCode,
+			DurationMs:      latencyMs,
+			ResponseExcerpt: out.Error.Message,
+		})
 		return nil, fmt.Errorf("gpt: %s", out.Error.Message)
 	}
 	if len(out.Data) == 0 {
 		return nil, fmt.Errorf("gpt returned 0 image")
 	}
+	logUpstream(ctx, req, provider.UpstreamLogEntry{
+		Provider:   "gpt",
+		Stage:      "api.done",
+		StatusCode: resp.StatusCode,
+		DurationMs: latencyMs,
+		Meta:       map[string]any{"images": len(out.Data)},
+	})
 
 	width, height := parseSize(body.Size)
 	assets := make([]provider.Asset, 0, len(out.Data))
