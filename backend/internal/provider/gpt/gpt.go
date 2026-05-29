@@ -153,15 +153,15 @@ func (p *Provider) Generate(ctx context.Context, req *provider.Request) (*provid
 		return nil, fmt.Errorf("gpt provider missing credential")
 	}
 	if isGPTImage2(req.ModelCode) {
-		// api_key accounts use the standard OpenAI /v1/images/generations route.
-		// oauth accounts use the web route (small images) or codex route (large images).
-		if req.Account == nil || req.Account.AuthType != model.AuthTypeAPIKey {
+		// Only OAuth accounts use the ChatGPT web/codex route.
+		// api_key and all other auth types fall through to the standard API route.
+		if req.Account != nil && req.Account.AuthType == model.AuthTypeOAuth {
 			if shouldUseWebImage2(req) {
 				return p.generateImage2Web(ctx, req)
 			}
 			return p.generateImage2(ctx, req)
 		}
-		// Fall through to standard /v1/images/generations for api_key accounts.
+		// Fall through to standard /v1/images/generations.
 	}
 
 	base := req.BaseURL
