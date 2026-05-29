@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/internal/dto"
+	"github.com/gpt-image-api/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/pkg/errcode"
 )
 
 type AdminPromoService struct {

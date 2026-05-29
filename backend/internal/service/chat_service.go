@@ -16,14 +16,14 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/provider"
-	grokweb "github.com/kleinai/backend/internal/provider/grok"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/logger"
-	"github.com/kleinai/backend/pkg/outbound"
+	"github.com/gpt-image-api/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/provider"
+	grokweb "github.com/gpt-image-api/backend/internal/provider/grok"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/pkg/crypto"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/logger"
+	"github.com/gpt-image-api/backend/pkg/outbound"
 )
 
 type ChatService struct {
@@ -67,9 +67,9 @@ func NewChatService(db *gorm.DB, r *repo.GenerationRepo, pool *AccountPool, bill
 		aes:      aes,
 		proxySvc: proxySvc,
 		client:   &http.Client{Timeout: 10 * time.Minute},
-		grok:     grokweb.NewWebClient(os.Getenv("KLEIN_GROK_BASE_URL")),
-		mock:     !isLiveProvider(os.Getenv("KLEIN_PROVIDER_GPT")),
-		grokMock: !isLiveProvider(os.Getenv("KLEIN_PROVIDER_GROK")),
+		grok:     grokweb.NewWebClient(os.Getenv("GIA_GROK_BASE_URL")),
+		mock:     !isLiveProvider(os.Getenv("GIA_PROVIDER_GPT")),
+		grokMock: !isLiveProvider(os.Getenv("GIA_PROVIDER_GROK")),
 	}
 }
 
@@ -234,7 +234,7 @@ func (s *ChatService) completeGrok(ctx context.Context, req ChatCallRequest, mod
 			logger.FromCtx(ctx).Warn("chat.grok.resolve_proxy", zap.Error(perr))
 		}
 		if proxyURL != "" || (acc.BaseURL != nil && *acc.BaseURL != "") {
-			base := os.Getenv("KLEIN_GROK_BASE_URL")
+			base := os.Getenv("GIA_GROK_BASE_URL")
 			if acc.BaseURL != nil && *acc.BaseURL != "" {
 				base = *acc.BaseURL
 			}
@@ -317,7 +317,7 @@ func (s *ChatService) streamGrok(ctx context.Context, req ChatCallRequest, model
 		logger.FromCtx(ctx).Warn("chat.grok.resolve_proxy", zap.Error(perr))
 	}
 	if proxyURL != "" || (acc.BaseURL != nil && *acc.BaseURL != "") {
-		base := os.Getenv("KLEIN_GROK_BASE_URL")
+		base := os.Getenv("GIA_GROK_BASE_URL")
 		if acc.BaseURL != nil && *acc.BaseURL != "" {
 			base = *acc.BaseURL
 		}
@@ -536,7 +536,7 @@ func (s *ChatService) openUpstream(ctx context.Context, acc *model.Account, body
 	httpReq.Header.Set("Authorization", "Bearer "+cred)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "application/json, text/event-stream")
-	httpReq.Header.Set("User-Agent", "kleinai/1.0")
+	httpReq.Header.Set("User-Agent", "gpt-image-api/1.0")
 	proxyURL, perr := s.resolveProxyURL(ctx, acc)
 	if perr != nil {
 		logger.FromCtx(ctx).Warn("chat.openai.resolve_proxy", zap.Error(perr))

@@ -78,7 +78,7 @@ export function LoginGate() {
         onClick={closeGate}
       />
 
-      <div className="relative w-full max-w-[440px] overflow-hidden rounded-[28px] border border-neutral-200 bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,.18)] klein-fade-in">
+      <div className="relative w-full max-w-[440px] overflow-hidden rounded-[28px] border border-neutral-200 bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,.18)] gia-fade-in">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 className="text-[26px] font-medium leading-tight text-neutral-950">

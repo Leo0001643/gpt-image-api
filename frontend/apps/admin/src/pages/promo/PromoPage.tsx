@@ -93,7 +93,7 @@ export default function PromoPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title flex items-center gap-2"><Tag className="text-klein-500" size={26} />优惠码</h1>
+          <h1 className="page-title flex items-center gap-2"><Tag className="text-gia-500" size={26} />优惠码</h1>
           <p className="page-subtitle">创建和维护满减、折扣、赠点优惠码，支持总量、每用户次数、有效期和启停控制。</p>
         </div>
         <div className="flex flex-wrap gap-2">

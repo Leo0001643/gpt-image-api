@@ -123,7 +123,7 @@ export default function BillingSettingsPage() {
 function SectionTitle({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
   return (
     <header className="flex items-start gap-3">
-      <span className="grid place-items-center w-9 h-9 rounded-md bg-info-soft text-klein-500">{icon}</span>
+      <span className="grid place-items-center w-9 h-9 rounded-md bg-info-soft text-gia-500">{icon}</span>
       <div>
         <h2 className="text-h5 font-semibold text-text-primary">{title}</h2>
         <p className="text-small text-text-tertiary mt-0.5">{desc}</p>
@@ -134,7 +134,7 @@ function SectionTitle({ icon, title, desc }: { icon: ReactNode; title: string; d
 
 function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={'relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ' + (checked ? 'bg-klein-500' : 'bg-surface-3')}>
+    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={'relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ' + (checked ? 'bg-gia-500' : 'bg-surface-3')}>
       <span className={'inline-block h-7 w-7 rounded-full bg-white shadow transition transform ' + (checked ? 'translate-x-6' : 'translate-x-0.5')} />
     </button>
   );

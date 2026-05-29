@@ -12,12 +12,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/gpt-image-api/backend/internal/dto"
+	"github.com/gpt-image-api/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/pkg/crypto"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/response"
 )
 
 type AdminLogHandler struct {
@@ -194,7 +194,7 @@ func serveAdminCachedAsset(c *gin.Context, rel string) {
 		response.Fail(c, errcode.InvalidParam.WithMsg("invalid asset path"))
 		return
 	}
-	root := strings.TrimSpace(os.Getenv("KLEIN_STORAGE_ROOT"))
+	root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
 	}

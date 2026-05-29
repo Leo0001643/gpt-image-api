@@ -6,12 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/bootstrap"
-	"github.com/kleinai/backend/internal/handler"
-	"github.com/kleinai/backend/internal/middleware"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/internal/service"
-	"github.com/kleinai/backend/pkg/jwtx"
+	"github.com/gpt-image-api/backend/internal/bootstrap"
+	"github.com/gpt-image-api/backend/internal/handler"
+	"github.com/gpt-image-api/backend/internal/middleware"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/internal/service"
+	"github.com/gpt-image-api/backend/pkg/jwtx"
 )
 
 // MountAdmin 在 root 上挂载 /admin/api/v1。

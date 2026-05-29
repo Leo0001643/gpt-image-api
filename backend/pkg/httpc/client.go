@@ -33,6 +33,6 @@ func New(opt Options) *resty.Client {
 	for k, v := range opt.Headers {
 		cli.SetHeader(k, v)
 	}
-	cli.SetHeader("User-Agent", "KleinAI-Backend/1.0")
+	cli.SetHeader("User-Agent", "GPT Image API-Backend/1.0")
 	return cli
 }

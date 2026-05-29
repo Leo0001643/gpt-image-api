@@ -10,7 +10,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/model"
 )
 
 // GenerationRepo 生成任务仓储。

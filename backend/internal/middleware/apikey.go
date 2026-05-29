@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/service"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/gpt-image-api/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/service"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/response"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 	CtxKeyScope ctxKey = "kc:apikey_scope"
 )
 
-// AuthAPIKey OpenAI 兼容服务鉴权：Authorization: Bearer sk-klein-xxxx。
+// AuthAPIKey OpenAI 兼容服务鉴权：Authorization: Bearer sk-gia-xxxx。
 func AuthAPIKey(svc *service.APIKeyService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")

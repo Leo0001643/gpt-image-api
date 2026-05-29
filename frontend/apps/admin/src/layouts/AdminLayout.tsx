@@ -94,7 +94,7 @@ export function AdminLayout() {
                 clsx(
                   'flex h-10 min-w-[44px] items-center gap-3 rounded-md px-3 text-small transition',
                   isActive
-                    ? 'bg-klein-gradient text-text-on-klein shadow-glow-soft'
+                    ? 'bg-gia-gradient text-text-on-gia shadow-glow-soft'
                     : 'text-text-secondary hover:bg-surface-2 hover:text-text-primary',
                 )
               }
@@ -138,7 +138,7 @@ export function AdminLayout() {
               <span className="hidden rounded-full bg-surface-2 px-3 py-1 text-small text-text-secondary sm:inline-flex">
                 {roleName}
               </span>
-              <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-pill bg-klein-gradient text-small text-white">
+              <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-pill bg-gia-gradient text-small text-white">
                 {initial}
               </span>
               <ChevronDown size={15} className={clsx('text-text-tertiary transition', menuOpen && 'rotate-180')} />
@@ -148,7 +148,7 @@ export function AdminLayout() {
               <div className="absolute right-0 top-12 z-40 w-[260px] overflow-hidden rounded-xl border border-border bg-surface-1 shadow-4">
                 <div className="border-b border-border px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-pill bg-klein-gradient text-white">
+                    <span className="grid h-10 w-10 place-items-center rounded-pill bg-gia-gradient text-white">
                       {initial}
                     </span>
                     <div className="min-w-0">

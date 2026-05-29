@@ -1,9 +1,9 @@
-export { default as kleinPreset } from './tailwind.preset';
+export { default as giaPreset } from './tailwind.preset';
 
-export const KLEIN_TOKENS = {
-  primary: 'var(--klein-600)',
-  primaryGradient: 'var(--klein-gradient)',
-  glow: 'var(--klein-glow)',
+export const GIA_TOKENS = {
+  primary: 'var(--gia-600)',
+  primaryGradient: 'var(--gia-gradient)',
+  glow: 'var(--gia-glow)',
 } as const;
 
 export type ThemeMode = 'light' | 'dark' | 'system';

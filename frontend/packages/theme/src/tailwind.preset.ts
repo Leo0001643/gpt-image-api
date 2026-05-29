@@ -2,8 +2,8 @@
  * gpt2api · Tailwind v3 preset
  *
  * 使用方式（apps/* tailwind.config.ts）：
- *   import kleinPreset from '@kleinai/theme/preset';
- *   export default { presets: [kleinPreset], content: [...] };
+ *   import giaPreset from '@gia/theme/preset';
+ *   export default { presets: [giaPreset], content: [...] };
  */
 import type { Config } from 'tailwindcss';
 
@@ -43,18 +43,18 @@ const preset: Partial<Config> = {
         mono: 'var(--font-mono)',
       },
       colors: {
-        klein: {
-          50: 'var(--klein-50)',
-          100: 'var(--klein-100)',
-          200: 'var(--klein-200)',
-          300: 'var(--klein-300)',
-          400: 'var(--klein-400)',
-          500: 'var(--klein-500)',
-          600: 'var(--klein-600)',
-          700: 'var(--klein-700)',
-          800: 'var(--klein-800)',
-          900: 'var(--klein-900)',
-          DEFAULT: 'var(--klein-600)',
+        gia: {
+          50: 'var(--gia-50)',
+          100: 'var(--gia-100)',
+          200: 'var(--gia-200)',
+          300: 'var(--gia-300)',
+          400: 'var(--gia-400)',
+          500: 'var(--gia-500)',
+          600: 'var(--gia-600)',
+          700: 'var(--gia-700)',
+          800: 'var(--gia-800)',
+          900: 'var(--gia-900)',
+          DEFAULT: 'var(--gia-600)',
         },
         ink: {
           50: 'var(--ink-50)',
@@ -85,7 +85,7 @@ const preset: Partial<Config> = {
           secondary: 'var(--text-secondary)',
           tertiary: 'var(--text-tertiary)',
           disabled: 'var(--text-disabled)',
-          'on-klein': 'var(--text-on-klein)',
+          'on-gia': 'var(--text-on-gia)',
         },
         border: {
           DEFAULT: 'var(--border-default)',
@@ -111,13 +111,13 @@ const preset: Partial<Config> = {
         3: 'var(--shadow-3)',
         4: 'var(--shadow-4)',
         inset: 'var(--shadow-inset)',
-        glow: 'var(--klein-glow)',
-        'glow-soft': 'var(--klein-glow-soft)',
+        glow: 'var(--gia-glow)',
+        'glow-soft': 'var(--gia-glow-soft)',
         'focus-ring': 'var(--focus-ring)',
       },
       backgroundImage: {
-        'klein-gradient': 'var(--klein-gradient)',
-        'klein-gradient-soft': 'var(--klein-gradient-soft)',
+        'gia-gradient': 'var(--gia-gradient)',
+        'gia-gradient-soft': 'var(--gia-gradient-soft)',
       },
       fontSize: {
         display: ['var(--fs-display)', { lineHeight: 'var(--lh-tight)' }],
@@ -161,9 +161,9 @@ const preset: Partial<Config> = {
         '20':  'var(--space-20)',
       },
       transitionTimingFunction: {
-        klein: 'var(--ease-in-out)',
-        'klein-out': 'var(--ease-out)',
-        'klein-spring': 'var(--ease-spring)',
+        gia: 'var(--ease-in-out)',
+        'gia-out': 'var(--ease-out)',
+        'gia-spring': 'var(--ease-spring)',
       },
       transitionDuration: {
         fast: 'var(--duration-fast)',
@@ -171,18 +171,18 @@ const preset: Partial<Config> = {
         slow: 'var(--duration-slow)',
       },
       keyframes: {
-        'klein-fade-in': {
+        'gia-fade-in': {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to:   { opacity: '1', transform: 'translateY(0)' },
         },
-        'klein-shimmer': {
+        'gia-shimmer': {
           '0%':   { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
       },
       animation: {
-        'klein-fade-in': 'klein-fade-in .25s cubic-bezier(.4,0,.2,1) both',
-        'klein-shimmer': 'klein-shimmer 1.6s linear infinite',
+        'gia-fade-in': 'gia-fade-in .25s cubic-bezier(.4,0,.2,1) both',
+        'gia-shimmer': 'gia-shimmer 1.6s linear infinite',
       },
     },
   },

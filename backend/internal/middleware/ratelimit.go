@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/ratelimit"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/ratelimit"
+	"github.com/gpt-image-api/backend/pkg/response"
 )
 
 // RateLimitIP IP 限流。

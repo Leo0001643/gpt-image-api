@@ -9,7 +9,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/model"
 )
 
 // UserRepo 用户表访问。

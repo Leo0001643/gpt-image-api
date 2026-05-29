@@ -35,8 +35,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kleinai/backend/internal/provider"
-	"github.com/kleinai/backend/pkg/outbound"
+	"github.com/gpt-image-api/backend/internal/provider"
+	"github.com/gpt-image-api/backend/pkg/outbound"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -187,7 +187,7 @@ func (p *Provider) Generate(ctx context.Context, req *provider.Request) (*provid
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+req.Credential)
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("User-Agent", "kleinai/1.0")
+	httpReq.Header.Set("User-Agent", "gpt-image-api/1.0")
 
 	start := time.Now()
 	client, err := p.httpClient(req.ProxyURL)
@@ -1490,7 +1490,7 @@ func userAgentForEndpoint(url string) string {
 	if isCodexEndpoint(url) {
 		return "codex-tui/0.118.0 (Mac OS 26.3.1; arm64) iTerm.app/3.6.9 (codex-tui; 0.118.0)"
 	}
-	return "kleinai/1.0"
+	return "gpt-image-api/1.0"
 }
 
 func imageSize(params map[string]any, def string) string {
@@ -1712,7 +1712,7 @@ func readRefImage(ctx context.Context, client *http.Client, ref string) ([]byte,
 		if rel == "" || strings.Contains(rel, "..") || strings.HasPrefix(rel, "/") || strings.HasPrefix(rel, `\`) {
 			return nil, "", fmt.Errorf("invalid cached reference image")
 		}
-		root := strings.TrimSpace(os.Getenv("KLEIN_STORAGE_ROOT"))
+		root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 		if root == "" {
 			root = "/app/storage/public"
 		}

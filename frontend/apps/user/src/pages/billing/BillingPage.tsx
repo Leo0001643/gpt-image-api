@@ -66,7 +66,7 @@ export default function BillingPage() {
         <div className="card card-section">
           <header className="section-header mb-3">
             <span className="section-title">
-              <Gift size={18} className="text-klein-500" />
+              <Gift size={18} className="text-gia-500" />
               兑换码 CDK
             </span>
           </header>
@@ -95,10 +95,10 @@ export default function BillingPage() {
         <div className="card-tinted card-section">
           <header className="section-header mb-3">
             <span className="section-title">
-              <Sparkles size={18} className="text-klein-500" />
+              <Sparkles size={18} className="text-gia-500" />
               充值套餐
             </span>
-            <span className="badge badge-klein">即将上线</span>
+            <span className="badge badge-gia">即将上线</span>
           </header>
           <p className="text-small text-text-secondary mb-4 leading-loose">
             支付通道（微信 / 支付宝 / Stripe）正在开发中，当前请通过 CDK 或邀请获得点数。

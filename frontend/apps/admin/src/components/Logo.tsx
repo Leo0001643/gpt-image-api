@@ -19,7 +19,7 @@ export function Logo({ size = 'md', iconOnly = false, suffix, className }: LogoP
   return (
     <div className={clsx('flex min-w-0 select-none items-center gap-2', className)}>
       <span
-        className="grid shrink-0 place-items-center rounded-xl bg-klein-gradient font-semibold text-white shadow-glow-soft"
+        className="grid shrink-0 place-items-center rounded-xl bg-gia-gradient font-semibold text-white shadow-glow-soft"
         style={{ width: cfg.icon, height: cfg.icon }}
       >
         AI

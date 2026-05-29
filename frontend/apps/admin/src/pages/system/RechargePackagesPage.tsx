@@ -219,7 +219,7 @@ function Stat({ title, value, icon }: { title: string; value: number; icon: Reac
         <div className="text-small text-text-tertiary">{title}</div>
         <div className="text-[26px] font-semibold text-text-primary tabular-nums mt-1">{value}</div>
       </div>
-      <span className="grid place-items-center w-10 h-10 rounded-md bg-info-soft text-klein-500">{icon}</span>
+      <span className="grid place-items-center w-10 h-10 rounded-md bg-info-soft text-gia-500">{icon}</span>
     </section>
   );
 }

@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/kleinai/backend/internal/bootstrap"
-	"github.com/kleinai/backend/internal/router"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/gpt-image-api/backend/internal/bootstrap"
+	"github.com/gpt-image-api/backend/internal/router"
+	"github.com/gpt-image-api/backend/pkg/logger"
 )
 
 const serviceName = "admin"

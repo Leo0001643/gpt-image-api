@@ -52,7 +52,7 @@ export default function CDKPage() {
       <header className="page-header">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            <Ticket className="text-klein-500" size={26} />
+            <Ticket className="text-gia-500" size={26} />
             兑换码 CDK
           </h1>
           <p className="page-subtitle">
@@ -134,15 +134,15 @@ export default function CDKPage() {
           />
         </Field>
 
-        <div className="lg:col-span-2 flex flex-col items-stretch justify-between gap-3 rounded-md bg-klein-gradient-soft p-4 md:flex-row md:items-center">
+        <div className="lg:col-span-2 flex flex-col items-stretch justify-between gap-3 rounded-md bg-gia-gradient-soft p-4 md:flex-row md:items-center">
           <div className="flex items-center gap-2 text-small text-text-secondary">
-            <AlertCircle size={16} className="text-klein-500" />
+            <AlertCircle size={16} className="text-gia-500" />
             预计生成：
             <strong className="text-text-primary mx-1">{fmtNumber(body.qty)}</strong>
             张，单码价值
             <strong className="text-text-primary mx-1">{fmtPoints(body.points)} 点</strong>，
             合计
-            <strong className="text-klein-500 mx-1">{fmtPoints(body.points * body.qty)} 点</strong>
+            <strong className="text-gia-500 mx-1">{fmtPoints(body.points * body.qty)} 点</strong>
           </div>
           <button type="submit" className="btn btn-primary btn-md md:shrink-0" disabled={m.isPending}>
             {m.isPending ? '生成中…' : '生成批次'}

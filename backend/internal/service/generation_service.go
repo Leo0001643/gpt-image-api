@@ -26,13 +26,13 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/provider"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/crypto"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/jwtpayload"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/gpt-image-api/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/provider"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/pkg/crypto"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/jwtpayload"
+	"github.com/gpt-image-api/backend/pkg/logger"
 )
 
 const codexOAuthClientID = "app_EMoamEEZ73f0CkXaXp7hrann"
@@ -834,7 +834,7 @@ func (s *GenerationService) cacheOneAsset(ctx context.Context, driver, cookie, r
 	ext := assetExt(source, resp.Header.Get("Content-Type"), thumb)
 	now := time.Now()
 	rel := path.Join("generated", now.Format("2006"), now.Format("01"), now.Format("02"), fmt.Sprintf("%s_%d%s%s", taskID, seq, map[bool]string{true: "_thumb", false: ""}[thumb], ext))
-	root := strings.TrimSpace(os.Getenv("KLEIN_STORAGE_ROOT"))
+	root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
 	}
@@ -895,7 +895,7 @@ func (s *GenerationService) cacheDataURLAsset(ctx context.Context, driver, rawUR
 	ext := assetExt("", contentType, thumb)
 	now := time.Now()
 	rel := path.Join("generated", now.Format("2006"), now.Format("01"), now.Format("02"), fmt.Sprintf("%s_%d%s%s", taskID, seq, map[bool]string{true: "_thumb", false: ""}[thumb], ext))
-	root := strings.TrimSpace(os.Getenv("KLEIN_STORAGE_ROOT"))
+	root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
 	}

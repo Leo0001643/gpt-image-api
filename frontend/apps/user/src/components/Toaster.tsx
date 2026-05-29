@@ -12,7 +12,7 @@ const ICONS = {
 const COLOR = {
   success: 'border-success bg-surface-1 text-success',
   error: 'border-danger bg-surface-1 text-danger',
-  info: 'border-klein-500 bg-surface-1 text-klein-500',
+  info: 'border-gia-500 bg-surface-1 text-gia-500',
 } as const;
 
 export function Toaster() {
@@ -28,7 +28,7 @@ export function Toaster() {
             className={clsx(
               'flex items-start gap-3 px-4 py-3 rounded-md border shadow-3 backdrop-blur',
               'bg-surface-1/95 text-text-primary',
-              'klein-fade-in',
+              'gia-fade-in',
               COLOR[t.kind],
             )}
           >

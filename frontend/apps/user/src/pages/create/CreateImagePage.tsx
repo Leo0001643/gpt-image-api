@@ -191,7 +191,7 @@ export default function CreateImagePage() {
         <div className="sticky bottom-0 -mx-5 lg:-mx-6 mt-6 px-5 lg:px-6 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] bg-surface-1/95 backdrop-blur border-t border-border">
           <div className="flex items-center justify-between mb-2 text-small">
             <span className="text-text-secondary">预计消耗</span>
-            <span className="font-semibold text-klein-500">{expectedCost} 点</span>
+            <span className="font-semibold text-gia-500">{expectedCost} 点</span>
           </div>
           <button
             className="btn btn-primary btn-xl btn-block"
@@ -216,7 +216,7 @@ export default function CreateImagePage() {
               {task && (
                 <div className="2xl:hidden chip chip-outline">
                   <span>{STATUS_LABELS[task.status]}</span>
-                  <span className="font-semibold text-klein-500">{task.progress ?? 0}%</span>
+                  <span className="font-semibold text-gia-500">{task.progress ?? 0}%</span>
                 </div>
               )}
             </div>
@@ -264,7 +264,7 @@ export default function CreateImagePage() {
               : Array.from({ length: count }).map((_, i) => (
                   <article
                     key={i}
-                    className="relative overflow-hidden rounded-lg bg-klein-gradient-soft border border-border grid place-items-center"
+                    className="relative overflow-hidden rounded-lg bg-gia-gradient-soft border border-border grid place-items-center"
                     style={{ aspectRatio: ratio.replace(':', '/') }}
                   >
                     <span className="text-text-tertiary text-small">
@@ -292,7 +292,7 @@ export default function CreateImagePage() {
             <div className="card-flat p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-small text-text-secondary">{STATUS_LABELS[task.status]}</span>
-                <span className="text-small font-semibold text-klein-500">{task.progress ?? 0}%</span>
+                <span className="text-small font-semibold text-gia-500">{task.progress ?? 0}%</span>
               </div>
               <div className="progress">
                 <div className="progress-bar" style={{ width: `${task.progress ?? 0}%` }} />
@@ -349,8 +349,8 @@ function Pill({
       className={clsx(
         'h-9 min-w-[44px] px-3 rounded-md text-small font-medium border transition',
         active
-          ? 'bg-klein-gradient text-text-on-klein border-transparent shadow-glow-soft'
-          : 'border-border text-text-secondary hover:text-text-primary hover:border-klein-500',
+          ? 'bg-gia-gradient text-text-on-gia border-transparent shadow-glow-soft'
+          : 'border-border text-text-secondary hover:text-text-primary hover:border-gia-500',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
@@ -384,8 +384,8 @@ function ScrollPicker({
               className={clsx(
                 'relative flex flex-col items-start p-3 rounded-md border text-left transition',
                 active
-                  ? 'border-klein-500 bg-klein-gradient-soft shadow-glow-soft'
-                  : 'border-border hover:border-klein-300',
+                  ? 'border-gia-500 bg-gia-gradient-soft shadow-glow-soft'
+                  : 'border-border hover:border-gia-300',
               )}
             >
               <span className="font-medium text-text-primary">{o.label}</span>
@@ -393,7 +393,7 @@ function ScrollPicker({
                 <span className="text-small text-text-tertiary mt-0.5">{o.cost} 点 / 张</span>
               )}
               {o.badge && (
-                <span className="absolute top-2 right-2 badge badge-klein">{o.badge}</span>
+                <span className="absolute top-2 right-2 badge badge-gia">{o.badge}</span>
               )}
             </button>
           );

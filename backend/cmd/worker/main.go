@@ -12,10 +12,10 @@ import (
 	"github.com/hibiken/asynq"
 	"go.uber.org/zap"
 
-	"github.com/kleinai/backend/internal/bootstrap"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/internal/service"
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/gpt-image-api/backend/internal/bootstrap"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/internal/service"
+	"github.com/gpt-image-api/backend/pkg/logger"
 )
 
 const serviceName = "worker"

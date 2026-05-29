@@ -113,13 +113,13 @@ export default function RegisterPage() {
         </button>
 
         <p className="text-small text-text-tertiary text-center">
-          注册即代表同意 <a className="text-klein-500">服务条款</a> 与 <a className="text-klein-500">隐私政策</a>
+          注册即代表同意 <a className="text-gia-500">服务条款</a> 与 <a className="text-gia-500">隐私政策</a>
         </p>
       </form>
 
       <p className="text-small text-text-secondary text-center">
         已有账号？
-        <Link to="/login" className="text-klein-500 hover:underline ml-1">立即登录</Link>
+        <Link to="/login" className="text-gia-500 hover:underline ml-1">立即登录</Link>
       </p>
     </div>
   );

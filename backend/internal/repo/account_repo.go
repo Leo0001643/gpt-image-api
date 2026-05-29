@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/model"
 )
 
 // AccountRepo 账号池仓储。

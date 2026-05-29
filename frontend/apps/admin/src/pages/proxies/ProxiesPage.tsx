@@ -289,7 +289,7 @@ export default function ProxiesPage() {
                       <span className="mt-0.5 block text-small text-text-tertiary">{item.remark}</span>
                     )}
                   </td>
-                  <td className="font-semibold uppercase text-klein-500">{item.protocol}</td>
+                  <td className="font-semibold uppercase text-gia-500">{item.protocol}</td>
                   <td className="font-mono text-small text-text-secondary">
                     {item.host}:{item.port}
                   </td>
@@ -333,7 +333,7 @@ export default function ProxiesPage() {
                       >
                         <Activity
                           size={14}
-                          className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse text-klein-500' : 'text-text-secondary'}
+                          className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse text-gia-500' : 'text-text-secondary'}
                         />
                       </button>
                       <button
@@ -626,7 +626,7 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="dialog-surface w-full max-w-xl klein-fade-in">
+      <div className="dialog-surface w-full max-w-xl gia-fade-in">
         <header className="flex h-12 items-center justify-between border-b border-border px-5">
           <h3 className="font-semibold text-text-primary">{title}</h3>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">

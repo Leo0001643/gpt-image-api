@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/model"
 )
 
 // APIKeyRepo API Key 数据访问层。

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/jwtx"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/jwtx"
+	"github.com/gpt-image-api/backend/pkg/response"
 )
 
 type ctxKey string

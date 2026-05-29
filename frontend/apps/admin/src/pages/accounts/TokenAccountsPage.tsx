@@ -73,7 +73,7 @@ function planTypeClass(planType?: string): string {
     case 'basic':
       return 'badge';
     case 'super':
-      return 'badge badge-klein';
+      return 'badge badge-gia';
     case 'heavy':
       return 'badge badge-warning';
     default:
@@ -486,7 +486,7 @@ export default function TokenAccountsPage() {
                     {item.name}
                     {item.remark && <span className="mt-0.5 block text-small text-text-tertiary">{item.remark}</span>}
                   </td>
-                  <td className="font-semibold uppercase text-klein-500">{item.provider}</td>
+                  <td className="font-semibold uppercase text-gia-500">{item.provider}</td>
                   <td className="whitespace-nowrap">
                     <span className={planTypeClass(item.plan_type)}>{planTypeLabel(item.plan_type)}</span>
                   </td>
@@ -566,7 +566,7 @@ export default function TokenAccountsPage() {
                       >
                         <Activity
                           size={14}
-                          className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse text-klein-500' : 'text-text-secondary'}
+                          className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse text-gia-500' : 'text-text-secondary'}
                         />
                       </button>
                       {isOAuth && (
@@ -578,7 +578,7 @@ export default function TokenAccountsPage() {
                         >
                           <RotateCw
                             size={14}
-                            className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin text-klein-500' : 'text-text-secondary'}
+                            className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin text-gia-500' : 'text-text-secondary'}
                           />
                         </button>
                       )}
@@ -1445,7 +1445,7 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className={`dialog-surface w-full ${wide ? 'max-w-2xl' : 'max-w-xl'} klein-fade-in`}>
+      <div className={`dialog-surface w-full ${wide ? 'max-w-2xl' : 'max-w-xl'} gia-fade-in`}>
         <header className="flex h-12 items-center justify-between border-b border-border px-5">
           <h3 className="font-semibold text-text-primary">{title}</h3>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">

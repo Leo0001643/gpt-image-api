@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kleinai/backend/internal/provider"
+	"github.com/gpt-image-api/backend/internal/provider"
 )
 
 // New 构造。kind 标识自身角色（gpt / grok）。
@@ -85,5 +85,5 @@ func mockVideoURL(taskID string, seq int) string {
 	if id == "" {
 		id = "demo"
 	}
-	return fmt.Sprintf("https://kleinai.dev/mock/video/%s-%d.mp4", id, seq)
+	return fmt.Sprintf("https://gpt-image-api.dev/mock/video/%s-%d.mp4", id, seq)
 }

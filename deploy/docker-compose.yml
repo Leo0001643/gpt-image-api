@@ -1,27 +1,27 @@
 # =====================================================
-# KleinAI · 单机生产 docker-compose
+# GPT Image API · 单机生产 docker-compose
 # 启动：docker compose --env-file ./env/.env.local up -d
 # 端口策略见 docs/01-开发规范-总览.md §端口规范
 # =====================================================
 
 x-common-env: &common-env
-  KLEIN_ENV: ${KLEIN_ENV:-prod}
-  KLEIN_DB_DSN: ${KLEIN_DB_DSN}
-  KLEIN_REDIS_ADDR: ${KLEIN_REDIS_ADDR:-redis:6379}
-  KLEIN_REDIS_PASSWORD: ${KLEIN_REDIS_PASSWORD:-}
-  KLEIN_JWT_SECRET: ${KLEIN_JWT_SECRET}
-  KLEIN_JWT_REFRESH_SECRET: ${KLEIN_JWT_REFRESH_SECRET}
-  KLEIN_AES_KEY: ${KLEIN_AES_KEY}
-  KLEIN_OPENAI_BASE: ${KLEIN_OPENAI_BASE:-https://api.openai.com}
-  KLEIN_GROK_BASE: ${KLEIN_GROK_BASE:-https://api.x.ai}
-  KLEIN_CORS_ORIGINS: ${KLEIN_CORS_ORIGINS}
-  KLEIN_LOG_DIR: /app/logs
+  GIA_ENV: ${GIA_ENV:-prod}
+  GIA_DB_DSN: ${GIA_DB_DSN}
+  GIA_REDIS_ADDR: ${GIA_REDIS_ADDR:-redis:6379}
+  GIA_REDIS_PASSWORD: ${GIA_REDIS_PASSWORD:-}
+  GIA_JWT_SECRET: ${GIA_JWT_SECRET}
+  GIA_JWT_REFRESH_SECRET: ${GIA_JWT_REFRESH_SECRET}
+  GIA_AES_KEY: ${GIA_AES_KEY}
+  GIA_OPENAI_BASE: ${GIA_OPENAI_BASE:-https://api.openai.com}
+  GIA_GROK_BASE: ${GIA_GROK_BASE:-https://api.x.ai}
+  GIA_CORS_ORIGINS: ${GIA_CORS_ORIGINS}
+  GIA_LOG_DIR: /app/logs
   TZ: Asia/Shanghai
 
 services:
   mysql:
     image: mysql:8.0
-    container_name: klein-mysql
+    container_name: gia-mysql
     restart: always
     command:
       - --default-authentication-plugin=caching_sha2_password
@@ -31,52 +31,57 @@ services:
       - --max_connections=300
       - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
     environment:
-      MYSQL_ROOT_PASSWORD: ${KLEIN_MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${KLEIN_MYSQL_DB:-klein_ai}
-      MYSQL_USER: ${KLEIN_MYSQL_USER:-klein}
-      MYSQL_PASSWORD: ${KLEIN_MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${GIA_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${GIA_MYSQL_DB:-gpt_image_api}
+      MYSQL_USER: ${GIA_MYSQL_USER:-gia}
+      MYSQL_PASSWORD: ${GIA_MYSQL_PASSWORD}
+      # 远程运维只读写账号（仅 DML 权限）
+      GIA_DB_OPS_USER: ${GIA_DB_OPS_USER:-giaops}
+      GIA_DB_OPS_PASSWORD: ${GIA_DB_OPS_PASSWORD:-}
     ports:
-      - "127.0.0.1:${KLEIN_MYSQL_PORT:-13306}:3306"
+      - "127.0.0.1:${GIA_MYSQL_PORT:-13306}:3306"
     volumes:
-      - klein-mysql-data:/var/lib/mysql
+      - gia-mysql-data:/var/lib/mysql
       # 首次初始化时执行 goose Up 段，避免 mysql 直接执行 Down 把表删空
       - ./mysql-init/01-run-migrations.sh:/docker-entrypoint-initdb.d/01-run-migrations.sh:ro
+      - ./mysql-init/02-create-remote-user.sh:/docker-entrypoint-initdb.d/02-create-remote-user.sh:ro
       - ../backend/migrations:/migrations:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       retries: 6
-    networks: [klein]
+    networks: [gia]
 
   redis:
     image: redis:7-alpine
-    container_name: klein-redis
+    container_name: gia-redis
     restart: always
-    command: redis-server --appendonly yes ${KLEIN_REDIS_PASSWORD:+--requirepass ${KLEIN_REDIS_PASSWORD}}
+    command: redis-server --appendonly yes ${GIA_REDIS_PASSWORD:+--requirepass ${GIA_REDIS_PASSWORD}}
     ports:
-      - "127.0.0.1:${KLEIN_REDIS_PORT:-16379}:6379"
+      - "127.0.0.1:${GIA_REDIS_PORT:-16379}:6379"
     volumes:
-      - klein-redis-data:/data
+      - gia-redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       retries: 6
-    networks: [klein]
+    networks: [gia]
 
   api:
-    image: kleinai/backend:latest
+    image: gpt-image-api/backend:latest
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: klein-api
+    container_name: gia-api
     restart: always
     command: ["/app/api"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 1
+      GIA_NODE_ID: 1
     expose: ["17180"]
     volumes:
-      - klein-logs:/app/logs
+      - gia-logs:/app/logs
+      - gia-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -87,104 +92,106 @@ services:
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
-    networks: [klein]
+    networks: [gia]
 
   admin:
-    image: kleinai/backend:latest
-    container_name: klein-admin
+    image: gpt-image-api/backend:latest
+    container_name: gia-admin
     restart: always
     command: ["/app/admin"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 2
+      GIA_NODE_ID: 2
     expose: ["17188"]
     volumes:
-      - klein-logs:/app/logs
+      - gia-logs:/app/logs
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
     deploy:
       resources:
         limits: { cpus: '1', memory: 512M }
-    networks: [klein]
+    networks: [gia]
 
   openai:
-    image: kleinai/backend:latest
-    container_name: klein-openai
+    image: gpt-image-api/backend:latest
+    container_name: gia-openai
     restart: always
     command: ["/app/openai"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 3
+      GIA_NODE_ID: 3
     expose: ["17200"]
     volumes:
-      - klein-logs:/app/logs
+      - gia-logs:/app/logs
+      - gia-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
-    networks: [klein]
+    networks: [gia]
 
   worker:
-    image: kleinai/backend:latest
-    container_name: klein-worker
+    image: gpt-image-api/backend:latest
+    container_name: gia-worker
     restart: always
     command: ["/app/worker"]
     environment:
       <<: *common-env
-      KLEIN_NODE_ID: 4
+      GIA_NODE_ID: 4
     volumes:
-      - klein-logs:/app/logs
+      - gia-logs:/app/logs
+      - gia-storage:/app/storage
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
-    networks: [klein]
+    networks: [gia]
 
   user-web:
-    image: kleinai/user-web:latest
+    image: gpt-image-api/user-web:latest
     build:
       context: ../frontend
       dockerfile: apps/user/Dockerfile
-    container_name: klein-user-web
+    container_name: gia-user-web
     restart: always
     expose: ["80"]
-    networks: [klein]
+    networks: [gia]
 
   admin-web:
-    image: kleinai/admin-web:latest
+    image: gpt-image-api/admin-web:latest
     build:
       context: ../frontend
       dockerfile: apps/admin/Dockerfile
-    container_name: klein-admin-web
+    container_name: gia-admin-web
     restart: always
     expose: ["80"]
-    networks: [klein]
+    networks: [gia]
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: klein-nginx
+    container_name: gia-nginx
     restart: always
     depends_on: [api, admin, openai, user-web, admin-web]
     ports:
-      - "${KLEIN_USER_WEB_PORT:-17080}:17080"
-      - "${KLEIN_ADMIN_WEB_PORT:-17088}:17088"
-      - "${KLEIN_OPENAI_PORT:-17200}:17200"
+      - "${GIA_USER_WEB_PORT:-17080}:17080"
+      - "${GIA_ADMIN_WEB_PORT:-17088}:17088"
+      - "${GIA_OPENAI_PORT:-17200}:17200"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
-      - ./certs:/etc/nginx/certs:ro
-      - klein-logs:/var/log/nginx
-    networks: [klein]
+      - gia-logs:/var/log/nginx
+    networks: [gia]
 
 volumes:
-  klein-mysql-data:
-  klein-redis-data:
-  klein-logs:
+  gia-mysql-data:
+  gia-redis-data:
+  gia-logs:
+  gia-storage:
 
 networks:
-  klein:
-    name: klein-net
+  gia:
+    name: gia-net

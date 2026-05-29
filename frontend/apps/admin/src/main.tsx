@@ -7,8 +7,8 @@ import App from './App';
 import { setUnauthorizedHandler } from './lib/api';
 import { useAuthStore } from './stores/auth';
 import { toast } from './stores/toast';
-import '@kleinai/theme/tokens.css';
-import '@kleinai/theme/animations.css';
+import '@gia/theme/tokens.css';
+import '@gia/theme/animations.css';
 import './index.css';
 
 const qc = new QueryClient({

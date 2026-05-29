@@ -329,7 +329,7 @@ function Section({ icon, title, desc, children }: { icon: ReactNode; title: stri
   return (
     <section className="card card-section space-y-4">
       <header className="flex items-start gap-3">
-        <span className="grid place-items-center w-9 h-9 rounded-md bg-info-soft text-klein-500">{icon}</span>
+        <span className="grid place-items-center w-9 h-9 rounded-md bg-info-soft text-gia-500">{icon}</span>
         <div>
           <h2 className="text-h5 font-semibold text-text-primary">{title}</h2>
           <p className="text-small text-text-tertiary mt-0.5">{desc}</p>
@@ -368,7 +368,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return (
     <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-surface-2 p-3">
       <div className="text-small font-medium text-text-primary">{label}</div>
-      <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ' + (checked ? 'bg-klein-500' : 'bg-surface-3')}>
+      <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ' + (checked ? 'bg-gia-500' : 'bg-surface-3')}>
         <span className={'inline-block h-5 w-5 rounded-full bg-white shadow transition transform ' + (checked ? 'translate-x-5' : 'translate-x-0.5')} />
       </button>
     </div>

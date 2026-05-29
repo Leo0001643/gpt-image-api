@@ -3,18 +3,18 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { applyThemeMode } from '@kleinai/theme';
+import { applyThemeMode } from '@gia/theme';
 
 import App from './App';
 import { setUnauthorizedHandler } from './lib/api';
 import { useAuthStore } from './stores/auth';
 import { useLoginGateStore } from './stores/loginGate';
 import { toast } from './stores/toast';
-import '@kleinai/theme/tokens.css';
-import '@kleinai/theme/animations.css';
+import '@gia/theme/tokens.css';
+import '@gia/theme/animations.css';
 import './index.css';
 
-applyThemeMode((localStorage.getItem('klein:theme') as 'dark' | 'light' | 'system' | null) ?? 'light');
+applyThemeMode((localStorage.getItem('gia:theme') as 'dark' | 'light' | 'system' | null) ?? 'light');
 
 setUnauthorizedHandler(() => {
   useAuthStore.setState({ token: null, me: null });

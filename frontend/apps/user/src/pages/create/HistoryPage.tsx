@@ -32,7 +32,7 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
 
 const STATUS_BADGE: Record<TaskStatus, string> = {
   0: 'badge',
-  1: 'badge badge-klein',
+  1: 'badge badge-gia',
   2: 'badge badge-success',
   3: 'badge badge-danger',
   4: 'badge badge-warning',
@@ -265,7 +265,7 @@ function TaskCard({ t, onPreview }: { t: GenerationTask; onPreview: () => void }
         if (ev.key === 'Enter' || ev.key === ' ') onPreview();
       }}
     >
-      <div className="relative aspect-square overflow-hidden bg-klein-gradient-soft" style={{ contain: 'paint' }}>
+      <div className="relative aspect-square overflow-hidden bg-gia-gradient-soft" style={{ contain: 'paint' }}>
         {resolvedCover ? (
           isVideo ? (
             <div className="relative h-full w-full">

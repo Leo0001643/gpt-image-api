@@ -172,7 +172,7 @@ function CreateKeyDialog({ onClose, onSubmit, submitting }: CreateKeyDialogProps
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-surface-overlay px-4 backdrop-blur-sm">
-      <div className="dialog-surface w-full max-w-md p-6 klein-fade-in">
+      <div className="dialog-surface w-full max-w-md p-6 gia-fade-in">
         <header className="flex items-center justify-between mb-5">
           <h2 className="text-h3 text-text-primary">创建 API KEY</h2>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">
@@ -254,7 +254,7 @@ function CreateKeyDialog({ onClose, onSubmit, submitting }: CreateKeyDialogProps
 function CreatedKeyCard({ data, onClose }: { data: APIKeyCreated; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   return (
-    <section className="card-tinted card-section mb-5 klein-fade-in">
+    <section className="card-tinted card-section mb-5 gia-fade-in">
       <header className="flex items-center justify-between mb-3">
         <h3 className="text-h4 text-text-primary">KEY「{data.name}」创建成功</h3>
         <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">

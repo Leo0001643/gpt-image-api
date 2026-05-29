@@ -44,7 +44,7 @@ export default function DashboardPage() {
       </header>
 
       <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
-        <div className="relative overflow-hidden rounded-lg border border-border bg-klein-gradient p-6 text-white shadow-3">
+        <div className="relative overflow-hidden rounded-lg border border-border bg-gia-gradient p-6 text-white shadow-3">
           <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <div className="text-small opacity-80">今日生成任务</div>
@@ -81,7 +81,7 @@ export default function DashboardPage() {
       <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
         <div className="card card-section space-y-4">
           <header className="flex items-center justify-between gap-3">
-            <h2 className="section-title"><BarChart3 size={18} className="text-klein-500" />账号池与额度</h2>
+            <h2 className="section-title"><BarChart3 size={18} className="text-gia-500" />账号池与额度</h2>
             <span className="badge badge-outline">每 15 秒刷新</span>
           </header>
           <div className="space-y-3">
@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
         <div className="card card-section space-y-4">
           <header className="flex items-center justify-between gap-3">
-            <h2 className="section-title"><Activity size={18} className="text-klein-500" />最近生成</h2>
+            <h2 className="section-title"><Activity size={18} className="text-gia-500" />最近生成</h2>
             <span className="text-small text-text-tertiary">最新 8 条</span>
           </header>
           <div className="space-y-2">
@@ -163,7 +163,7 @@ function SmallMetric({ title, value, sub, icon }: { title: string; value: string
     <div className="card card-section !py-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-small text-text-tertiary">{title}</div>
-        <span className="grid h-8 w-8 place-items-center rounded-md bg-info-soft text-klein-500">{icon}</span>
+        <span className="grid h-8 w-8 place-items-center rounded-md bg-info-soft text-gia-500">{icon}</span>
       </div>
       <div className="mt-2 text-h3 font-semibold text-text-primary tabular-nums">{value}</div>
       {sub && <div className="mt-1 text-tiny text-text-tertiary">{sub}</div>}
@@ -175,7 +175,7 @@ function InfoCard({ title, value, sub, icon }: { title: string; value: string; s
   return (
     <div className="card card-section !py-4">
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-md bg-info-soft text-klein-500">{icon}</span>
+        <span className="grid h-9 w-9 place-items-center rounded-md bg-info-soft text-gia-500">{icon}</span>
         <div>
           <div className="text-small text-text-tertiary">{title}</div>
           <div className="mt-1 text-[24px] font-semibold text-text-primary tabular-nums">{value}</div>

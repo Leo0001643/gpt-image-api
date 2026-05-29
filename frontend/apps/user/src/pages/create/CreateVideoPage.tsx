@@ -91,7 +91,7 @@ export default function CreateVideoPage() {
     <div className="page">
       <header className="page-header">
         <div className="flex items-center gap-3">
-          <div className="grid place-items-center w-11 h-11 rounded-md bg-klein-gradient text-text-on-klein shadow-glow-soft flex-shrink-0">
+          <div className="grid place-items-center w-11 h-11 rounded-md bg-gia-gradient text-text-on-gia shadow-glow-soft flex-shrink-0">
             <Video size={22} />
           </div>
           <div className="min-w-0">
@@ -113,8 +113,8 @@ export default function CreateVideoPage() {
                   className={clsx(
                     'flex flex-col items-start p-3 rounded-md border text-left transition',
                     m.code === model
-                      ? 'border-klein-500 bg-klein-gradient-soft shadow-glow-soft'
-                      : 'border-border hover:border-klein-300',
+                      ? 'border-gia-500 bg-gia-gradient-soft shadow-glow-soft'
+                      : 'border-border hover:border-gia-300',
                   )}
                   onClick={() => setModel(m.code)}
                 >
@@ -163,7 +163,7 @@ export default function CreateVideoPage() {
 
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <span className="text-small text-text-secondary">
-              预计消耗 <span className="text-klein-500 font-bold">{expectedCost}</span> 点
+              预计消耗 <span className="text-gia-500 font-bold">{expectedCost}</span> 点
             </span>
             <button
               className="btn btn-primary btn-lg"
@@ -182,14 +182,14 @@ export default function CreateVideoPage() {
         <section className="card card-section">
           <h3 className="section-title mb-3">实时预览</h3>
           <div
-            className="rounded-md bg-klein-gradient-soft grid place-items-center text-text-tertiary overflow-hidden border border-border"
+            className="rounded-md bg-gia-gradient-soft grid place-items-center text-text-tertiary overflow-hidden border border-border"
             style={{ aspectRatio: ratio.replace(':', '/') }}
           >
             {result?.url ? (
               <video src={result.url} controls playsInline className="h-full w-full object-cover" />
             ) : inProgress ? (
               <div className="flex flex-col items-center gap-2">
-                <Loader2 size={28} className="animate-spin text-klein-500" />
+                <Loader2 size={28} className="animate-spin text-gia-500" />
                 <span className="text-small">{task?.progress ?? 0}%</span>
               </div>
             ) : (
@@ -231,8 +231,8 @@ function Selector({
             className={clsx(
               'h-9 rounded-md text-small font-medium transition',
               o.value === active
-                ? 'bg-klein-gradient text-text-on-klein shadow-glow-soft'
-                : 'border border-border text-text-secondary hover:border-klein-500',
+                ? 'bg-gia-gradient text-text-on-gia shadow-glow-soft'
+                : 'border border-border text-text-secondary hover:border-gia-500',
             )}
           >
             {o.label}

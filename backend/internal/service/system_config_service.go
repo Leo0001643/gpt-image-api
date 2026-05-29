@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kleinai/backend/internal/model"
-	"github.com/kleinai/backend/internal/repo"
-	"github.com/kleinai/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/internal/model"
+	"github.com/gpt-image-api/backend/internal/repo"
+	"github.com/gpt-image-api/backend/pkg/errcode"
 )
 
 // 系统配置 key 常量。

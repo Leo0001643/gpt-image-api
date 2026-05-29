@@ -85,7 +85,7 @@ export default function LoginPage() {
             <input type="checkbox" className="checkbox" {...register('remember')} />
             记住我
           </label>
-          <Link to="/forgot" className="text-klein-500 hover:underline">忘记密码?</Link>
+          <Link to="/forgot" className="text-gia-500 hover:underline">忘记密码?</Link>
         </div>
 
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={isSubmitting}>
@@ -108,7 +108,7 @@ export default function LoginPage() {
 
       <p className="text-small text-text-secondary text-center">
         还没账号？
-        <Link to="/register" className="text-klein-500 hover:underline ml-1">立即注册</Link>
+        <Link to="/register" className="text-gia-500 hover:underline ml-1">立即注册</Link>
       </p>
     </div>
   );

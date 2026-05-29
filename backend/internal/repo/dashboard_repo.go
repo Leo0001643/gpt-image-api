@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/kleinai/backend/internal/dto"
+	"github.com/gpt-image-api/backend/internal/dto"
 )
 
 type DashboardRepo struct{ db *gorm.DB }

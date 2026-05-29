@@ -54,7 +54,7 @@ export default function BillingPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title flex items-center gap-2"><Wallet className="text-klein-500" size={26} />充值消费记录</h1>
+          <h1 className="page-title flex items-center gap-2"><Wallet className="text-gia-500" size={26} />充值消费记录</h1>
           <p className="page-subtitle">查看用户积分流水，包含充值、消费、退款、兑换码、优惠码和人工调整。</p>
         </div>
         <button className="btn btn-outline btn-md" onClick={() => query.refetch()} disabled={query.isFetching}>

@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/bootstrap"
-	"github.com/kleinai/backend/internal/middleware"
-	"github.com/kleinai/backend/pkg/version"
+	"github.com/gpt-image-api/backend/internal/bootstrap"
+	"github.com/gpt-image-api/backend/internal/middleware"
+	"github.com/gpt-image-api/backend/pkg/version"
 )
 
 // Options 路由构造选项。

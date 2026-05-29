@@ -9,10 +9,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/middleware"
-	"github.com/kleinai/backend/internal/service"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/gpt-image-api/backend/internal/middleware"
+	"github.com/gpt-image-api/backend/internal/service"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/response"
 )
 
 // AdminSystemHandler /admin/api/v1/system 资源 handler。
@@ -109,7 +109,7 @@ func (h *AdminSystemHandler) CleanCache(c *gin.Context) {
 }
 
 func generatedCacheRoot() (string, error) {
-	root := strings.TrimSpace(os.Getenv("KLEIN_STORAGE_ROOT"))
+	root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
 	}

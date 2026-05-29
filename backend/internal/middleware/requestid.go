@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/kleinai/backend/pkg/logger"
+	"github.com/gpt-image-api/backend/pkg/logger"
 )
 
 const HeaderRequestID = "X-Request-Id"

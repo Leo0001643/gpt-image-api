@@ -19,16 +19,16 @@
     "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {
-      "@kleinai/theme": ["packages/theme/src"],
-      "@kleinai/theme/*": ["packages/theme/src/*"],
-      "@kleinai/ui": ["packages/ui/src"],
-      "@kleinai/ui/*": ["packages/ui/src/*"],
-      "@kleinai/api-client": ["packages/api-client/src"],
-      "@kleinai/api-client/*": ["packages/api-client/src/*"],
-      "@kleinai/hooks": ["packages/hooks/src"],
-      "@kleinai/hooks/*": ["packages/hooks/src/*"],
-      "@kleinai/utils": ["packages/utils/src"],
-      "@kleinai/utils/*": ["packages/utils/src/*"]
+      "@gia/theme": ["packages/theme/src"],
+      "@gia/theme/*": ["packages/theme/src/*"],
+      "@gia/ui": ["packages/ui/src"],
+      "@gia/ui/*": ["packages/ui/src/*"],
+      "@gia/api-client": ["packages/api-client/src"],
+      "@gia/api-client/*": ["packages/api-client/src/*"],
+      "@gia/hooks": ["packages/hooks/src"],
+      "@gia/hooks/*": ["packages/hooks/src/*"],
+      "@gia/utils": ["packages/utils/src"],
+      "@gia/utils/*": ["packages/utils/src/*"]
     }
   }
 }

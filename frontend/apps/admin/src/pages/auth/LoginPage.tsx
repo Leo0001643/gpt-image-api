@@ -52,7 +52,7 @@ export default function LoginPage() {
   });
 
   return (
-    <div className="grid min-h-screen place-items-center bg-klein-gradient px-4 py-10">
+    <div className="grid min-h-screen place-items-center bg-gia-gradient px-4 py-10">
       <form
         onSubmit={handleSubmit((v) => m.mutate(v))}
         className="dialog-surface w-full max-w-sm p-6 sm:p-8 space-y-5"

@@ -288,7 +288,7 @@ export default function DocsPage() {
             <tbody>
               {ENDPOINTS.map((item) => (
                 <tr key={`${item.method}-${item.path}`} className="align-top">
-                  <td className="border-b border-border px-3 py-3 font-mono text-klein-600">{item.method}</td>
+                  <td className="border-b border-border px-3 py-3 font-mono text-gia-600">{item.method}</td>
                   <td className="border-b border-border px-3 py-3 font-mono">{item.path}</td>
                   <td className="border-b border-border px-3 py-3">{item.kind}</td>
                   <td className="border-b border-border px-3 py-3 text-text-secondary">{item.sync}</td>
@@ -363,7 +363,7 @@ export default function DocsPage() {
                 {tier.rows.map(([ratio, size]) => (
                   <div key={`${tier.tier}-${ratio}`} className="flex items-center justify-between rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm">
                     <span className="text-text-secondary">{ratio}</span>
-                    <span className="font-mono text-klein-600">{size}</span>
+                    <span className="font-mono text-gia-600">{size}</span>
                   </div>
                 ))}
               </div>

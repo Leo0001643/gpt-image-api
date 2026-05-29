@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/kleinai/backend/internal/dto"
-	"github.com/kleinai/backend/internal/service"
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/response"
+	"github.com/gpt-image-api/backend/internal/dto"
+	"github.com/gpt-image-api/backend/internal/service"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/response"
 )
 
 type AdminUserHandler struct {

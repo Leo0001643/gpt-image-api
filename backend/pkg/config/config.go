@@ -1,5 +1,5 @@
-// Package config 加载 KleinAI 全局配置。
-// 优先级：环境变量 > config.${KLEIN_ENV}.yaml > config.yaml。
+// Package config 加载 GPT Image API 全局配置。
+// 优先级：环境变量 > config.${GIA_ENV}.yaml > config.yaml。
 package config
 
 import (
@@ -144,7 +144,7 @@ func Get() *Config {
 }
 
 func loadInternal() (*Config, error) {
-	env := strings.TrimSpace(os.Getenv("KLEIN_ENV"))
+	env := strings.TrimSpace(os.Getenv("GIA_ENV"))
 	if env == "" {
 		env = "dev"
 	}
@@ -168,7 +168,7 @@ func loadInternal() (*Config, error) {
 		}
 	}
 
-	v.SetEnvPrefix("KLEIN")
+	v.SetEnvPrefix("GIA")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
@@ -182,18 +182,18 @@ func loadInternal() (*Config, error) {
 			*target = val
 		}
 	}
-	mapEnv(&out.MySQL.DSN, "KLEIN_DB_DSN")
-	mapEnv(&out.Redis.Addr, "KLEIN_REDIS_ADDR")
-	mapEnv(&out.Redis.Password, "KLEIN_REDIS_PASSWORD")
-	mapEnv(&out.JWT.Secret, "KLEIN_JWT_SECRET")
-	mapEnv(&out.JWT.RefreshSecret, "KLEIN_JWT_REFRESH_SECRET")
-	mapEnv(&out.AESKey, "KLEIN_AES_KEY")
-	mapEnv(&out.Provider.OpenAIBase, "KLEIN_OPENAI_BASE")
-	mapEnv(&out.Provider.GrokBase, "KLEIN_GROK_BASE")
-	mapEnv(&out.Logger.Dir, "KLEIN_LOG_DIR")
-	mapEnv(&out.Logger.Level, "KLEIN_LOG_LEVEL")
+	mapEnv(&out.MySQL.DSN, "GIA_DB_DSN")
+	mapEnv(&out.Redis.Addr, "GIA_REDIS_ADDR")
+	mapEnv(&out.Redis.Password, "GIA_REDIS_PASSWORD")
+	mapEnv(&out.JWT.Secret, "GIA_JWT_SECRET")
+	mapEnv(&out.JWT.RefreshSecret, "GIA_JWT_REFRESH_SECRET")
+	mapEnv(&out.AESKey, "GIA_AES_KEY")
+	mapEnv(&out.Provider.OpenAIBase, "GIA_OPENAI_BASE")
+	mapEnv(&out.Provider.GrokBase, "GIA_GROK_BASE")
+	mapEnv(&out.Logger.Dir, "GIA_LOG_DIR")
+	mapEnv(&out.Logger.Level, "GIA_LOG_LEVEL")
 
-	if origins := os.Getenv("KLEIN_CORS_ORIGINS"); origins != "" {
+	if origins := os.Getenv("GIA_CORS_ORIGINS"); origins != "" {
 		out.CORS.Origins = splitAndTrim(origins, ",")
 	}
 
@@ -209,16 +209,16 @@ func loadInternal() (*Config, error) {
 
 func validateProd(c *Config) error {
 	if c.MySQL.DSN == "" {
-		return fmt.Errorf("KLEIN_DB_DSN is required in prod")
+		return fmt.Errorf("GIA_DB_DSN is required in prod")
 	}
 	if c.Redis.Addr == "" {
-		return fmt.Errorf("KLEIN_REDIS_ADDR is required in prod")
+		return fmt.Errorf("GIA_REDIS_ADDR is required in prod")
 	}
 	if len(c.JWT.Secret) < 32 || len(c.JWT.RefreshSecret) < 32 {
-		return fmt.Errorf("KLEIN_JWT_SECRET / KLEIN_JWT_REFRESH_SECRET must be >= 32 bytes")
+		return fmt.Errorf("GIA_JWT_SECRET / GIA_JWT_REFRESH_SECRET must be >= 32 bytes")
 	}
 	if len(c.AESKey) < 32 {
-		return fmt.Errorf("KLEIN_AES_KEY must be >= 32 bytes")
+		return fmt.Errorf("GIA_AES_KEY must be >= 32 bytes")
 	}
 	return nil
 }

@@ -1,6 +1,6 @@
 <div align="center">
 
-# gpt2api · KleinAI
+# gpt-image-api · GPT Image API
 
 **面向 GPT / GROK 双账号池的 OpenAI 兼容 AIGC 网关**
 
@@ -23,7 +23,7 @@
 
 ## 项目简介
 
-`gpt2api`（项目代号 KleinAI）是一个生产级的 **AIGC 聚合网关**，把 GPT / GROK 这类账号 + Cookie 体系的能力，整体封装成 **OpenAI 兼容协议**，让任何按 OpenAI SDK 编写的程序都可以无缝接入。
+`gpt-image-api` 是一个生产级的 **AIGC 聚合网关**，把 GPT / GROK 这类账号 + Cookie 体系的能力，整体封装成 **OpenAI 兼容协议**，让任何按 OpenAI SDK 编写的程序都可以无缝接入。
 
 平台同时提供：
 
@@ -104,8 +104,8 @@
 ### 1. 拉取代码
 
 ```bash
-git clone https://github.com/432539/gpt2api.git
-cd gpt2api
+git clone https://github.com/432539/gpt-image-api.git
+cd gpt-image-api
 ```
 
 ### 2. 配置环境变量
@@ -131,10 +131,10 @@ docker compose -f docker-compose.server.yml up -d --build
 
 ```bash
 docker compose -f docker-compose.server.yml ps
-docker logs -f klein-api
-docker logs -f klein-admin
-docker logs -f klein-openai
-docker logs -f klein-worker
+docker logs -f gia-api
+docker logs -f gia-admin
+docker logs -f gia-openai
+docker logs -f gia-worker
 ```
 
 ### 5. 默认入口
@@ -246,12 +246,12 @@ pwsh ./scripts/dev-up.ps1
 # 前端
 cd frontend
 pnpm install
-pnpm --filter @kleinai/user  dev    # http://localhost:5173
-pnpm --filter @kleinai/admin dev    # http://localhost:5174
+pnpm --filter @gpt-image-api/user  dev    # http://localhost:5173
+pnpm --filter @gpt-image-api/admin dev    # http://localhost:5174
 ```
 
-> 默认 `KLEIN_PROVIDER_GPT/GROK=mock`，无需真实凭证即可走通生成全流程。
-> 切真实通道：编辑 `deploy/docker-compose.dev-full.yml` 或 `backend/.env.local`，把 `KLEIN_PROVIDER_*=real`。
+> 默认 `GIA_PROVIDER_GPT/GROK=mock`，无需真实凭证即可走通生成全流程。
+> 切真实通道：编辑 `deploy/docker-compose.dev-full.yml` 或 `backend/.env.local`，把 `GIA_PROVIDER_*=real`。
 > 真实凭证一律通过「管理后台 → Token 管理」入库，AES-256-GCM 落盘。
 
 ## 🏭 生产建议

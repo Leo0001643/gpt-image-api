@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kleinai/backend/pkg/errcode"
-	"github.com/kleinai/backend/pkg/outbound"
+	"github.com/gpt-image-api/backend/pkg/errcode"
+	"github.com/gpt-image-api/backend/pkg/outbound"
 )
 
 // OpenAITokenResponse OAuth Token 响应（Codex CLI 流）。
