@@ -847,7 +847,40 @@ func (s *AccountTestService) RefreshOAuth(ctx context.Context, account *model.Ac
 		rt = cred
 	}
 	if rt == "" {
-		return nil, errcode.InvalidParam.WithMsg("璐﹀彿鏈厤缃?refresh_token")
+		return nil, errcode.InvalidParam.WithMsg("账号未配置 refresh_token")
+	}
+
+	// If "rt" is itself a JWT it is a session token / access token, NOT an
+	// OAuth2 refresh token. Exchanging it against auth0.openai.com would always
+	// fail with 401 "token_expired". Store it directly as the access token so
+	// it can be used as a Bearer token for chatgpt.com API calls.
+	if isSessionJWT(rt) {
+		exp, hasExp := jwtpayload.ExpUnixFromJWT(rt)
+		if hasExp && time.Now().Unix() >= exp {
+			return nil, errcode.InvalidParam.WithMsg(
+				"session token 已过期，请从浏览器 Cookie 重新获取 __Secure-next-auth.session-token 并更新账号凭证")
+		}
+		atEnc, encErr := s.aes.Encrypt([]byte(rt))
+		if encErr != nil {
+			return nil, errcode.Internal.Wrap(encErr)
+		}
+		now := time.Now().UTC()
+		upd := map[string]any{
+			"access_token_enc": atEnc,
+			"last_refresh_at":  now,
+			"last_error":       "",
+		}
+		if hasExp {
+			t := time.Unix(exp, 0).UTC()
+			upd["access_token_expires_at"] = t
+		}
+		if updErr := s.accountRepo.Update(ctx, account.ID, upd); updErr != nil {
+			return nil, errcode.DBError.Wrap(updErr)
+		}
+		return &dto.AccountRefreshResp{
+			OK:          true,
+			RefreshedAt: time.Now().Unix(),
+		}, nil
 	}
 
 	proxyURL, err := s.resolveProxyURL(ctx, account)
@@ -1057,6 +1090,14 @@ func accountTestImageResetAt(info *accountTestInfo) int64 {
 		return 0
 	}
 	return info.ImageQuotaResetAt
+}
+
+// isSessionJWT reports whether s looks like a JWT (three base64url segments
+// separated by dots). ChatGPT session tokens and OAuth2 access tokens are JWTs;
+// OAuth2 refresh tokens are opaque strings and will return false.
+func isSessionJWT(s string) bool {
+	parts := strings.SplitN(s, ".", 4)
+	return len(parts) == 3 && len(parts[0]) > 0 && len(parts[1]) > 0 && len(parts[2]) > 0
 }
 
 // isConvInitUnavailable reports whether a conversation/init error is due to
