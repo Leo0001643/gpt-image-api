@@ -419,14 +419,21 @@ func (s *GenerationService) pickAccountForTask(ctx context.Context, t *model.Gen
 	if t.Provider != model.ProviderGPT || t.Kind != string(provider.KindImage) || !strings.EqualFold(t.ModelCode, "gpt-image-2") {
 		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", nil)
 	}
+	// For gpt-image-2: api_key accounts use the standard OpenAI API route;
+	// oauth accounts use the web/codex route. Accept both types.
 	if accountRequiresCodexRoute(t, params) {
-		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", isCodexOAuthAccount)
+		return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", func(acc *model.Account) bool {
+			if acc == nil {
+				return false
+			}
+			return isCodexOAuthAccount(acc) || acc.AuthType == model.AuthTypeAPIKey
+		})
 	}
 	return s.pool.ReserveWhere(ctx, t.Provider, "round_robin", func(acc *model.Account) bool {
 		if acc == nil {
 			return false
 		}
-		return acc.AuthType == model.AuthTypeOAuth
+		return acc.AuthType == model.AuthTypeOAuth || acc.AuthType == model.AuthTypeAPIKey
 	})
 }
 
