@@ -14,6 +14,10 @@ x-common-env: &common-env
   GIA_AES_KEY: ${GIA_AES_KEY}
   GIA_OPENAI_BASE: ${GIA_OPENAI_BASE:-https://api.openai.com}
   GIA_GROK_BASE: ${GIA_GROK_BASE:-https://api.x.ai}
+  GIA_PROVIDER_GPT: ${GIA_PROVIDER_GPT:-real}
+  GIA_PROVIDER_GROK: ${GIA_PROVIDER_GROK:-real}
+  GIA_GPT_BASE_URL: ${GIA_GPT_BASE_URL:-}
+  GIA_GROK_BASE_URL: ${GIA_GROK_BASE_URL:-}
   GIA_CORS_ORIGINS: ${GIA_CORS_ORIGINS}
   GIA_LOG_DIR: /app/logs
   TZ: Asia/Shanghai
