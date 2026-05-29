@@ -22,6 +22,23 @@
   --klein-gradient:      linear-gradient(135deg, #002FA7 0%, #1E3DFF 100%);
   --klein-gradient-soft: linear-gradient(135deg, rgba(0,47,167,.12) 0%, rgba(30,61,255,.10) 100%);
 
+  /* ====== GIA 别名（与 Tailwind preset / 代码保持一致） ====== */
+  --gia-50:  var(--klein-50);
+  --gia-100: var(--klein-100);
+  --gia-200: var(--klein-200);
+  --gia-300: var(--klein-300);
+  --gia-400: var(--klein-400);
+  --gia-500: var(--klein-500);
+  --gia-600: var(--klein-600);
+  --gia-700: var(--klein-700);
+  --gia-800: var(--klein-800);
+  --gia-900: var(--klein-900);
+  --gia-glow:          var(--klein-glow);
+  --gia-glow-soft:     var(--klein-glow-soft);
+  --gia-gradient:      var(--klein-gradient);
+  --gia-gradient-soft: var(--klein-gradient-soft);
+  --text-on-gia:       #FFFFFF;
+
   /* ====== 中性 ink ====== */
   --ink-50:  #F7F8FB;
   --ink-100: #EEF1F6;
