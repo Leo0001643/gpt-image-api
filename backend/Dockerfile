@@ -47,4 +47,4 @@ USER 65532:65532
 
 EXPOSE 17180 17188 17200
 
-ENTRYPOINT ["/app/api"]
+CMD ["/app/api"]
