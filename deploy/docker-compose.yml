@@ -39,7 +39,7 @@ services:
       GIA_DB_OPS_USER: ${GIA_DB_OPS_USER:-giaops}
       GIA_DB_OPS_PASSWORD: ${GIA_DB_OPS_PASSWORD:-}
     ports:
-      - "${GIA_MYSQL_PORT:-23306}:3306"  # 临时对外暴露，后期改回 127.0.0.1:
+      - "${GIA_MYSQL_PORT:-33306}:3306"  # 临时对外暴露，后期改回 127.0.0.1:
     volumes:
       - gia-mysql-data:/var/lib/mysql
       # 首次初始化时执行 goose Up 段，避免 mysql 直接执行 Down 把表删空
