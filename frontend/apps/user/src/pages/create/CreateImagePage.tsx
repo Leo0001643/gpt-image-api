@@ -1,313 +1,465 @@
-import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, Upload, RefreshCw, Heart, Download, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlertCircle, Download, Heart, Sparkles,
+  RefreshCw, Check, Loader2,
+} from 'lucide-react';
 import clsx from 'clsx';
 
 import { useEnsureLoggedIn } from '../../hooks/useEnsureLoggedIn';
 import { ApiError } from '../../lib/api';
 import { fmtPoints } from '../../lib/format';
 import { genApi } from '../../lib/services';
-import type { GenerationTask } from '../../lib/types';
+import type { GenerationTask, PublicModel } from '../../lib/types';
 import { useAuthStore } from '../../stores/auth';
 import { toast } from '../../stores/toast';
 
-const MODELS = [
-  { code: 'img-v3',    name: '通用 V3.0',    hot: true,  cost: 4 },
-  { code: 'img-real',  name: '写实 V2.1',    cost: 4 },
-  { code: 'img-anime', name: '二次元 V2.0',  cost: 3 },
-  { code: 'img-3d',    name: '3D 渲染',       cost: 5,    pro: true },
-];
-
-const RATIOS = ['1:1', '3:4', '4:3', '16:9', '9:16'] as const;
-const COUNTS = [1, 2, 4] as const;
-const QUALITY = [
-  { value: 'standard', label: '标准' },
-  { value: 'hd', label: '高清' },
+/* ──────────────────────────────────────────────
+   常量
+────────────────────────────────────────────── */
+const RATIOS = [
+  { value: '1:1',  w: 1, h: 1 },
+  { value: '3:4',  w: 3, h: 4 },
+  { value: '4:3',  w: 4, h: 3 },
+  { value: '16:9', w: 16, h: 9 },
+  { value: '9:16', w: 9, h: 16 },
 ] as const;
 
-type Quality = (typeof QUALITY)[number]['value'];
+const COUNTS = [1, 2, 4] as const;
 
-const STATUS_LABELS: Record<number, string> = {
-  0: '排队中', 1: '生成中', 2: '已完成', 3: '失败', 4: '已退款', 5: '已取消',
+const QUALITY = [
+  { value: 'standard', label: '标准' },
+  { value: 'hd',       label: '高清' },
+] as const;
+
+const PROMPT_CHIPS = ['电影级构图', '超写实', '赛博朋克', '微距摄影', '梦幻光影', '极简主义'];
+
+const GEN_PHRASES = [
+  '正在构建画面结构…',
+  '填充光影层次…',
+  '润色细节质感…',
+  'AI 正在创作中…',
+  '作品即将呈现…',
+];
+
+const STATUS_LABEL: Record<number, string> = {
+  0: '队列中', 1: '生成中', 2: '已完成', 3: '失败', 4: '已退款', 5: '已取消',
 };
 
+type Ratio = (typeof RATIOS)[number]['value'];
+type Quality = (typeof QUALITY)[number]['value'];
+
+/* ──────────────────────────────────────────────
+   主页面
+────────────────────────────────────────────── */
 export default function CreateImagePage() {
   const qc = useQueryClient();
   const refreshMe = useAuthStore((s) => s.refreshMe);
   const ensureLoggedIn = useEnsureLoggedIn();
 
-  const [model, setModel] = useState(MODELS[0]!.code);
-  const [ratio, setRatio] = useState<(typeof RATIOS)[number]>('1:1');
-  const [count, setCount] = useState<(typeof COUNTS)[number]>(2);
-  const [quality, setQuality] = useState<Quality>('hd');
-  const [prompt, setPrompt] = useState('一座漂浮在云端的未来主义城堡，黄昏，体积光，电影级构图');
+  /* 模型列表（动态从 API 加载） */
+  const {
+    data: allModels = [],
+    isLoading: modelsLoading,
+    isError: modelsError,
+    refetch: refetchModels,
+  } = useQuery({
+    queryKey: ['gen.models'],
+    queryFn: () => genApi.models(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+  // useMemo 防止每次渲染产生新数组引用，避免自动选模型的 useEffect 无限触发
+  const imageModels = useMemo(
+    () => allModels.filter((m) => m.kind === 'image' && m.enabled !== false),
+    [allModels],
+  );
 
+  /* 表单状态 */
+  const [modelCode, setModelCode] = useState('');
+  const [ratio, setRatio] = useState<Ratio>('1:1');
+  const [count, setCount] = useState<(typeof COUNTS)[number]>(1);
+  const [quality, setQuality] = useState<Quality>('standard');
+  const [prompt, setPrompt] = useState('');
+
+  /* 任务状态 */
   const [task, setTask] = useState<GenerationTask | null>(null);
+  const [phraseIdx, setPhraseIdx] = useState(0);
   const pollRef = useRef<number | null>(null);
+  const phraseRef = useRef<number | null>(null);
+
+  /* 首次加载完成后自动选中第一个模型 */
+  useEffect(() => {
+    if (imageModels.length > 0 && !modelCode) {
+      setModelCode(imageModels[0]!.model_code);
+    }
+  }, [imageModels, modelCode]);
 
   useEffect(() => {
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
+      if (phraseRef.current) window.clearInterval(phraseRef.current);
     };
   }, []);
 
+  /* 生成 mutation */
   const createMut = useMutation({
-    mutationFn: () =>
-      genApi.createImage({ model, prompt, count, ratio, quality }),
+    mutationFn: () => genApi.createImage({ model: modelCode, prompt, count, ratio, quality }),
     onSuccess: (t) => {
       setTask(t);
       startPolling(t.task_id);
+      startPhrases();
       void refreshMe();
       qc.invalidateQueries({ queryKey: ['gen.history'] });
     },
-    onError: (e) => toast.error(e instanceof ApiError ? e.message : '生成失败'),
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : '生成失败，请稍后重试'),
   });
 
-  const startPolling = (taskId: string) => {
+  function startPolling(taskId: string) {
     if (pollRef.current) window.clearInterval(pollRef.current);
     pollRef.current = window.setInterval(async () => {
       try {
         const fresh = await genApi.getTask(taskId);
         setTask(fresh);
-        if (fresh.status === 2 || fresh.status === 3 || fresh.status === 4) {
-          if (pollRef.current) window.clearInterval(pollRef.current);
+        // 终态：已完成 / 失败 / 已退款 / 已取消
+        if (fresh.status === 2 || fresh.status === 3 || fresh.status === 4 || fresh.status === 5) {
+          window.clearInterval(pollRef.current!);
           pollRef.current = null;
-          if (fresh.status === 2) toast.success('生成完成');
+          if (phraseRef.current) {
+            window.clearInterval(phraseRef.current);
+            phraseRef.current = null;
+          }
+          if (fresh.status === 2) toast.success('图像生成完成');
           else if (fresh.status === 3) toast.error(fresh.error || '生成失败');
-          else toast.info('生成失败已退款');
+          else if (fresh.status === 5) toast.info('任务已取消');
+          else toast.info('任务失败，积分已退还');
           await refreshMe();
           qc.invalidateQueries({ queryKey: ['gen.history'] });
-          qc.invalidateQueries({ queryKey: ['billing.logs'] });
         }
-      } catch {
-        // ignore
-      }
+      } catch {/* ignore */}
     }, 1500);
-  };
+  }
 
-  const expectedCost = (MODELS.find((m) => m.code === model)?.cost ?? 4) * count;
-  const inProgress = task && (task.status === 0 || task.status === 1);
-  const results = task?.results ?? [];
+  function startPhrases() {
+    if (phraseRef.current) window.clearInterval(phraseRef.current);
+    setPhraseIdx(0);
+    phraseRef.current = window.setInterval(() => {
+      setPhraseIdx((i) => (i + 1) % GEN_PHRASES.length);
+    }, 2200);
+  }
 
-  const submitGenerate = () => {
-    ensureLoggedIn(() => createMut.mutate(), '登录后即可生成图像');
-  };
+  const selectedModel = imageModels.find((m) => m.model_code === modelCode);
+  const costPerImage  = Math.round((selectedModel?.unit_points ?? 0) / 100);
+  const expectedCost  = costPerImage * count;
+  const inProgress    = !!(task && (task.status === 0 || task.status === 1));
+  const results       = task?.results ?? [];
+  const canSubmit     = !!modelCode && !!prompt.trim() && !createMut.isPending && !inProgress;
 
+  const submit = () => ensureLoggedIn(() => createMut.mutate(), '登录后即可开始创作');
+
+  /* ── 渲染 ── */
   return (
-    <div
-      className="
-        grid h-full
-        @container
-        grid-cols-1
-        lg:grid-cols-[clamp(320px,30vw,420px)_1fr]
-        2xl:grid-cols-[clamp(320px,26vw,420px)_1fr_clamp(260px,18vw,320px)]
-      "
-    >
-      {/* 左：参数面板 */}
-      <section className="border-r border-border bg-surface-1 p-5 lg:p-6 overflow-y-auto">
-        <header className="mb-5">
-          <h2 className="text-h3 text-text-primary">图像创作</h2>
-          <p className="text-small text-text-tertiary mt-1">配置模型、提示词与输出参数。</p>
-        </header>
+    <div className="grid h-full grid-cols-1 lg:grid-cols-[clamp(300px,30vw,400px)_1fr] 2xl:grid-cols-[clamp(300px,26vw,380px)_1fr_clamp(220px,16vw,280px)]">
 
-        <ScrollPicker
-          label="模型"
-          value={model}
-          options={MODELS.map((m) => ({
-            value: m.code,
-            label: m.name,
-            badge: m.hot ? '热门' : m.pro ? 'Pro' : undefined,
-            cost: m.cost,
-          }))}
-          onChange={setModel}
-        />
+      {/* ══════════════ 左：参数面板 ══════════════ */}
+      <aside className="flex flex-col border-r border-border bg-surface-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-6 space-y-6">
 
-        <FieldBlock label="提示词" hint={`${prompt.length}/4000`}>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={6}
-            className="textarea leading-loose"
-            placeholder="描述你想要的画面，越具体越好"
-            maxLength={4000}
-          />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {['电影感', '微距摄影', '梦幻光影', '高级感'].map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="chip"
-                onClick={() => setPrompt((p) => `${p}, ${t}`)}
-              >
-                + {t}
-              </button>
-            ))}
+          {/* 页头 */}
+          <div>
+            <h2 className="text-[22px] text-text-primary tracking-tight">图像创作</h2>
+            <p className="text-small text-text-tertiary mt-1">选择模型，描述你的画面</p>
           </div>
-        </FieldBlock>
 
-        <FieldBlock label="参考图（暂不可用）">
-          <button
-            className="w-full h-28 grid place-items-center rounded-md border-2 border-dashed border-border opacity-60 cursor-not-allowed"
-            disabled
-          >
-            <div className="flex flex-col items-center gap-1 text-text-tertiary">
-              <Upload size={20} />
-              <span className="text-small">即将上线</span>
-            </div>
-          </button>
-        </FieldBlock>
+          {/* ─ 模型选择 ─ */}
+          <Section label="模型">
+            {modelsLoading ? (
+              <div className="grid grid-cols-2 gap-2">
+                {[0,1,2,3].map(i => (
+                  <div key={i} className="h-16 rounded-2xl bg-surface-2 animate-pulse" />
+                ))}
+              </div>
+            ) : modelsError ? (
+              <div className="flex items-center justify-between rounded-2xl border border-dashed border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-small text-red-500">
+                <span className="flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0" />
+                  模型加载失败
+                </span>
+                <button
+                  type="button"
+                  className="text-tiny underline underline-offset-2"
+                  onClick={() => void refetchModels()}
+                >
+                  重试
+                </button>
+              </div>
+            ) : imageModels.length === 0 ? (
+              <div className="flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-small text-text-tertiary">
+                <AlertCircle size={15} className="shrink-0" />
+                暂无可用模型，请联系管理员配置
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {imageModels.map((m) => <ModelCard key={m.model_code} model={m} active={m.model_code === modelCode} onSelect={setModelCode} />)}
+              </div>
+            )}
+          </Section>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FieldBlock label="比例">
-            <div className="grid grid-cols-5 gap-1.5">
-              {RATIOS.map((r) => (
-                <Pill key={r} active={r === ratio} onClick={() => setRatio(r)}>
-                  {r}
-                </Pill>
-              ))}
+          {/* ─ 提示词 ─ */}
+          <Section label="提示词" aside={<span className="text-tiny text-text-tertiary tabular-nums">{prompt.length}/4000</span>}>
+            <div className="relative">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={5}
+                maxLength={4000}
+                placeholder="描述你想要的画面…越具体，效果越好"
+                className="studio-prompt w-full resize-none rounded-2xl border border-border bg-surface-2 px-4 py-3 text-small text-text-primary placeholder:text-text-tertiary focus:bg-white transition-colors leading-relaxed"
+              />
             </div>
-          </FieldBlock>
-          <FieldBlock label="数量">
-            <div className="grid grid-cols-3 gap-1.5">
-              {COUNTS.map((c) => (
-                <Pill key={c} active={c === count} onClick={() => setCount(c)}>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {PROMPT_CHIPS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className="chip text-tiny"
+                  onClick={() => setPrompt((p) => (p ? `${p.trimEnd()}, ${c}` : c))}
+                >
                   {c}
-                </Pill>
+                </button>
               ))}
             </div>
-          </FieldBlock>
+          </Section>
+
+          {/* ─ 比例 ─ */}
+          <Section label="画面比例">
+            <div className="flex items-center gap-2">
+              {RATIOS.map((r) => (
+                <RatioButton
+                  key={r.value}
+                  ratio={r}
+                  active={r.value === ratio}
+                  onClick={() => setRatio(r.value)}
+                />
+              ))}
+            </div>
+          </Section>
+
+          {/* ─ 数量 & 质量 ─ */}
+          <div className="grid grid-cols-2 gap-5">
+            <Section label="数量">
+              <div className="flex gap-1.5">
+                {COUNTS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCount(c)}
+                    className={clsx(
+                      'flex-1 h-10 rounded-xl border text-small transition',
+                      c === count
+                        ? 'border-transparent bg-[#111] text-white'
+                        : 'border-border text-text-secondary hover:border-[#111] hover:text-text-primary bg-surface-2',
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </Section>
+
+            <Section label="质量">
+              <div className="flex gap-1.5">
+                {QUALITY.map((q) => (
+                  <button
+                    key={q.value}
+                    type="button"
+                    onClick={() => setQuality(q.value)}
+                    className={clsx(
+                      'flex-1 h-10 rounded-xl border text-small transition',
+                      q.value === quality
+                        ? 'border-transparent bg-[#111] text-white'
+                        : 'border-border text-text-secondary hover:border-[#111] hover:text-text-primary bg-surface-2',
+                    )}
+                  >
+                    {q.label}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          </div>
         </div>
 
-        <FieldBlock label="质量">
-          <div className="grid grid-cols-2 gap-1.5">
-            {QUALITY.map((q) => (
-              <Pill key={q.value} active={q.value === quality} onClick={() => setQuality(q.value)}>
-                {q.label}
-              </Pill>
-            ))}
-          </div>
-        </FieldBlock>
-
-        <div className="sticky bottom-0 -mx-5 lg:-mx-6 mt-6 px-5 lg:px-6 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] bg-surface-1/95 backdrop-blur border-t border-border">
-          <div className="flex items-center justify-between mb-2 text-small">
-            <span className="text-text-secondary">预计消耗</span>
-            <span className="font-semibold text-gia-500">{expectedCost} 点</span>
+        {/* ── 底部 CTA ── */}
+        <div className="border-t border-border px-5 lg:px-6 pt-4 pb-[max(20px,env(safe-area-inset-bottom))] bg-surface-1">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-small text-text-tertiary">预计消耗</span>
+            <span className="text-small text-text-primary tabular-nums">
+              {expectedCost > 0 ? `${expectedCost} 点` : '免费'}
+            </span>
           </div>
           <button
-            className="btn btn-primary btn-xl btn-block"
-            onClick={submitGenerate}
-            disabled={createMut.isPending || !!inProgress || !prompt.trim()}
+            className={clsx(
+              'w-full h-[52px] rounded-full text-[15px] flex items-center justify-center gap-2 transition',
+              canSubmit
+                ? 'bg-[#111] text-white hover:bg-[#222] active:scale-[.98]'
+                : 'bg-surface-2 text-text-tertiary cursor-not-allowed',
+            )}
+            onClick={submit}
+            disabled={!canSubmit}
           >
-            {createMut.isPending || inProgress ? (
-              <><Loader2 size={18} className="animate-spin" />生成中…</>
+            {(createMut.isPending || inProgress) ? (
+              <><Loader2 size={16} className="animate-spin" />生成中…</>
             ) : (
-              <><Sparkles size={18} />立即生成</>
+              <><Sparkles size={16} />立即生成</>
             )}
           </button>
         </div>
-      </section>
+      </aside>
 
-      {/* 中：结果展示 */}
-      <section className="bg-surface-bg overflow-y-auto">
-        <div className="p-5 lg:p-8">
-          <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="text-h2 text-text-primary">作品预览</h3>
-              {task && (
-                <div className="2xl:hidden chip chip-outline">
-                  <span>{STATUS_LABELS[task.status]}</span>
-                  <span className="font-semibold text-gia-500">{task.progress ?? 0}%</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                className="btn btn-outline btn-md"
-                onClick={submitGenerate}
-                disabled={createMut.isPending || !!inProgress}
-              >
-                <RefreshCw size={16} /> 再来一组
-              </button>
-            </div>
-          </header>
+      {/* ══════════════ 中：结果区 ══════════════ */}
+      <main className="overflow-y-auto bg-[#f9f9f9]">
+        <div className="p-6 lg:p-10">
 
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))]">
-            {results.length > 0
-              ? results.map((r, i) => (
-                  <article
-                    key={r.url}
-                    className="group relative overflow-hidden rounded-lg bg-surface-2 shadow-2 hover:shadow-3 transition"
-                    style={{ aspectRatio: ratio.replace(':', '/') }}
-                  >
-                    <img
-                      src={r.url}
-                      alt={`生成结果 ${i + 1}`}
-                      loading="lazy"
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition flex items-center justify-end gap-2">
-                      <button className="btn btn-icon btn-sm bg-white/15 text-white hover:bg-white/25" title="收藏">
-                        <Heart size={16} />
+          {/* 结果区标题栏 */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <h3 className="text-[18px] text-text-primary">生成结果</h3>
+              {task && <TaskStatusBadge status={task.status} progress={task.progress} />}
+            </div>
+            <button
+              className="btn btn-outline btn-md rounded-full text-small"
+              onClick={submit}
+              disabled={!canSubmit}
+            >
+              <RefreshCw size={14} />
+              再次生成
+            </button>
+          </div>
+
+          {/* 图片网格 */}
+          <div className={clsx(
+            'grid gap-3',
+            count === 1 ? 'grid-cols-1 max-w-sm' :
+            count === 2 ? 'grid-cols-2' :
+            'grid-cols-2',
+          )}>
+            {results.length > 0 ? (
+              results.map((r, i) => (
+                <article
+                  key={r.url}
+                  className="group relative overflow-hidden rounded-2xl bg-surface-2 shadow-sm"
+                  style={{ aspectRatio: ratio.replace(':', '/') }}
+                >
+                  <img
+                    src={r.url}
+                    alt={`生成结果 ${i + 1}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <div className="relative flex justify-end gap-2 p-3">
+                      <button
+                        className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/35 transition"
+                        title="收藏"
+                      >
+                        <Heart size={15} />
                       </button>
                       <a
-                        className="btn btn-icon btn-sm bg-white/15 text-white hover:bg-white/25"
                         href={r.url}
                         download
                         target="_blank"
                         rel="noreferrer"
+                        className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/35 transition"
+                        title="下载"
                       >
-                        <Download size={16} />
+                        <Download size={15} />
                       </a>
                     </div>
-                  </article>
-                ))
-              : Array.from({ length: count }).map((_, i) => (
-                  <article
-                    key={i}
-                    className="relative overflow-hidden rounded-lg bg-gia-gradient-soft border border-border grid place-items-center"
-                    style={{ aspectRatio: ratio.replace(':', '/') }}
-                  >
-                    <span className="text-text-tertiary text-small">
-                      {inProgress ? `生成中 ${task?.progress ?? 0}%` : '等待生成'}
-                    </span>
-                  </article>
-                ))}
+                  </div>
+                </article>
+              ))
+            ) : (
+              Array.from({ length: count }).map((_, i) => (
+                <article
+                  key={i}
+                  className="relative overflow-hidden rounded-2xl"
+                  style={{ aspectRatio: ratio.replace(':', '/') }}
+                >
+                  {inProgress ? (
+                    <>
+                      <div className="generating-dots" />
+                      <div className="generating-dots__phrases">
+                        <p
+                          key={phraseIdx}
+                          className="generating-dots__phrase generating-dots__phrase--active"
+                        >
+                          {GEN_PHRASES[phraseIdx % GEN_PHRASES.length]}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 border border-dashed border-[#e0e0e0] rounded-2xl bg-[#fafafa] grid place-items-center">
+                      <div className="text-center text-text-tertiary">
+                        <div className="w-10 h-10 rounded-full border border-dashed border-[#d5d5d5] grid place-items-center mx-auto mb-2">
+                          <Sparkles size={16} strokeWidth={1.5} />
+                        </div>
+                        <p className="text-tiny">等待生成</p>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              ))
+            )}
           </div>
 
-          <div className="mt-10 card card-section">
-            <h4 className="section-title mb-2">提示</h4>
-            <p className="text-body text-text-secondary leading-loose">
-              生成结果将自动保存到「生成历史」，可在 14 天内重新下载或生成变体。
-              支持 OpenAI 兼容协议直接调用，参考「调用说明」。
-            </p>
-          </div>
+          {/* 底部提示 */}
+          <p className="mt-8 text-small text-text-tertiary leading-relaxed">
+            生成结果将自动保存至「生成历史」，可在 14 天内重新下载。
+            支持 OpenAI 兼容接口，详见「API 调用」文档。
+          </p>
         </div>
-      </section>
+      </main>
 
-      {/* 右：当前任务进度（≥1536px） */}
-      <aside className="hidden 2xl:flex flex-col border-l border-border bg-surface-1 overflow-y-auto">
-        <div className="p-5">
-          <h4 className="section-title mb-3">当前任务</h4>
+      {/* ══════════════ 右：任务详情（≥1536px） ══════════════ */}
+      <aside className="hidden 2xl:block border-l border-border bg-surface-1 overflow-y-auto">
+        <div className="px-5 py-6 space-y-4">
+          <h4 className="text-small text-text-secondary">当前任务</h4>
           {task ? (
-            <div className="card-flat p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-small text-text-secondary">{STATUS_LABELS[task.status]}</span>
-                <span className="text-small font-semibold text-gia-500">{task.progress ?? 0}%</span>
+            <div className="space-y-4">
+              <TaskStatusBadge status={task.status} progress={task.progress} />
+
+              {inProgress && (
+                <div className="progress">
+                  <div className="progress-bar" style={{ width: `${task.progress ?? 0}%` }} />
+                </div>
+              )}
+
+              {prompt && (
+                <p className="text-small text-text-secondary leading-relaxed line-clamp-5 border border-dashed border-border rounded-xl p-3">
+                  {prompt}
+                </p>
+              )}
+
+              <div className="space-y-2 pt-1">
+                {[
+                  { label: '模型', value: task.model },
+                  { label: '消耗', value: `${fmtPoints(task.cost_points)} 点` },
+                  { label: 'ID', value: task.task_id.slice(0, 10) + '…' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between text-tiny">
+                    <span className="text-text-tertiary">{label}</span>
+                    <span className="text-text-secondary font-mono">{value}</span>
+                  </div>
+                ))}
               </div>
-              <div className="progress">
-                <div className="progress-bar" style={{ width: `${task.progress ?? 0}%` }} />
-              </div>
-              <p className="mt-3 text-small text-text-tertiary leading-loose line-clamp-3">{prompt}</p>
-              <p className="mt-2 text-tiny text-text-tertiary">
-                Task ID: <code className="font-mono">{task.task_id}</code>
-              </p>
-              <p className="mt-1 text-tiny text-text-tertiary">
-                消耗：{fmtPoints(task.cost_points)} 点
-              </p>
             </div>
           ) : (
-            <div className="rounded-md border border-dashed border-border p-4 text-text-tertiary text-small">
-              点击「立即生成」开始你的创作
+            <div className="text-center text-text-tertiary text-small border border-dashed border-border rounded-2xl p-6">
+              <Sparkles size={20} className="mx-auto mb-2 opacity-25" strokeWidth={1.5} />
+              填写提示词并点击
+              <br />「立即生成」开始创作
             </div>
           )}
         </div>
@@ -316,89 +468,127 @@ export default function CreateImagePage() {
   );
 }
 
-/* —— 小组件 —— */
+/* ──────────────────────────────────────────────
+   子组件
+────────────────────────────────────────────── */
 
-function FieldBlock({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Section({
+  label,
+  aside,
+  children,
+}: {
+  label: string;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <div className="mb-5">
-      <div className="flex items-center justify-between mb-1.5">
-        <label className="field-label">{label}</label>
-        {hint && <span className="text-tiny text-text-tertiary">{hint}</span>}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-tiny text-text-secondary tracking-wide uppercase">{label}</span>
+        {aside}
       </div>
       {children}
     </div>
   );
 }
 
-function Pill({
+function ModelCard({
+  model,
   active,
-  children,
-  onClick,
-  disabled,
+  onSelect,
 }: {
-  active?: boolean;
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
+  model: PublicModel;
+  active: boolean;
+  onSelect: (code: string) => void;
 }) {
+  const pts = Math.round(model.unit_points / 100);
   return (
     <button
       type="button"
-      onClick={onClick}
-      disabled={disabled}
+      onClick={() => onSelect(model.model_code)}
       className={clsx(
-        'h-9 min-w-[44px] px-3 rounded-md text-small font-medium border transition',
+        'relative flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-all duration-150',
         active
-          ? 'bg-gia-gradient text-text-on-gia border-transparent shadow-glow-soft'
-          : 'border-border text-text-secondary hover:text-text-primary hover:border-gia-500',
-        disabled && 'opacity-50 cursor-not-allowed',
+          ? 'border-[#111] bg-white shadow-sm'
+          : 'border-border bg-surface-2 hover:border-[#ccc] hover:bg-white',
       )}
     >
-      {children}
+      {active && (
+        <span className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-[#111] grid place-items-center">
+          <Check size={9} strokeWidth={3} className="text-white" />
+        </span>
+      )}
+      <span className="text-small text-text-primary pr-5">{model.name}</span>
+      <span className="text-tiny text-text-tertiary">
+        {pts > 0 ? `${pts} 点 / 张` : '免费'}
+      </span>
     </button>
   );
 }
 
-function ScrollPicker({
-  label,
-  value,
-  options,
-  onChange,
+function RatioButton({
+  ratio,
+  active,
+  onClick,
 }: {
-  label: string;
-  value: string;
-  options: { value: string; label: string; badge?: string; cost?: number }[];
-  onChange: (v: string) => void;
+  ratio: { value: string; w: number; h: number };
+  active: boolean;
+  onClick: () => void;
 }) {
+  /* 将实际宽高比缩放到一个固定显示尺寸内 */
+  const maxW = 22;
+  const maxH = 22;
+  const scale = Math.min(maxW / ratio.w, maxH / ratio.h);
+  const displayW = Math.round(ratio.w * scale);
+  const displayH = Math.round(ratio.h * scale);
+
   return (
-    <div className="mb-5">
-      <label className="field-label mb-1.5 block">{label}</label>
-      <div className="grid grid-cols-2 gap-2">
-        {options.map((o) => {
-          const active = o.value === value;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => onChange(o.value)}
-              className={clsx(
-                'relative flex flex-col items-start p-3 rounded-md border text-left transition',
-                active
-                  ? 'border-gia-500 bg-gia-gradient-soft shadow-glow-soft'
-                  : 'border-border hover:border-gia-300',
-              )}
-            >
-              <span className="font-medium text-text-primary">{o.label}</span>
-              {o.cost !== undefined && (
-                <span className="text-small text-text-tertiary mt-0.5">{o.cost} 点 / 张</span>
-              )}
-              {o.badge && (
-                <span className="absolute top-2 right-2 badge badge-gia">{o.badge}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      title={ratio.value}
+      className={clsx(
+        'flex-1 h-10 rounded-xl border flex flex-col items-center justify-center gap-1 transition',
+        active
+          ? 'border-[#111] bg-white shadow-sm'
+          : 'border-border bg-surface-2 hover:border-[#ccc] hover:bg-white',
+      )}
+    >
+      {/* 微型比例可视化 */}
+      <div
+        className={clsx(
+          'border rounded-[2px] transition',
+          active ? 'border-[#111] bg-[#111]' : 'border-text-tertiary',
+        )}
+        style={{ width: displayW, height: displayH }}
+      />
+      <span className="text-[10px] text-text-tertiary leading-none">{ratio.value}</span>
+    </button>
+  );
+}
+
+function TaskStatusBadge({
+  status,
+  progress,
+}: {
+  status: number;
+  progress?: number;
+}) {
+  const colorMap: Record<number, string> = {
+    0: 'bg-[#fff7ed] text-orange-600',
+    1: 'bg-[#eff6ff] text-blue-600',
+    2: 'bg-[#f0fdf4] text-green-600',
+    3: 'bg-[#fef2f2] text-red-500',
+    4: 'bg-surface-2 text-text-tertiary',
+    5: 'bg-surface-2 text-text-tertiary',
+  };
+  return (
+    <span className={clsx('chip text-tiny', colorMap[status] ?? 'bg-surface-2')}>
+      {(status === 0 || status === 1) && <Loader2 size={10} className="animate-spin" />}
+      {STATUS_LABEL[status] ?? '未知'}
+      {(status === 0 || status === 1) && progress !== undefined && (
+        <span className="tabular-nums ml-0.5">{progress}%</span>
+      )}
+    </span>
   );
 }
