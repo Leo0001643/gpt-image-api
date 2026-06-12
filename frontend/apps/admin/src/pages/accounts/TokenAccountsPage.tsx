@@ -845,7 +845,7 @@ function CreateDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="权重">
-            <input type="number" className="input" min={1} max={1000} value={body.weight || 10} onChange={(e) => setBody((prev) => ({ ...prev, weight: Number(e.target.value) || 10 }))} />
+            <input type="number" className="input" min={1} max={1000} value={body.weight || ''} placeholder="10" onChange={(e) => setBody((prev) => ({ ...prev, weight: e.target.value === '' ? 10 : Math.max(1, Number(e.target.value)) }))} />
           </Field>
           <Field label="备注">
             <input className="input" value={body.remark || ''} onChange={(e) => setBody((prev) => ({ ...prev, remark: e.target.value }))} />
@@ -854,19 +854,19 @@ function CreateDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="RPM">
-            <input type="number" className="input" min={0} value={body.rpm_limit || 0} onChange={(e) => setBody((prev) => ({ ...prev, rpm_limit: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.rpm_limit || ''} onChange={(e) => setBody((prev) => ({ ...prev, rpm_limit: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
           <Field label="TPM">
-            <input type="number" className="input" min={0} value={body.tpm_limit || 0} onChange={(e) => setBody((prev) => ({ ...prev, tpm_limit: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.tpm_limit || ''} onChange={(e) => setBody((prev) => ({ ...prev, tpm_limit: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="日额度">
-            <input type="number" className="input" min={0} value={body.daily_quota || 0} onChange={(e) => setBody((prev) => ({ ...prev, daily_quota: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.daily_quota || ''} onChange={(e) => setBody((prev) => ({ ...prev, daily_quota: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
           <Field label="月额度">
-            <input type="number" className="input" min={0} value={body.monthly_quota || 0} onChange={(e) => setBody((prev) => ({ ...prev, monthly_quota: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.monthly_quota || ''} onChange={(e) => setBody((prev) => ({ ...prev, monthly_quota: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
         </div>
 
@@ -1029,7 +1029,7 @@ function ImportDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
             </select>
           </Field>
           <Field label="权重">
-            <input type="number" className="input input-sm" min={1} max={1000} value={body.weight || 10} onChange={(e) => setBody((prev) => ({ ...prev, weight: Number(e.target.value) || 10 }))} />
+            <input type="number" className="input input-sm" min={1} max={1000} value={body.weight || ''} placeholder="10" onChange={(e) => setBody((prev) => ({ ...prev, weight: e.target.value === '' ? 10 : Math.max(1, Number(e.target.value)) }))} />
           </Field>
         </div>
 
@@ -1394,7 +1394,7 @@ function EditDialog({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="权重">
-            <input type="number" className="input" min={1} max={1000} value={body.weight || 10} onChange={(e) => setBody((prev) => ({ ...prev, weight: Number(e.target.value) || 10 }))} />
+            <input type="number" className="input" min={1} max={1000} value={body.weight || ''} placeholder="10" onChange={(e) => setBody((prev) => ({ ...prev, weight: e.target.value === '' ? 10 : Math.max(1, Number(e.target.value)) }))} />
           </Field>
           <Field label="备注">
             <input className="input" value={body.remark || ''} onChange={(e) => setBody((prev) => ({ ...prev, remark: e.target.value }))} />
@@ -1403,19 +1403,19 @@ function EditDialog({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="RPM">
-            <input type="number" className="input" min={0} value={body.rpm_limit || 0} onChange={(e) => setBody((prev) => ({ ...prev, rpm_limit: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.rpm_limit || ''} onChange={(e) => setBody((prev) => ({ ...prev, rpm_limit: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
           <Field label="TPM">
-            <input type="number" className="input" min={0} value={body.tpm_limit || 0} onChange={(e) => setBody((prev) => ({ ...prev, tpm_limit: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.tpm_limit || ''} onChange={(e) => setBody((prev) => ({ ...prev, tpm_limit: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="日额度">
-            <input type="number" className="input" min={0} value={body.daily_quota || 0} onChange={(e) => setBody((prev) => ({ ...prev, daily_quota: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.daily_quota || ''} onChange={(e) => setBody((prev) => ({ ...prev, daily_quota: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
           <Field label="月额度">
-            <input type="number" className="input" min={0} value={body.monthly_quota || 0} onChange={(e) => setBody((prev) => ({ ...prev, monthly_quota: Number(e.target.value) || 0 }))} />
+            <input type="number" className="input" min={0} placeholder="0 (不限)" value={body.monthly_quota || ''} onChange={(e) => setBody((prev) => ({ ...prev, monthly_quota: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)) }))} />
           </Field>
         </div>
 
