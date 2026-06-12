@@ -217,7 +217,22 @@ func (p *AccountPool) getBucket(ctx context.Context, provider string) (*provider
 func (p *AccountPool) loadBucket(ctx context.Context, provider string) (*providerBucket, error) {
 	items, err := p.repo.AvailableByProvider(ctx, provider)
 	if err != nil {
+		logger.FromCtx(ctx).Error("account_pool.load_failed",
+			zap.String("provider", provider),
+			zap.Error(err),
+		)
 		return nil, errcode.DBError.Wrap(err)
+	}
+	if len(items) == 0 {
+		logger.FromCtx(ctx).Warn("account_pool.empty",
+			zap.String("provider", provider),
+			zap.String("hint", "check: account table status=1, deleted_at IS NULL, cooldown_until expired, access_token_expires_at not expired"),
+		)
+	} else {
+		logger.FromCtx(ctx).Info("account_pool.loaded",
+			zap.String("provider", provider),
+			zap.Int("count", len(items)),
+		)
 	}
 	b := &providerBucket{
 		loadedAt: time.Now(),

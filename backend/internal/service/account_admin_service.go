@@ -257,6 +257,11 @@ func (s *AccountAdminService) Update(ctx context.Context, id uint64, req *dto.Ac
 	}
 	if req.Status != nil {
 		fields["status"] = *req.Status
+		// When re-enabling an account, clear any lingering cooldown so it
+		// is immediately returned by AvailableByProvider.
+		if *req.Status == model.AccountStatusEnabled {
+			fields["cooldown_until"] = nil
+		}
 	}
 	if req.Remark != nil {
 		fields["remark"] = *req.Remark
