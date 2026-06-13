@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, BarChart2, Calendar, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, Users, X } from 'lucide-react';
+import { Ban, Calendar, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
