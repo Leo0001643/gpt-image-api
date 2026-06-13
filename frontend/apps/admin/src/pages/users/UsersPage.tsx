@@ -155,7 +155,7 @@ export default function UsersPage() {
                   </div>
                 </td>
                 <td className="sticky-r">
-                  <div className="inline-flex flex-wrap gap-1 justify-end">
+                  <div className="grid grid-cols-2 gap-1">
                     <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => setDlg({ mode: 'edit', row: u })}>
                       <Pencil size={13}/> 编辑
                     </button>
