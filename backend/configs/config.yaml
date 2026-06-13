@@ -1,9 +1,10 @@
-# GPT Image API · 默认配置
-# 优先级：环境变量 > config.${GIA_ENV}.yaml > 本文件
+# GPT Image API · 配置文件
+# 优先级：环境变量 > 本文件
+# 环境变量前缀 GIA_，层级用 _ 连接，如 GIA_LOG_LEVEL
 
 app:
   name: gpt-image-api
-  env:  dev
+  env:  prod                  # 由 GIA_ENV 覆盖
 
 server:
   api_port:         17180
@@ -16,47 +17,45 @@ server:
   shutdown_timeout: 15s
 
 mysql:
-  dsn:              ""        # 由 GIA_DB_DSN 注入
+  dsn:               ""        # 必填：由 GIA_DB_DSN 注入
   max_open_conns:   100
   max_idle_conns:   20
   conn_max_lifetime: 1h
   slow_threshold:   200ms
 
 redis:
-  addr:     ""               # 由 GIA_REDIS_ADDR 注入
-  password: ""
-  db:       0
+  addr:      ""                # 必填：由 GIA_REDIS_ADDR 注入
+  password:  ""
+  db:        0
   pool_size: 50
 
 jwt:
   access_ttl:  2h
-  refresh_ttl: 336h          # 14 天
+  refresh_ttl: 336h            # 14 天
 
 logger:
   level:        info
-  dir:          ./logs        # 由 GIA_LOG_DIR 覆盖；生产映射到 /app/logs
+  dir:          /app/logs      # 由 GIA_LOG_DIR 覆盖，bind mount 到宿主机
   max_size_mb:  200
   max_age_days: 30
   compress:     true
-  console:      true          # dev 环境同时输出到控制台
+  console:      false          # 生产不输出控制台，日志全写文件
 
 snowflake:
-  node_id: 1
+  node_id: 1                   # 由 GIA_NODE_ID 覆盖（多副本须不同）
 
 cors:
-  origins:
-    - http://localhost:5173
-    - http://localhost:5174
+  origins: []                  # 由 GIA_CORS_ORIGINS 注入
 
 ratelimit:
-  ip_per_minute:     1000
+  ip_per_minute:     1200
   user_per_minute:   600
   apikey_per_minute: 60
 
 pool:
-  strategy:            round_robin  # round_robin | weighted | least_used | lowest_err_rate
-  cooldown_seconds:    600
-  fail_threshold:      5
+  strategy:             round_robin   # round_robin | weighted | least_used | lowest_err_rate
+  cooldown_seconds:     600
+  fail_threshold:       5
   health_check_seconds: 300
 
 provider:
