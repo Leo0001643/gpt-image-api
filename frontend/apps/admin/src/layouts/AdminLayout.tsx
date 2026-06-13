@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   BadgeDollarSign, BarChart2, BookOpen, ChevronDown, Circle,
-  FileText, Gift, Globe2, KeyRound, LayoutDashboard, LockKeyhole,
+  FileText, Globe2, KeyRound, LayoutDashboard, LockKeyhole,
   LogOut, Menu, ReceiptText, Settings, Tag, Ticket, UserCircle2,
   Users, Wallet, WalletCards, X,
 } from 'lucide-react';
