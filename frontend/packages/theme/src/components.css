@@ -517,10 +517,9 @@
      确保打开弹窗时 backdrop 能正确覆盖吸顶头部。 */
   .list-page-head {
     position: sticky;
-    /* top:0 — 滚动容器现在是 content-div（topbar 已从滚动流中分离），
-       sticky 相对于 content-div 顶部而非 main 顶部。 */
-    top: 0;
-    /* z-index 25 > pager(10): dropdown menus from filter row paint above sticky pager */
+    /* top: 56px = topbar 高度，相对于 main（overflow-y:auto 滚动容器）。
+       z-index 25 > pager(10): dropdown menus from filter row paint above sticky pager */
+    top: 56px;
     z-index: 25;
     background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(20px);
@@ -878,6 +877,10 @@
   /* ── table wrapper: horizontal scroll ── */
   .table-wrap {
     overflow-x: auto;
+    /* overflow-y:clip prevents the CSS spec quirk where overflow-x:auto forces
+       overflow-y to compute as 'auto', which would make table-wrap a vertical
+       scroll container and break thead position:sticky relative to main. */
+    overflow-y: clip;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -898,10 +901,11 @@
     white-space: nowrap;
     vertical-align: middle;
     user-select: none;
-    /* 表头吸顶：top = list-page-head 高度 (由 AdminLayout ResizeObserver 写入 --lph)。
-       fallback 100px 是 title-row(50px) + filter-row(50px) 的近似值。 */
+    /* 表头吸顶：top = topbar(56px) + list-page-head 高度(由 AdminLayout ResizeObserver 写入 --lph)。
+       fallback 160px ≈ 56 + title-row(54px) + filter-row(50px)。
+       需 table-wrap { overflow-y: clip } 以阻止其成为吸顶的 scroll container（CSS spec 修复）。 */
     position: sticky;
-    top: var(--lph, 100px);
+    top: calc(56px + var(--lph, 104px));
     z-index: 4;
   }
   /* th icon label */

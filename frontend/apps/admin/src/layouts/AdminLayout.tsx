@@ -58,36 +58,36 @@ export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen]     = useState(false);
   const [pwdOpen, setPwdOpen]       = useState(false);
-  const me          = useAuthStore((s) => s.me);
-  const logout      = useAuthStore((s) => s.logout);
-  const navigate    = useNavigate();
-  const location    = useLocation();
-  const mainRef     = useRef<HTMLElement>(null);
-  const contentRef  = useRef<HTMLDivElement>(null);
+  const me       = useAuthStore((s) => s.me);
+  const logout   = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const mainRef  = useRef<HTMLElement>(null);
 
-  /* 路由切换时将滚动容器滚回顶部 */
+  /* 路由切换时将滚动容器滚回顶部，消除页面抖动 */
   useEffect(() => {
-    contentRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [location.pathname]);
 
-  /* 监听 list-page-head 高度变化 → 更新 CSS 变量 --lph
-     供 data-table thead th { top: var(--lph) } 精确定位吸顶表头 */
+  /* 监听 .list-page-head 高度 → 设置 CSS 变量 --lph（list-page-head height）
+     data-table thead th 使用 top: calc(56px + var(--lph)) 精确贴在 head 正下方。
+     table-wrap 已设 overflow-y:clip 以阻止其成为 sticky 的滚动容器（CSS 规范漏洞修复）。 */
   useEffect(() => {
-    const content = contentRef.current;
-    if (!content) return;
+    const main = mainRef.current;
+    if (!main) return;
     let ro: ResizeObserver | undefined;
 
     const setup = () => {
       ro?.disconnect();
-      const head = content.querySelector<HTMLElement>('.list-page-head');
-      if (!head) { content.style.removeProperty('--lph'); return; }
-      const update = () => content.style.setProperty('--lph', `${head.offsetHeight}px`);
+      const head = main.querySelector<HTMLElement>('.list-page-head');
+      if (!head) { main.style.removeProperty('--lph'); return; }
+      const update = () => main.style.setProperty('--lph', `${head.offsetHeight}px`);
       update();
       ro = new ResizeObserver(update);
       ro.observe(head);
     };
 
-    const timer = setTimeout(setup, 30);
+    const timer = setTimeout(setup, 20);
     return () => { clearTimeout(timer); ro?.disconnect(); };
   }, [location.pathname]);
 
@@ -176,11 +176,11 @@ export function AdminLayout() {
       )}
 
       {/* ── main ──────────────────────────────────────── */}
-      {/* main 不再滚动，overflow-hidden 防止内容溢出。
-          滚动容器移至 content-div，使 list-page-head sticky top:0 和 thead sticky 可正确定位。 */}
-      <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-hidden h-screen">
-        {/* topbar — shrink-0 常驻顶部，main 不滚动故无需 sticky */}
-        <header className="shrink-0 z-30 flex h-[56px] items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      {/* main 是唯一的滚动容器。--lph CSS 变量由 ResizeObserver 写入，供 thead th 吸顶使用。
+          scrollbar-gutter:stable 保留滚动条空间，overscroll-none 禁止弹跳效果。 */}
+      <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen [scrollbar-gutter:stable] overscroll-none">
+        {/* topbar */}
+        <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-3">
             {/* mobile hamburger */}
             <button className="btn btn-ghost btn-icon btn-sm lg:hidden" onClick={() => setMobileOpen((v) => !v)} aria-label="菜单">
@@ -244,11 +244,11 @@ export function AdminLayout() {
           </div>
         </header>
 
-        {/* content 是唯一滚动容器。overflow-y:auto 驱动垂直滚动；
-            scrollbar-gutter:stable 保留滚条位置防止宽度抖动；
-            overflow-x:hidden 裁剪水平溢出；overscroll-none 禁止弹跳。
-            注意：不能加 overflow-x:hidden 到此 div 的祖先，否则新建滚动容器破坏 sticky。 */}
-        <div ref={contentRef} className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none [scrollbar-gutter:stable] bg-[#f8fafc] py-6">
+        {/* content area — pages use list-page pattern to negate this padding */}
+        {/* 注意：此 div 不能加 overflow-x-hidden，否则会创建新的滚动容器，
+            破坏 list-page-head / list-page-pager / thead 的 sticky 定位。
+            水平滚动由外层 main 的 overflow-x-hidden 负责裁剪。 */}
+        <div className="flex-1 bg-[#f8fafc] py-6">
           {/* Suspense 放在这里：路由懒加载时只有内容区显示占位，
               侧栏和顶栏始终可见，不会触发全屏空白 */}
           <Suspense fallback={
