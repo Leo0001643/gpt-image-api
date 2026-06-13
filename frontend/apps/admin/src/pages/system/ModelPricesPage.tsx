@@ -127,40 +127,35 @@ export default function ModelPricesPage() {
   /* summary counts */
   const imgN = rows.filter((r: PriceRow)=>r.kind==='image').length;
   const vidN = rows.filter((r: PriceRow)=>r.kind==='video').length;
-  const txtN = rows.filter((r: PriceRow)=>r.kind==='text').length;
+  // const txtN = rows.filter((r: PriceRow)=>r.kind==='text').length;
   const onN  = rows.filter((r: PriceRow)=>r.enabled).length;
 
   return (
-    <div className="page page-wide space-y-6">
+    <div className="page page-wide space-y-5">
 
       {/* ── page header ─────────────────── */}
-      <header className="page-header">
+      <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',paddingBottom:4,borderBottom:'2px solid #eef1ff'}}>
+        <div className="page-icon-box" style={{background:'linear-gradient(135deg,#f59e0b,#d97706)',boxShadow:'0 4px 14px rgba(245,158,11,.3)'}}>
+          <BarChart2 size={16}/>
+        </div>
         <div>
-          <h1 className="page-title flex items-center gap-2"><BarChart2 className="text-gia-500" size={18}/>模型价格</h1>
-          <p className="page-subtitle">配置前台可用模型、上游映射与计费单价</p>
+          <div className="list-page-title">模型价格配置</div>
+          <div className="list-page-subtitle">配置前台可用模型、上游映射与计费单价</div>
         </div>
-        <div className="flex gap-2">
-          <button className="btn btn-outline btn-md" onClick={()=>cfg.refetch()} disabled={cfg.isFetching}>
-            <RefreshCw size={14} className={cfg.isFetching?'animate-spin':''}/> 刷新
-          </button>
-          <button
-            className="btn btn-primary btn-md"
-            onClick={()=>saveMut.mutate()}
-            disabled={!dirty||saveMut.isPending}
-          >
-            <Save size={14}/> {saveMut.isPending?'保存中…':'保存修改'}
+        <div className="list-divider"/>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+          <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">全部</span><span className="stat-pill-val">{rows.length}</span></span>
+          <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">启用</span><span className="stat-pill-val">{onN}</span></span>
+          <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">禁用</span><span className="stat-pill-val">{rows.length-onN}</span></span>
+          <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">图片</span><span className="stat-pill-val">{imgN}</span></span>
+          <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">视频</span><span className="stat-pill-val">{vidN}</span></span>
+        </div>
+        <div style={{marginLeft:'auto',display:'flex',gap:8}}>
+          <button className="btn btn-outline btn-sm" onClick={()=>cfg.refetch()} disabled={cfg.isFetching}><RefreshCw size={13} className={cfg.isFetching?'animate-spin':''}/> 刷新</button>
+          <button className="btn btn-primary btn-sm" onClick={()=>saveMut.mutate()} disabled={!dirty||saveMut.isPending}>
+            <Save size={13}/> {saveMut.isPending?'保存中…':'保存修改'}
           </button>
         </div>
-      </header>
-
-      {/* ── stat tabs ─────────────────────────────────────── */}
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-violet"><span className="stat-tab-dot"/><span>全部模型</span><span className="stat-tab-val">{rows.length}</span></div>
-        <div className="stat-tab stat-tab-emerald"><span className="stat-tab-dot"/><span>已启用</span><span className="stat-tab-val">{onN}</span></div>
-        <div className="stat-tab stat-tab-rose"><span className="stat-tab-dot"/><span>已禁用</span><span className="stat-tab-val">{rows.length - onN}</span></div>
-        <div className="stat-tab stat-tab-blue"><span className="stat-tab-dot"/><span>图片模型</span><span className="stat-tab-val">{imgN}</span></div>
-        <div className="stat-tab stat-tab-amber"><span className="stat-tab-dot"/><span>视频模型</span><span className="stat-tab-val">{vidN}</span></div>
-        <div className="stat-tab stat-tab-teal"><span className="stat-tab-dot"/><span>文字模型</span><span className="stat-tab-val">{txtN}</span></div>
       </div>
 
       {/* ── alerts ─────────────────────────────────────── */}

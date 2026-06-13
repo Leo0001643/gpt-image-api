@@ -131,56 +131,58 @@ export default function RechargePackagesPage() {
   });
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><WalletCards className="text-gia-500" size={18}/>充值套餐</h1>
-          <p className="page-subtitle">用表单维护前端售卖套餐，金额单位为元，积分单位为点。</p>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',boxShadow:'0 4px 14px rgba(99,102,241,.35)'}}>
+            <WalletCards size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">充值套餐</div>
+            <div className="list-page-subtitle">用表单维护前端售卖套餐，金额单位为元，积分单位为点</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">总数</span><span className="stat-pill-val">{totals.total}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">启用</span><span className="stat-pill-val">{totals.enabled}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">停用</span><span className="stat-pill-val">{totals.disabled}</span></span>
+            {dirty && <span className="stat-pill stat-pill-orange"><span className="stat-pill-dot"/><span className="stat-pill-label">有未保存修改</span></span>}
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}><RefreshCw size={13} className={settings.isFetching?'animate-spin':''}/> 重新加载</button>
+            <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={13}/> 新增套餐</button>
+            <button className="btn btn-primary btn-sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+              <Save size={13}/> {save.isPending?'保存中...':dirty?'保存修改':'已是最新'}
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn btn-outline btn-md" onClick={() => settings.refetch()} disabled={settings.isFetching}>
-            <RefreshCw size={16} className={settings.isFetching ? 'animate-spin' : ''} /> 重新加载
-          </button>
-          <button className="btn btn-outline btn-md" onClick={addRow}>
-            <Plus size={16} /> 新增套餐
-          </button>
-          <button className="btn btn-primary btn-md" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-            <Save size={16} /> {save.isPending ? '保存中...' : dirty ? '保存修改' : '已是最新'}
-          </button>
-        </div>
-      </header>
-
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-blue"><span className="stat-tab-dot"/><span>套餐总数</span><span className="stat-tab-val">{totals.total}</span></div>
-        <div className="stat-tab stat-tab-emerald"><span className="stat-tab-dot"/><span>已启用</span><span className="stat-tab-val">{totals.enabled}</span></div>
-        <div className="stat-tab stat-tab-rose"><span className="stat-tab-dot"/><span>已停用</span><span className="stat-tab-val">{totals.disabled}</span></div>
-        <div className="stat-tab stat-tab-amber"><span className="stat-tab-dot"/><span>未保存修改</span><span className="stat-tab-val">{dirty ? '●' : '—'}</span></div>
       </div>
 
-      {settings.isLoading ? (
-        <div className="card overflow-x-auto">
+      <div className="list-page-body">
+        {settings.isLoading ? (
+        <div className="table-wrap">
           <table className="data-table min-w-[1180px]">
-            <thead><tr>{['排序','套餐 ID','套餐名称','金额','基础积分','赠送积分','标签','备注','状态','操作'].map(h=><th key={h}>{h}</th>)}</tr></thead>
+            <thead><tr>{['排序','套餐 ID','套餐名称','金额','基础积分','赠送积分','标签','备注','状态','操作'].map(h=><th key={h}><span className="th-icon">{h}</span></th>)}</tr></thead>
             <tbody>{Array.from({length:5}).map((_,i)=>(
               <tr key={i} className="table-skeleton">{[76,140,160,110,110,110,100,100,80,100].map((w,j)=><td key={j}><span style={{width:w}} className="block rounded-full"/></td>)}</tr>
             ))}</tbody>
           </table>
         </div>
-      ) : (
-        <div className="card table-wrap">
+        ) : (
+        <div className="table-wrap">
           <table className="data-table min-w-[1180px]">
             <thead>
               <tr>
-                <th>排序</th>
-                <th>套餐 ID</th>
-                <th>套餐名称</th>
-                <th>金额（元）</th>
-                <th>基础积分（点）</th>
-                <th>赠送积分（点）</th>
-                <th>标签</th>
-                <th>备注</th>
-                <th>状态</th>
-                <th>操作</th>
+                <th><span className="th-icon">排序</span></th>
+                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>套餐 ID</span></th>
+                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>套餐名称</span></th>
+                <th><span className="th-icon">金额（元）</span></th>
+                <th><span className="th-icon">基础积分</span></th>
+                <th><span className="th-icon">赠送积分</span></th>
+                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>标签</span></th>
+                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>备注</span></th>
+                <th><span className="th-icon">状态</span></th>
+                <th><span className="th-icon">操作</span></th>
               </tr>
             </thead>
             <tbody>
@@ -215,7 +217,8 @@ export default function RechargePackagesPage() {
             </tbody>
           </table>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

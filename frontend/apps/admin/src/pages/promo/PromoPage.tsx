@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit3, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit3, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -90,54 +90,63 @@ export default function PromoPage() {
   });
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><Tag className="text-gia-500" size={26} />优惠码</h1>
-          <p className="page-subtitle">创建和维护满减、折扣、赠点优惠码，支持总量、每用户次数、有效期和启停控制。</p>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#f97316,#fb923c)',boxShadow:'0 4px 14px rgba(249,115,22,.35)'}}>
+            <Tag size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">优惠码管理</div>
+            <div className="list-page-subtitle">创建和维护满减、折扣、赠点优惠码，支持总量、每用户次数和有效期</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">总数</span><span className="stat-pill-val">{total}</span></span>
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">满减</span><span className="stat-pill-val">{rows.filter(r=>r.discount_type===1).length}</span></span>
+            <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">折扣</span><span className="stat-pill-val">{rows.filter(r=>r.discount_type===2).length}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">赠点</span><span className="stat-pill-val">{rows.filter(r=>r.discount_type===3).length}</span></span>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            <button className="btn btn-outline btn-sm" onClick={() => query.refetch()} disabled={query.isFetching}><RefreshCw size={13} className={query.isFetching?'animate-spin':''}/> 刷新</button>
+            <button className="list-page-btn-add" onClick={() => setForm(DEFAULT_FORM)}><Plus size={14}/> 新增优惠码</button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn btn-outline btn-md" onClick={() => query.refetch()} disabled={query.isFetching}>
-            <RefreshCw size={16} className={query.isFetching ? 'animate-spin' : ''} /> 刷新
-          </button>
-          <button className="btn btn-primary btn-md" onClick={() => setForm(DEFAULT_FORM)}>
-            <Plus size={16} /> 新增优惠码
-          </button>
+        <div className="list-page-filter-row">
+          <div className="search-wrap">
+            <Search size={13}/>
+            <input className="filter-input" style={{width:220}} value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} placeholder="搜索优惠码、名称、ID"/>
+          </div>
+          <select className="filter-select" style={{minWidth:100}} value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}>
+            <option value="">全部状态</option>
+            <option value="1">启用</option>
+            <option value="0">停用</option>
+          </select>
+          <select className="filter-select" style={{minWidth:110}} value={discountType} onChange={(e) => { setDiscountType(e.target.value as typeof discountType); setPage(1); }}>
+            <option value="">全部类型</option>
+            <option value="1">满减</option>
+            <option value="2">折扣</option>
+            <option value="3">赠点</option>
+          </select>
+          <div className="ml-auto filter-count">共 <strong>{fmtNumber(total)}</strong> 条</div>
         </div>
-      </header>
-
-      <div className="card card-section flex flex-wrap items-center gap-2 !py-3">
-        <div className="relative min-w-[220px] flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-          <input className="input pl-9" value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} placeholder="搜索优惠码、名称、ID" />
-        </div>
-        <select className="select select-sm min-w-[110px]" value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}>
-          <option value="">全部状态</option>
-          <option value="1">启用</option>
-          <option value="0">停用</option>
-        </select>
-        <select className="select select-sm min-w-[120px]" value={discountType} onChange={(e) => { setDiscountType(e.target.value as typeof discountType); setPage(1); }}>
-          <option value="">全部类型</option>
-          <option value="1">满减</option>
-          <option value="2">折扣</option>
-          <option value="3">赠点</option>
-        </select>
       </div>
 
-      <div className="card table-wrap">
+      <div className="list-page-body">
+        <div className="table-wrap">
         <table className="data-table min-w-[1120px]">
           <thead>
             <tr>
-              <th>优惠码</th>
-              <th>类型</th>
-              <th>优惠值</th>
-              <th>门槛</th>
-              <th>适用范围</th>
-              <th>使用量</th>
-              <th>每用户</th>
-              <th>有效期</th>
-              <th>状态</th>
-              <th>操作</th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>优惠码</span></th>
+              <th><span className="th-icon">类型</span></th>
+              <th><span className="th-icon">优惠值</span></th>
+              <th><span className="th-icon">门槛</span></th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>适用范围</span></th>
+              <th><span className="th-icon">使用量</span></th>
+              <th><span className="th-icon">每用户</span></th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>有效期</span></th>
+              <th><span className="th-icon">状态</span></th>
+              <th><span className="th-icon">操作</span></th>
             </tr>
           </thead>
           <tbody>
@@ -168,32 +177,17 @@ export default function PromoPage() {
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="card card-section flex flex-wrap items-center justify-between gap-3 !py-2">
-        <span className="text-small text-text-tertiary">第 {page} / {pages} 页，共 {fmtNumber(total)} 条</span>
-        <div className="flex gap-2">
-          <button className="btn btn-outline btn-sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>上一页</button>
-          <button className="btn btn-outline btn-sm" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>下一页</button>
         </div>
-      </div>
-
-      {/* stat tabs */}
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-amber">
-          <span className="stat-tab-dot"/><span>优惠码总数</span><span className="stat-tab-val">{total}</span>
-        </div>
-        <div className="stat-tab stat-tab-blue">
-          <span className="stat-tab-dot"/><span>满减</span><span className="stat-tab-val">{rows.filter(r=>r.discount_type===1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-violet">
-          <span className="stat-tab-dot"/><span>折扣</span><span className="stat-tab-val">{rows.filter(r=>r.discount_type===2).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-teal">
-          <span className="stat-tab-dot"/><span>赠点</span><span className="stat-tab-val">{rows.filter(r=>r.discount_type===3).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-emerald">
-          <span className="stat-tab-dot"/><span>当页启用</span><span className="stat-tab-val">{rows.filter(r=>r.status===1).length}</span>
+        <div className="list-page-pager">
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:'linear-gradient(135deg,#f97316,#fb923c)'}}/>
+            <span>共 <strong style={{color:'#f97316'}}>{fmtNumber(total)}</strong> 个优惠码 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <span style={{fontSize:12,color:'#374151'}}>{page} / {pages}</span>
+            <button className="btn btn-outline btn-sm" disabled={page>=pages} onClick={()=>setPage(p=>p+1)}>下一页 <ChevronRight size={13}/></button>
+          </div>
         </div>
       </div>
 

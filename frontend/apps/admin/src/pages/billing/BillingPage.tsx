@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Search, Wallet } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw, Search, Wallet } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { billingApi } from '../../lib/services';
@@ -51,68 +51,62 @@ export default function BillingPage() {
   }, [rows]);
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><Wallet className="text-gia-500" size={26} />充值消费记录</h1>
-          <p className="page-subtitle">查看用户积分流水，包含充值、消费、退款、兑换码、优惠码和人工调整。</p>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#10b981,#34d399)',boxShadow:'0 4px 14px rgba(16,185,129,.35)'}}>
+            <Wallet size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">充值消费记录</div>
+            <div className="list-page-subtitle">查看用户积分流水，包含充值、消费、退款、兑换码、优惠码和人工调整</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">总记录</span><span className="stat-pill-val">{fmtNumber(total)}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">当页收入</span><span className="stat-pill-val">{fmtPoints(summary.income)}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">当页支出</span><span className="stat-pill-val">{fmtPoints(summary.outcome)}</span></span>
+          </div>
+          <div className="ml-auto">
+            <button className="btn btn-outline btn-sm" onClick={() => query.refetch()} disabled={query.isFetching}>
+              <RefreshCw size={13} className={query.isFetching ? 'animate-spin' : ''}/> 刷新
+            </button>
+          </div>
         </div>
-        <button className="btn btn-outline btn-md" onClick={() => query.refetch()} disabled={query.isFetching}>
-          <RefreshCw size={16} className={query.isFetching ? 'animate-spin' : ''} /> 刷新
-        </button>
-      </header>
-
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-emerald">
-          <span className="stat-tab-dot"/><span>当前页收入</span><span className="stat-tab-val">{fmtPoints(summary.income)}</span>
-        </div>
-        <div className="stat-tab stat-tab-rose">
-          <span className="stat-tab-dot"/><span>当前页支出</span><span className="stat-tab-val">{fmtPoints(summary.outcome)}</span>
-        </div>
-        <div className="stat-tab stat-tab-blue">
-          <span className="stat-tab-dot"/><span>匹配记录数</span><span className="stat-tab-val">{fmtNumber(total)}</span>
+        <div className="list-page-filter-row">
+          <div className="search-wrap">
+            <Search size={13}/>
+            <input className="filter-input" style={{width:240}} placeholder="搜索流水ID、用户、业务ID、备注"
+              value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            />
+          </div>
+          <input className="filter-input" style={{width:90}} value={userID} onChange={(e) => { setUserID(e.target.value); setPage(1); }} placeholder="用户ID"/>
+          <select className="filter-select" style={{minWidth:110}} value={bizType} onChange={(e) => { setBizType(e.target.value); setPage(1); }}>
+            {BIZ_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <select className="filter-select" style={{minWidth:100}} value={direction} onChange={(e) => { setDirection(e.target.value as typeof direction); setPage(1); }}>
+            <option value="">收支方向</option>
+            <option value="1">收入</option>
+            <option value="-1">支出</option>
+          </select>
+          <div className="ml-auto filter-count">共 <strong>{fmtNumber(total)}</strong> 条</div>
         </div>
       </div>
 
-      <div className="card card-section grid gap-2 !py-3 lg:grid-cols-[minmax(320px,1fr)_140px_140px_120px]">
-        <div className="relative min-w-0">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-          <input
-            className="input pl-9"
-            value={keyword}
-            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-            placeholder="搜索流水ID、用户、业务ID、备注"
-          />
-        </div>
-        <input
-          className="input w-full"
-          value={userID}
-          onChange={(e) => { setUserID(e.target.value); setPage(1); }}
-          placeholder="用户ID"
-        />
-        <select className="select select-sm w-full" value={bizType} onChange={(e) => { setBizType(e.target.value); setPage(1); }}>
-          {BIZ_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-        <select className="select select-sm w-full" value={direction} onChange={(e) => { setDirection(e.target.value as typeof direction); setPage(1); }}>
-          <option value="">收支方向</option>
-          <option value="1">收入</option>
-          <option value="-1">支出</option>
-        </select>
-      </div>
-
-      <div className="card table-wrap">
+      <div className="list-page-body">
+        <div className="table-wrap">
         <table className="data-table min-w-[1120px]">
           <thead>
             <tr>
-              <th>时间</th>
-              <th>用户</th>
-              <th>业务</th>
-              <th>业务ID</th>
-              <th>方向</th>
-              <th>变动积分</th>
-              <th>变动前</th>
-              <th>变动后</th>
-              <th>备注</th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>时间</span></th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>用户</span></th>
+              <th><span className="th-icon">业务</span></th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>业务ID</span></th>
+              <th><span className="th-icon">方向</span></th>
+              <th><span className="th-icon">变动积分</span></th>
+              <th><span className="th-icon">变动前</span></th>
+              <th><span className="th-icon">变动后</span></th>
+              <th><span className="th-icon" style={{justifyContent:'flex-start'}}>备注</span></th>
             </tr>
           </thead>
           <tbody>
@@ -122,13 +116,17 @@ export default function BillingPage() {
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="card card-section flex flex-wrap items-center justify-between gap-3 !py-2">
-        <span className="text-small text-text-tertiary">第 {page} / {pages} 页，共 {fmtNumber(total)} 条</span>
-        <div className="flex gap-2">
-          <button className="btn btn-outline btn-sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>上一页</button>
-          <button className="btn btn-outline btn-sm" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>下一页</button>
+        </div>
+        <div className="list-page-pager">
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:'linear-gradient(135deg,#10b981,#34d399)'}}/>
+            <span>共 <strong style={{color:'#10b981'}}>{fmtNumber(total)}</strong> 条流水 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <span style={{fontSize:12,color:'#374151'}}>{page} / {pages}</span>
+            <button className="btn btn-outline btn-sm" disabled={page>=pages} onClick={()=>setPage(p=>p+1)}>下一页 <ChevronRight size={13}/></button>
+          </div>
         </div>
       </div>
     </div>

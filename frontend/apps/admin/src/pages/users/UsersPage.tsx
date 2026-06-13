@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, Calendar, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, Users, X } from 'lucide-react';
+import { Ban, Calendar, CheckCircle2, ChevronLeft, ChevronRight, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -57,69 +57,45 @@ export default function UsersPage() {
   });
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><Users className="text-gia-500" size={18}/>用户管理</h1>
-          <p className="page-subtitle">管理注册用户、账号状态、资料和积分余额</p>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#10b981,#34d399)',boxShadow:'0 4px 14px rgba(16,185,129,.35)'}}>
+            <Users size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">用户管理</div>
+            <div className="list-page-subtitle">管理注册用户、账号状态、资料和积分余额</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">总数</span><span className="stat-pill-val">{total}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">当页正常</span><span className="stat-pill-val">{items.filter(u=>u.status===1).length}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">当页停用</span><span className="stat-pill-val">{items.filter(u=>u.status!==1).length}</span></span>
+            <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">总积分</span><span className="stat-pill-val">{(items.reduce((s,u)=>s+(u.points||0),0)/100).toFixed(0)}</span></span>
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={13}/> 刷新</button>
+            <button className="list-page-btn-add" onClick={() => setDlg({ mode: 'create' })}><Plus size={14}/> 新增用户</button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn btn-outline btn-md" onClick={refresh}>
-            <RefreshCw size={16} /> 刷新
-          </button>
-          <button className="btn btn-primary btn-md" onClick={() => setDlg({ mode: 'create' })}>
-            <Plus size={18} /> 新增用户
-          </button>
-        </div>
-      </header>
-
-      {/* stat tabs */}
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-violet">
-          <span className="stat-tab-dot"/><span>总用户数</span><span className="stat-tab-val">{total}</span>
-        </div>
-        <div className="stat-tab stat-tab-emerald">
-          <span className="stat-tab-dot"/><span>当页正常</span><span className="stat-tab-val">{items.filter(u=>u.status===1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-rose">
-          <span className="stat-tab-dot"/><span>当页停用</span><span className="stat-tab-val">{items.filter(u=>u.status!==1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-amber">
-          <span className="stat-tab-dot"/><span>当页总积分</span><span className="stat-tab-val">{(items.reduce((s,u)=>s+(u.points||0),0)/100).toFixed(0)}</span>
-        </div>
-      </div>
-
-      <div className="filter-bar">
-        <span className="filter-bar-icon"><Search size={14}/></span>
-        <div className="search-wrap flex-1 min-w-[220px]">
-          <Search size={13}/>
-          <input
-            className="input input-sm w-full"
-            placeholder="搜索 ID / 邮箱 / 手机 / 用户名 / 邀请码"
-            value={keyword}
-            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-          />
-        </div>
-        <span className="filter-divider"/>
-        <div className="tabs">
-          {[
-            ['all', '全部用户'],
-            ['enabled', '正常'],
-            ['disabled', '暂停'],
-          ].map(([k, label]) => (
-            <button
-              key={k}
-              className="tab"
-              aria-selected={status === k}
-              onClick={() => { setStatus(k as typeof status); setPage(1); }}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="list-page-filter-row">
+          <div className="search-wrap">
+            <Search size={13}/>
+            <input className="filter-input" style={{width:220}} placeholder="搜索 ID / 邮箱 / 手机 / 用户名 / 邀请码"
+              value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
+            {[['all','全部'],['enabled','正常'],['disabled','暂停']].map(([k,label]) => (
+              <button key={k} className="tab" aria-selected={status===k} onClick={() => { setStatus(k as typeof status); setPage(1); }}>{label}</button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="card table-wrap">
+      <div className="list-page-body">
+        <div className="table-wrap">
         <table className="data-table">
           <thead>
             <tr>
@@ -203,14 +179,17 @@ export default function UsersPage() {
             ))}
           </tbody>
         </table>
-      </div>
-
-      <div className="flex items-center justify-between text-small text-text-tertiary">
-        <span>共 {total} 个用户</span>
-        <div className="inline-flex items-center gap-2">
-          <button className="btn btn-outline btn-sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>上一页</button>
-          <span>{page} / {lastPage}</span>
-          <button className="btn btn-outline btn-sm" disabled={page >= lastPage} onClick={() => setPage((p) => Math.min(lastPage, p + 1))}>下一页</button>
+        </div>
+        <div className="list-page-pager">
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:'linear-gradient(135deg,#10b981,#34d399)'}}/>
+            <span>共 <strong style={{color:'#10b981'}}>{total}</strong> 个用户 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <span style={{fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
+            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={13}/></button>
+          </div>
         </div>
       </div>
 

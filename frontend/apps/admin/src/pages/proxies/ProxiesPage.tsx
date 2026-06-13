@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, CheckCircle2, Clock, Globe, Pencil, Plus, Power,
+  Activity, CheckCircle2, ChevronLeft, ChevronRight, Clock, Globe, Pencil, Plus, Power,
   RefreshCw, Search, Server, Settings2, ShieldCheck, Signal, Trash2, Upload, X, XCircle, Zap,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
@@ -150,92 +150,58 @@ export default function ProxiesPage() {
   };
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><Globe className="text-gia-500" size={18}/>代理管理</h1>
-          <p className="page-subtitle">统一维护账号可用代理，支持批量导入、批量测试和批量删除。</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn btn-outline btn-md" onClick={refresh}>
-            <RefreshCw size={16} /> 刷新
-          </button>
-          <button className="btn btn-outline btn-md" onClick={() => setImportOpen(true)}>
-            <Upload size={16} /> 批量添加
-          </button>
-          <button
-            className="btn btn-outline btn-md"
-            disabled={selectedCount === 0 || batchTest.isPending}
-            onClick={() => batchTest.mutate([...selected])}
-          >
-            <Activity size={16} className={batchTest.isPending ? 'animate-pulse' : ''} />
-            批量测试
-          </button>
-          <button
-            className="btn btn-danger btn-md"
-            disabled={selectedCount === 0 || batchDelete.isPending}
-            onClick={() => {
-              if (!confirm(`确认删除选中的 ${selectedCount} 个代理吗？`)) return;
-              batchDelete.mutate([...selected]);
-            }}
-          >
-            <Trash2 size={16} /> 批量删除
-          </button>
-          <button className="btn btn-primary btn-md" onClick={() => setEditor({ mode: 'create' })}>
-            <Plus size={18} /> 新增代理
-          </button>
-        </div>
-      </header>
-
-      {/* ── stat tabs (pill style) ── */}
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-blue">
-          <span className="stat-tab-dot"/><span>代理总数</span><span className="stat-tab-val">{total}</span>
-        </div>
-        <div className="stat-tab stat-tab-emerald">
-          <span className="stat-tab-dot"/><span>当页启用</span><span className="stat-tab-val">{items.filter(p=>p.status===1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-rose">
-          <span className="stat-tab-dot"/><span>当页禁用</span><span className="stat-tab-val">{items.filter(p=>p.status!==1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-teal">
-          <span className="stat-tab-dot"/><span>测试可用</span><span className="stat-tab-val">{items.filter(p=>p.last_check_ok===1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-violet">
-          <span className="stat-tab-dot"/><span>已选中</span><span className="stat-tab-val">{selectedCount}</span>
-        </div>
-      </div>
-
-      {/* ── filter bar ── */}
-      <div className="filter-bar">
-        <span className="filter-bar-icon"><Search size={14}/></span>
-        <div className="search-wrap flex-1 min-w-[200px]">
-          <Search size={13}/>
-          <input
-            className="input input-sm w-full"
-            placeholder="搜索名称、主机、备注"
-            value={keyword}
-            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-          />
-        </div>
-        <span className="filter-divider"/>
-        <div className="tabs">
-          {(['all', 'enabled', 'disabled'] as const).map((item) => (
-            <button
-              key={item}
-              type="button"
-              className="tab"
-              aria-selected={statusFilter === item}
-              onClick={() => { setStatusFilter(item); setPage(1); }}
-            >
-              {item === 'all' ? '全部代理' : item === 'enabled' ? '启用' : '禁用'}
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#0ea5e9,#6366f1)',boxShadow:'0 4px 14px rgba(14,165,233,.35)'}}>
+            <Globe size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">代理管理</div>
+            <div className="list-page-subtitle">统一维护账号可用代理，支持批量导入、批量测试和批量删除</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">总数</span><span className="stat-pill-val">{total}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">启用</span><span className="stat-pill-val">{items.filter(p=>p.status===1).length}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">禁用</span><span className="stat-pill-val">{items.filter(p=>p.status!==1).length}</span></span>
+            <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">测试可用</span><span className="stat-pill-val">{items.filter(p=>p.last_check_ok===1).length}</span></span>
+            {selectedCount > 0 && <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">已选</span><span className="stat-pill-val">{selectedCount}</span></span>}
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={13}/> 刷新</button>
+            <button className="btn btn-outline btn-sm" onClick={() => setImportOpen(true)}><Upload size={13}/> 批量添加</button>
+            <button className="btn btn-outline btn-sm" disabled={selectedCount === 0 || batchTest.isPending} onClick={() => batchTest.mutate([...selected])}>
+              <Activity size={13} className={batchTest.isPending ? 'animate-pulse' : ''}/> 批量测试
             </button>
-          ))}
+            {selectedCount > 0 && (
+              <button className="btn btn-danger btn-sm" disabled={batchDelete.isPending} onClick={() => { if (!confirm(`确认删除选中的 ${selectedCount} 个代理吗？`)) return; batchDelete.mutate([...selected]); }}>
+                <Trash2 size={13}/> 批量删除
+              </button>
+            )}
+            <button className="list-page-btn-add" onClick={() => setEditor({ mode: 'create' })}><Plus size={14}/> 新增代理</button>
+          </div>
         </div>
-        <span className="filter-count">共 <strong>{total}</strong> 条，已选 <strong>{selectedCount}</strong> 条</span>
+        <div className="list-page-filter-row">
+          <div className="search-wrap">
+            <Search size={13}/>
+            <input className="filter-input" style={{width:200}} placeholder="搜索名称、主机、备注"
+              value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
+            {(['all','enabled','disabled'] as const).map((item) => (
+              <button key={item} type="button" className="tab" aria-selected={statusFilter===item} onClick={() => { setStatusFilter(item); setPage(1); }}>
+                {item==='all'?'全部':item==='enabled'?'启用':'禁用'}
+              </button>
+            ))}
+          </div>
+          <div className="ml-auto filter-count">共 <strong>{total}</strong> 条{selectedCount>0 && <>，已选 <strong>{selectedCount}</strong> 条</>}</div>
+        </div>
       </div>
 
-      <div className="card table-wrap">
+      <div className="list-page-body">
+        <div className="table-wrap">
         <table className="data-table min-w-[960px]">
           <thead>
             <tr>
@@ -377,21 +343,19 @@ export default function ProxiesPage() {
             })}
           </tbody>
         </table>
-      </div>
-
-      {total > pageSize && (
-        <div className="flex items-center justify-end gap-2 text-small">
-          <button className="btn btn-outline btn-sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-            上一页
-          </button>
-          <span className="text-text-tertiary">
-            {page} / {lastPage}
-          </span>
-          <button className="btn btn-outline btn-sm" disabled={page >= lastPage} onClick={() => setPage((p) => Math.min(lastPage, p + 1))}>
-            下一页
-          </button>
         </div>
-      )}
+        <div className="list-page-pager">
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:'linear-gradient(135deg,#0ea5e9,#6366f1)'}}/>
+            <span>共 <strong style={{color:'#6366f1'}}>{total}</strong> 条代理 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <span style={{fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
+            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={13}/></button>
+          </div>
+        </div>
+      </div>
 
       {editor && (
         <ProxyDialog

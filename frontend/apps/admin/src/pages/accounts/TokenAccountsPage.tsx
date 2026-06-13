@@ -308,116 +308,78 @@ export default function TokenAccountsPage() {
   };
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><KeyRound className="text-gia-500" size={18}/>Token 账号管理</h1>
-          <p className="page-subtitle">统一管理 GPT / GROK 账号、额度、账户类型和代理绑定。</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button className="btn btn-outline btn-sm" onClick={refresh}>
-            <RefreshCw size={14} /> 刷新
-          </button>
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={() => batchRefresh.mutate(provider === 'all' ? '' : provider)}
-            disabled={batchRefresh.isPending}
-          >
-            <RotateCw size={14} className={batchRefresh.isPending ? 'animate-spin' : ''} />
-            批量刷新 OAuth
-          </button>
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={() => batchProbe.mutate(provider === 'all' ? '' : provider)}
-            disabled={batchProbe.isPending}
-          >
-            <Activity size={14} className={batchProbe.isPending ? 'animate-pulse' : ''} />
-            批量检测用量
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => setOpenImport(true)}>
-            <Upload size={14} /> 导入
-          </button>
-          <button
-            className="btn btn-outline btn-sm"
-            disabled={selected.size === 0 || batchAssignProxy.isPending}
-            onClick={() => setOpenAssignProxy(true)}
-          >
-            <ChevronDown size={14} /> 批量代理
-          </button>
-          <button
-            className="btn btn-danger btn-sm"
-            disabled={selected.size === 0 || batchDelete.isPending}
-            onClick={() => {
-              if (!confirm(`确认删除选中的 ${selected.size} 个账号吗？`)) return;
-              batchDelete.mutate([...selected]);
-            }}
-          >
-            <Trash2 size={14} /> 批量删除
-          </button>
-          <button className="btn btn-primary btn-sm" onClick={() => setOpenCreate(true)}>
-            <Plus size={16} /> 新增
-          </button>
-        </div>
-      </header>
-
-      {/* ── stat tabs (pill style) ── */}
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-blue">
-          <span className="stat-tab-dot"/><span>账号总数</span><span className="stat-tab-val">{total}</span>
-        </div>
-        <div className="stat-tab stat-tab-emerald">
-          <span className="stat-tab-dot"/><span>当页启用</span><span className="stat-tab-val">{items.filter(a=>a.status===1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-rose">
-          <span className="stat-tab-dot"/><span>当页禁用</span><span className="stat-tab-val">{items.filter(a=>a.status!==1).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-amber">
-          <span className="stat-tab-dot"/><span>当页异常</span><span className="stat-tab-val">{items.filter(a=>{const r=accountRowStatus(a);return r.tone==='err'||r.tone==='warn';}).length}</span>
-        </div>
-        <div className="stat-tab stat-tab-violet">
-          <span className="stat-tab-dot"/><span>已选中</span><span className="stat-tab-val">{selected.size}</span>
-        </div>
-      </div>
-
-      {/* ── filter bar ── */}
-      <div className="filter-bar">
-        <span className="filter-bar-icon"><Search size={14}/></span>
-        <div className="search-wrap flex-1 min-w-[180px]">
-          <Search size={13}/>
-          <input
-            className="input input-sm w-full"
-            placeholder="搜索名称或备注"
-            value={keyword}
-            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-          />
-        </div>
-        <span className="filter-divider"/>
-        <div className="tabs">
-          {(['all', 'gpt', 'grok'] as const).map((item) => (
-            <button
-              key={item}
-              type="button"
-              className="tab"
-              aria-selected={provider === item}
-              onClick={() => { setProvider(item); setPage(1); }}
-            >
-              {item === 'all' ? '全部 Provider' : item.toUpperCase()}
+    <div className="list-page">
+      {/* ── 吸顶头部 ── */}
+      <div className="list-page-head">
+        {/* 标题行 */}
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',boxShadow:'0 4px 14px rgba(99,102,241,.35)'}}>
+            <KeyRound size={16} />
+          </div>
+          <div>
+            <div className="list-page-title">Token 账号管理</div>
+            <div className="list-page-subtitle">统一管理 GPT / GROK 账号、额度、账户类型和代理绑定</div>
+          </div>
+          <div className="list-divider" />
+          {/* 统计徽章 */}
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">总数</span><span className="stat-pill-val">{total}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">当页启用</span><span className="stat-pill-val">{items.filter(a=>a.status===1).length}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">当页禁用</span><span className="stat-pill-val">{items.filter(a=>a.status!==1).length}</span></span>
+            <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">异常</span><span className="stat-pill-val">{items.filter(a=>{const r=accountRowStatus(a);return r.tone==='err'||r.tone==='warn';}).length}</span></span>
+            {selected.size > 0 && <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">已选</span><span className="stat-pill-val">{selected.size}</span></span>}
+          </div>
+          {/* 操作按钮 */}
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={13}/> 刷新</button>
+            <button className="btn btn-outline btn-sm" onClick={() => batchRefresh.mutate(provider === 'all' ? '' : provider)} disabled={batchRefresh.isPending}>
+              <RotateCw size={13} className={batchRefresh.isPending ? 'animate-spin' : ''}/> 批量刷新
             </button>
-          ))}
+            <button className="btn btn-outline btn-sm" onClick={() => batchProbe.mutate(provider === 'all' ? '' : provider)} disabled={batchProbe.isPending}>
+              <Activity size={13} className={batchProbe.isPending ? 'animate-pulse' : ''}/> 批量检测
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => setOpenImport(true)}><Upload size={13}/> 导入</button>
+            <button className="btn btn-outline btn-sm" disabled={selected.size === 0 || batchAssignProxy.isPending} onClick={() => setOpenAssignProxy(true)}>
+              <ChevronDown size={13}/> 批量代理
+            </button>
+            {selected.size > 0 && (
+              <button className="btn btn-danger btn-sm" disabled={batchDelete.isPending} onClick={() => { if (!confirm(`确认删除选中的 ${selected.size} 个账号吗？`)) return; batchDelete.mutate([...selected]); }}>
+                <Trash2 size={13}/> 批量删除
+              </button>
+            )}
+            <button className="list-page-btn-add" onClick={() => setOpenCreate(true)}><Plus size={14}/> 新增账号</button>
+          </div>
         </div>
-        <select
-          className="select select-sm min-w-[120px]"
-          value={planType}
-          onChange={(e) => { setPlanType(e.target.value as PlanTypeFilter); setPage(1); }}
-        >
-          {PLAN_TYPE_OPTIONS.map((item) => (
-            <option key={item.value} value={item.value}>{item.label}</option>
-          ))}
-        </select>
-        <span className="filter-count">共 <strong>{fmtNumber(total)}</strong> 条</span>
+
+        {/* 筛选行 */}
+        <div className="list-page-filter-row">
+          <div className="search-wrap">
+            <Search size={13}/>
+            <input
+              className="filter-input"
+              style={{width:180}}
+              placeholder="搜索名称或备注"
+              value={keyword}
+              onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
+            {(['all', 'gpt', 'grok'] as const).map((item) => (
+              <button key={item} type="button" className="tab" aria-selected={provider === item} onClick={() => { setProvider(item); setPage(1); }}>
+                {item === 'all' ? '全部' : item.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <select className="filter-select" style={{minWidth:110}} value={planType} onChange={(e) => { setPlanType(e.target.value as PlanTypeFilter); setPage(1); }}>
+            {PLAN_TYPE_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <div className="ml-auto filter-count">共 <strong>{fmtNumber(total)}</strong> 条</div>
+        </div>
       </div>
 
-      <div className="card table-wrap">
+      {/* ── 表格区域 ── */}
+      <div className="list-page-body">
+        <div className="table-wrap">
         <table className="data-table min-w-[1100px]">
           <thead>
             <tr>
@@ -610,43 +572,29 @@ export default function TokenAccountsPage() {
             })}
           </tbody>
         </table>
-      </div>
+        </div>{/* end table-wrap */}
 
-      <div className="card card-section flex flex-wrap items-center gap-3 !py-2">
-        <div className="flex items-center gap-2 text-small text-text-secondary">
-          <span className="text-text-tertiary">每页</span>
-          <select
-            className="select select-sm w-[88px]"
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value) || 20);
-              setPage(1);
-            }}
-          >
-            {PAGE_SIZE_OPTIONS.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className="text-text-tertiary">条</span>
+        {/* 吸底分页器 */}
+        <div className="list-page-pager">
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:'linear-gradient(135deg,#6366f1,#8b5cf6)'}}/>
+            <span>共 <strong style={{color:'#6366f1'}}>{fmtNumber(total)}</strong> 条账号 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#9ca3af'}}>
+              每页
+              <select className="filter-select" style={{width:72}} value={pageSize} onChange={(e)=>{setPageSize(Number(e.target.value)||20);setPage(1);}}>
+                {PAGE_SIZE_OPTIONS.map(s=><option key={s} value={s}>{s} 条</option>)}
+              </select>
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:4}}>
+              <button className="btn btn-outline btn-icon btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/></button>
+              <span style={{minWidth:'3rem',textAlign:'center',fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
+              <button className="btn btn-outline btn-icon btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}><ChevronRight size={13}/></button>
+            </div>
+          </div>
         </div>
-        <div className="text-small text-text-tertiary tabular-nums">
-          {total === 0 ? '0' : `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, total)} / ${fmtNumber(total)}`}
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          <button className="btn btn-outline btn-icon btn-sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-            <ChevronLeft size={14} />
-          </button>
-          <span className="min-w-[3.5rem] px-2 text-center text-small tabular-nums text-text-secondary">
-            <span className="font-medium text-text-primary">{page}</span>
-            <span className="text-text-tertiary"> / {lastPage}</span>
-          </span>
-          <button className="btn btn-outline btn-icon btn-sm" disabled={page >= lastPage} onClick={() => setPage((p) => Math.min(lastPage, p + 1))}>
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      </div>
+      </div>{/* end list-page-body */}
 
       {openCreate && (
         <CreateDialog

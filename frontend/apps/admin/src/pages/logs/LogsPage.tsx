@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, ChevronDown, ChevronRight, Clock, Coins, Eye,
+  Activity, ChevronDown, ChevronLeft, ChevronRight, Clock, Coins, Eye,
   ImageIcon, Key, MessageSquare, RefreshCw, Search, Settings2, Signal, Tag, Trash2, User, Video, X,
 } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
@@ -112,89 +112,65 @@ export default function LogsPage() {
   const failCount    = (list.data?.list ?? []).filter(r=>r.status===3).length;
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><Eye className="text-gia-500" size={18}/>请求日志</h1>
-          <p className="page-subtitle">按任务查看用户、模型、状态与费用；提示词、错误和上游返回收进详情行。</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <div className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-surface-1 px-3">
-            <span className="text-small text-text-tertiary">清除</span>
-            <input
-              className="input h-7 w-14 rounded-lg px-2 text-center text-small"
-              value={purgeDays} inputMode="numeric"
-              onChange={(e) => setPurgeDays(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              aria-label="删除几天前"
-            />
-            <span className="text-small text-text-tertiary">天前</span>
-            <button className="btn btn-danger btn-sm" disabled={purge.isPending || purgeDayNum <= 0} onClick={() => setConfirmPurge(true)}>
-              <Trash2 size={13} />
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#f43f5e,#ec4899)',boxShadow:'0 4px 14px rgba(244,63,94,.35)'}}>
+            <Eye size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">请求日志</div>
+            <div className="list-page-subtitle">按任务查看用户、模型、状态与费用；提示词、错误和上游返回收进详情行</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">总记录</span><span className="stat-pill-val">{total}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">成功</span><span className="stat-pill-val">{successCount}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">失败</span><span className="stat-pill-val">{failCount}</span></span>
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <div className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#fca5a5] bg-[#fff1f2] px-2.5 text-[12px]">
+              <span className="text-[#dc2626]">清除</span>
+              <input className="w-10 rounded border border-[#fca5a5] bg-white px-1.5 text-center text-[12px] outline-none"
+                value={purgeDays} inputMode="numeric"
+                onChange={(e) => setPurgeDays(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              />
+              <span className="text-[#dc2626]">天前</span>
+              <button className="btn btn-danger btn-sm !h-6 !px-2" disabled={purge.isPending || purgeDayNum <= 0} onClick={() => setConfirmPurge(true)}>
+                <Trash2 size={12}/>
+              </button>
+            </div>
+            <button className="btn btn-outline btn-sm" onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'logs'] })}>
+              <RefreshCw size={13}/> 刷新
             </button>
           </div>
-          <button className="btn btn-outline btn-md" onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'logs'] })}>
-            <RefreshCw size={14} /> 刷新
-          </button>
         </div>
-      </header>
-
-      <div className="stat-tabs">
-        <div className="stat-tab stat-tab-blue">
-          <span className="stat-tab-dot"/><span>查询总记录</span><span className="stat-tab-val">{total}</span>
-        </div>
-        <div className="stat-tab stat-tab-emerald">
-          <span className="stat-tab-dot"/><span>当页成功</span><span className="stat-tab-val">{successCount}</span>
-        </div>
-        <div className="stat-tab stat-tab-rose">
-          <span className="stat-tab-dot"/><span>当页失败</span><span className="stat-tab-val">{failCount}</span>
+        <div className="list-page-filter-row">
+          <div className="search-wrap">
+            <Search size={13}/>
+            <input className="filter-input" style={{width:240}} placeholder="搜索用户 / Key / 模型 / 提示词 / task_id"
+              value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
+            {[['all','全部'],['chat','文字'],['image','图片'],['video','视频']].map(([k,label]) => (
+              <button key={k} className="tab" aria-selected={kind===k} onClick={() => { setKind(k as typeof kind); setPage(1); }}>{label}</button>
+            ))}
+          </div>
+          <select className="filter-select" style={{minWidth:100}} value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}>
+            <option value="all">全部状态</option>
+            <option value="0">待处理</option>
+            <option value="1">生成中</option>
+            <option value="2">成功</option>
+            <option value="3">失败</option>
+            <option value="4">已退款</option>
+          </select>
+          <div className="ml-auto filter-count">共 <strong>{total}</strong> 条</div>
         </div>
       </div>
 
-      <div className="filter-bar">
-        <span className="filter-bar-icon"><Search size={14}/></span>
-        <div className="search-wrap flex-1 min-w-[240px]">
-          <Search size={13}/>
-          <input
-            className="input input-sm w-full"
-            placeholder="搜索用户 / Key / 模型 / 提示词 / task_id"
-            value={keyword}
-            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-          />
-        </div>
-        <span className="filter-divider"/>
-        <div className="tabs">
-          {[
-            ['all', '全部类型'],
-            ['chat', '文字'],
-            ['image', '图片'],
-            ['video', '视频'],
-          ].map(([k, label]) => (
-            <button
-              key={k}
-              className="tab"
-              aria-selected={kind === k}
-              onClick={() => { setKind(k as typeof kind); setPage(1); }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <select
-          className="select select-sm min-w-[110px]"
-          value={status}
-          onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}
-        >
-          <option value="all">全部状态</option>
-          <option value="0">待处理</option>
-          <option value="1">生成中</option>
-          <option value="2">成功</option>
-          <option value="3">失败</option>
-          <option value="4">已退款</option>
-        </select>
-        <span className="filter-count">共 <strong>{total}</strong> 条</span>
-      </div>
-
-      <div className="card table-wrap overflow-hidden">
+      <div className="list-page-body">
+        <div className="table-wrap overflow-hidden">
         <table className="data-table text-small min-w-[960px]">
           <thead>
             <tr>
@@ -280,14 +256,17 @@ export default function LogsPage() {
             })}
           </tbody>
         </table>
-      </div>
-
-      <div className="flex items-center justify-between text-small text-text-tertiary">
-        <span>共 {total} 条记录</span>
-        <div className="inline-flex items-center gap-2">
-          <button className="btn btn-outline btn-sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>上一页</button>
-          <span>{page} / {lastPage}</span>
-          <button className="btn btn-outline btn-sm" disabled={page >= lastPage} onClick={() => setPage((p) => Math.min(lastPage, p + 1))}>下一页</button>
+        </div>
+        <div className="list-page-pager">
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:5,height:5,borderRadius:'50%',background:'linear-gradient(135deg,#f43f5e,#ec4899)'}}/>
+            <span>共 <strong style={{color:'#f43f5e'}}>{total}</strong> 条记录 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <span style={{fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
+            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={13}/></button>
+          </div>
         </div>
       </div>
 

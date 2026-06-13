@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { Logo } from '../components/Logo';
 import { authApi } from '../lib/services';
 import { useAuthStore } from '../stores/auth';
 import { toast } from '../stores/toast';
@@ -74,20 +73,12 @@ export function AdminLayout() {
   const initial     = displayName.slice(0, 1).toUpperCase();
 
   return (
-    <div className="grid min-h-screen bg-surface-bg lg:grid-cols-[260px_1fr]">
-
-      {/* ── mobile header ─────────────────────────────── */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface-1 px-4 lg:hidden">
-        <Logo size="sm" suffix="管理后台" />
-        <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setMobileOpen((v) => !v)} aria-label="菜单">
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </header>
+    <div className="flex h-screen overflow-hidden bg-surface-bg">
 
       {/* ── sidebar ───────────────────────────────────── */}
       <aside className={clsx(
-        'flex flex-col border-r border-border bg-surface-1 lg:sticky lg:top-0 lg:h-screen',
-        mobileOpen ? 'fixed inset-y-0 left-0 z-40 w-[260px] shadow-2xl' : 'hidden lg:flex',
+        'flex h-screen w-[260px] shrink-0 flex-col border-r border-border bg-surface-1',
+        mobileOpen ? 'fixed inset-y-0 left-0 z-40 shadow-2xl' : 'hidden lg:flex',
       )}>
         {/* logo */}
         <div className="flex h-[64px] shrink-0 items-center gap-3 border-b border-border px-5">
@@ -150,18 +141,25 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      {/* overlay */}
+      {/* mobile overlay */}
       {mobileOpen && (
-        <button type="button" aria-label="关闭" className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
+        <button type="button" aria-label="关闭" className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
       )}
 
       {/* ── main ──────────────────────────────────────── */}
-      <main className="flex min-w-0 flex-col overflow-x-hidden">
+      {/* main 是唯一的滚动容器，消除路由切换时的外层背景闪烁 */}
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen">
         {/* topbar */}
-        <header className="sticky top-0 z-20 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-surface-1/95 px-6 backdrop-blur-sm">
-          <div className="flex items-center gap-2 text-tiny text-text-tertiary">
-            <BookOpen size={13} />
-            <span>管理后台</span>
+        <header className="sticky top-0 z-20 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-3">
+            {/* mobile hamburger */}
+            <button className="btn btn-ghost btn-icon btn-sm lg:hidden" onClick={() => setMobileOpen((v) => !v)} aria-label="菜单">
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+            <div className="flex items-center gap-2 text-tiny text-text-tertiary">
+              <BookOpen size={13} />
+              <span>管理后台</span>
+            </div>
           </div>
 
           {/* user menu */}
@@ -216,7 +214,8 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <div className="min-w-0 flex-1 overflow-x-hidden">
+        {/* content area — pages use list-page pattern to negate this padding */}
+        <div className="flex-1 overflow-x-hidden bg-[#f8fafc] p-6">
           <Outlet />
         </div>
       </main>
