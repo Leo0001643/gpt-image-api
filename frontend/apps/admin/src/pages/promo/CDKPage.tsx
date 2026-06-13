@@ -48,18 +48,19 @@ export default function CDKPage() {
   };
 
   return (
-    <div className="page page-wide space-y-6">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2">
-            <Ticket className="text-gia-500" size={26} />
-            兑换码 CDK
-          </h1>
-          <p className="page-subtitle">
-            按批次生成；每张 CDK 只能被使用一次，使用后写入 wallet_log 并入账。
-          </p>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#f59e0b,#d97706)',boxShadow:'0 4px 14px rgba(245,158,11,.35)'}}>
+            <Ticket size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">兑换码 CDK</div>
+            <div className="list-page-subtitle">按批次生成；每张 CDK 只能被使用一次，使用后写入 wallet_log 并入账</div>
+          </div>
         </div>
-      </header>
+      </div>
+      <div className="space-y-5 py-5">
 
       <div className="dialog-surface w-full">
         <div className="modal-header-grad mhg-amber">
@@ -182,6 +183,7 @@ export default function CDKPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

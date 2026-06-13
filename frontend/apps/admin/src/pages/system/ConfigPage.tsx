@@ -188,28 +188,35 @@ export default function ConfigPage() {
   const proxyOptions: ProxyItem[] = proxies.data?.list ?? [];
 
   return (
-    <div className="page page-wide space-y-4">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">系统配置</h1>
-          <p className="page-subtitle">维护运行容错、刷新存储、OSS 和支付通道基础参数。</p>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#3b82f6,#2563eb)',boxShadow:'0 4px 14px rgba(59,130,246,.35)'}}>
+            <Database size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">系统配置</div>
+            <div className="list-page-subtitle">维护运行容错、刷新存储、OSS 和支付通道基础参数</div>
+          </div>
+          {dirty && <span className="stat-pill stat-pill-orange"><span className="stat-pill-dot"/><span className="stat-pill-label">有未保存修改</span></span>}
+          <div className="ml-auto flex flex-wrap gap-2">
+            <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}>
+              <RefreshCw size={13} className={settings.isFetching ? 'animate-spin' : ''} /> 重新加载
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+              <Save size={13} /> {save.isPending ? '保存中...' : dirty ? '保存修改' : '已是最新'}
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn btn-outline btn-md" onClick={() => settings.refetch()} disabled={settings.isFetching}>
-            <RefreshCw size={16} className={settings.isFetching ? 'animate-spin' : ''} /> 重新加载
-          </button>
-          <button className="btn btn-primary btn-md" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-            <Save size={16} /> {save.isPending ? '保存中...' : dirty ? '保存修改' : '已是最新'}
-          </button>
-        </div>
-      </header>
+      </div>
 
-      {settings.isLoading ? (
-        <div className="grid gap-4 xl:grid-cols-2">
-          {[0,1,2,3,4].map(i=><div key={i} className="card h-48 animate-pulse bg-surface-2"/>)}
-        </div>
-      ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+      <div className="py-5">
+        {settings.isLoading ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            {[0,1,2,3,4].map(i=><div key={i} className="card h-48 animate-pulse bg-surface-2"/>)}
+          </div>
+        ) : (
+          <div className="grid gap-4 xl:grid-cols-2">
           <Section icon={<ShieldAlert size={16} />} title="重试与容错" desc="控制生成请求失败后的重试次数、超时和账号熔断策略。" iconCls="bg-orange-100 text-orange-600">
             <NumberField label="最大重试次数" value={form.retry_max_attempts} min={0} max={10} onChange={(v) => set('retry_max_attempts', v)} />
             <NumberField label="重试基础延迟（毫秒）" value={form.retry_base_delay_ms} min={0} onChange={(v) => set('retry_base_delay_ms', v)} />
@@ -321,8 +328,9 @@ export default function ConfigPage() {
             <Field label="支付宝私钥"><textarea className="input font-mono text-small min-h-[96px]" value={form.alipay_private_key} onChange={(e) => set('alipay_private_key', e.target.value)} /></Field>
             <TextField label="微信 API v3 Key" value={form.wechat_api_v3_key} onChange={(v) => set('wechat_api_v3_key', v)} type="password" />
           </Section>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -131,51 +131,50 @@ export default function ModelPricesPage() {
   const onN  = rows.filter((r: PriceRow)=>r.enabled).length;
 
   return (
-    <div className="page page-wide space-y-5">
-
-      {/* ── page header ─────────────────── */}
-      <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',paddingBottom:4,borderBottom:'2px solid #eef1ff'}}>
-        <div className="page-icon-box" style={{background:'linear-gradient(135deg,#f59e0b,#d97706)',boxShadow:'0 4px 14px rgba(245,158,11,.3)'}}>
-          <BarChart2 size={16}/>
-        </div>
-        <div>
-          <div className="list-page-title">模型价格配置</div>
-          <div className="list-page-subtitle">配置前台可用模型、上游映射与计费单价</div>
-        </div>
-        <div className="list-divider"/>
-        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-          <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">全部</span><span className="stat-pill-val">{rows.length}</span></span>
-          <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">启用</span><span className="stat-pill-val">{onN}</span></span>
-          <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">禁用</span><span className="stat-pill-val">{rows.length-onN}</span></span>
-          <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">图片</span><span className="stat-pill-val">{imgN}</span></span>
-          <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">视频</span><span className="stat-pill-val">{vidN}</span></span>
-        </div>
-        <div style={{marginLeft:'auto',display:'flex',gap:8}}>
-          <button className="btn btn-outline btn-sm" onClick={()=>cfg.refetch()} disabled={cfg.isFetching}><RefreshCw size={13} className={cfg.isFetching?'animate-spin':''}/> 刷新</button>
-          <button className="btn btn-primary btn-sm" onClick={()=>saveMut.mutate()} disabled={!dirty||saveMut.isPending}>
-            <Save size={13}/> {saveMut.isPending?'保存中…':'保存修改'}
-          </button>
+    <div className="list-page">
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#f59e0b,#d97706)',boxShadow:'0 4px 14px rgba(245,158,11,.35)'}}>
+            <BarChart2 size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">模型价格配置</div>
+            <div className="list-page-subtitle">配置前台可用模型、上游映射与计费单价</div>
+          </div>
+          <div className="list-divider"/>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">全部</span><span className="stat-pill-val">{rows.length}</span></span>
+            <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">启用</span><span className="stat-pill-val">{onN}</span></span>
+            <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">禁用</span><span className="stat-pill-val">{rows.length-onN}</span></span>
+            <span className="stat-pill stat-pill-blue"><span className="stat-pill-dot"/><span className="stat-pill-label">图片</span><span className="stat-pill-val">{imgN}</span></span>
+            <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">视频</span><span className="stat-pill-val">{vidN}</span></span>
+          </div>
+          <div className="ml-auto flex gap-2">
+            <button className="btn btn-outline btn-sm" onClick={()=>cfg.refetch()} disabled={cfg.isFetching}><RefreshCw size={13} className={cfg.isFetching?'animate-spin':''}/> 刷新</button>
+            <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={13}/> 添加模型</button>
+            <button className="btn btn-primary btn-sm" onClick={()=>saveMut.mutate()} disabled={!dirty||saveMut.isPending}>
+              <Save size={13}/> {saveMut.isPending?'保存中…':'保存修改'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── alerts ─────────────────────────────────────── */}
-      {cfg.isError && (
-        <div className="flex items-center justify-between rounded-xl border border-warning/40 bg-warning-soft px-4 py-3 text-small text-warning">
-          <span className="flex items-center gap-2"><AlertCircle size={14}/>配置加载失败，显示默认模板</span>
-          <button className="btn btn-sm btn-outline" onClick={()=>cfg.refetch()}><RefreshCw size={12}/>重试</button>
-        </div>
-      )}
+      <div className="py-5 space-y-4">
+        {/* ── alerts ─────────────────────────────────────── */}
+        {cfg.isError && (
+          <div className="flex items-center justify-between rounded-xl border border-warning/40 bg-warning-soft px-4 py-3 text-small text-warning">
+            <span className="flex items-center gap-2"><AlertCircle size={14}/>配置加载失败，显示默认模板</span>
+            <button className="btn btn-sm btn-outline" onClick={()=>cfg.refetch()}><RefreshCw size={12}/>重试</button>
+          </div>
+        )}
 
-      {/* ── model list ─────────────────────────────────── */}
-      <div className="card">
+        {/* ── model list ─────────────────────────────────── */}
+        <div className="card">
         {/* list header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center px-6 py-4 border-b border-border">
           <span className="text-small font-semibold text-text-secondary uppercase tracking-wide">
             模型列表 · {rows.length} 个
           </span>
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            <Plus size={13}/> 添加模型
-          </button>
         </div>
 
         {/* skeleton */}
@@ -280,12 +279,13 @@ export default function ModelPricesPage() {
             })}
           </div>
         )}
-      </div>
+        </div>
 
-      {/* ── footer note ─────────────────────────────────── */}
-      <p className="text-tiny text-text-tertiary text-center pb-2">
-        单价 0 = 免费 · 文字模型按千 Token 分输入/输出计费 · 图片视频按次计费
-      </p>
+        {/* ── footer note ─────────────────────────────────── */}
+        <p className="text-tiny text-text-tertiary text-center pb-2">
+          单价 0 = 免费 · 文字模型按千 Token 分输入/输出计费 · 图片视频按次计费
+        </p>
+      </div>
 
       {/* ══════════════════════════════════════════════
           Edit Modal
