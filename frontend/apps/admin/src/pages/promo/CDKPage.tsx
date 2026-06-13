@@ -60,7 +60,7 @@ export default function CDKPage() {
           </div>
         </div>
       </div>
-      <div className="space-y-5 py-5">
+      <div className="-mx-6 space-y-5 py-5">
 
       <div className="dialog-surface w-full">
         <div className="modal-header-grad mhg-amber">

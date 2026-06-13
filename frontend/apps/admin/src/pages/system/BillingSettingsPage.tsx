@@ -68,7 +68,7 @@ export default function BillingSettingsPage() {
         </div>
       </div>
 
-      <div className="py-5">
+      <div className="-mx-6 py-5">
         {settings.isLoading ? (
           <div className="grid gap-4 lg:grid-cols-2">
             {[0,1].map(i=><div key={i} className="card h-44 animate-pulse bg-surface-2"/>)}

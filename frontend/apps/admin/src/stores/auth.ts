@@ -15,9 +15,36 @@ interface AuthState {
   logout: () => void;
 }
 
+/**
+ * 从 JWT access_token 的 payload 中快速解析基础用户信息。
+ * 仅用于页面首次渲染时避免空白等待，API 验证仍通过 refreshMe() 进行。
+ */
+function parseMeFromToken(tok: StoredToken | null): AdminMe | null {
+  if (!tok?.access) return null;
+  try {
+    const parts = tok.access.split('.');
+    if (parts.length < 2) return null;
+    const payload = JSON.parse(atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload) return null;
+    return {
+      id:        Number(payload.sub ?? payload.id ?? 0),
+      username:  String(payload.username ?? payload.sub ?? ''),
+      nickname:  String(payload.nickname ?? payload.username ?? '管理员'),
+      role_id:   Number(payload.role_id ?? 0),
+      role_code: String(payload.role_code ?? ''),
+      role_name: String(payload.role_name ?? ''),
+    };
+  } catch {
+    return null;
+  }
+}
+
+const _token = loadToken();
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  token: loadToken(),
-  me: null,
+  token: _token,
+  /* 从 token 解析基础 me，消除首次渲染的全屏空白 */
+  me: parseMeFromToken(_token),
   loading: false,
 
   setLogin: (resp) => {
