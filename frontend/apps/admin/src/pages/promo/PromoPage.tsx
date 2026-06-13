@@ -165,7 +165,7 @@ export default function PromoPage() {
                 <td className="whitespace-nowrap">{fmtTime(row.start_at)} - {fmtTime(row.end_at)}</td>
                 <td><button className={row.status === 1 ? 'btn btn-outline btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => toggle.mutate(row)}>{row.status === 1 ? '启用' : '停用'}</button></td>
                 <td className="sticky-r">
-                  <div className="flex items-center justify-center gap-1">
+                  <div className="inline-flex items-center gap-1">
                     <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setForm(rowToForm(row))}><Edit3 size={13}/> 编辑</button>
                     <button className="btn btn-outline btn-action-danger btn-xs" onClick={() => { if (confirm(`删除优惠码 ${row.code}？`)) remove.mutate(row.id); }}><Trash2 size={13}/> 删除</button>
                   </div>

@@ -944,6 +944,7 @@
     text-align: center;
     white-space: nowrap;
     padding-inline: 6px;
+    width: 1px; /* shrink-to-fit: column takes only what buttons need */
   }
   .data-table tbody tr:nth-child(even) td.sticky-r { background: #fafbff; }
   .data-table thead th.sticky-r {

@@ -303,7 +303,7 @@ export default function ProxiesPage() {
                     )}
                   </td>
                   <td className="sticky-r">
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="inline-flex items-center gap-1">
                       <button
                         className="btn btn-outline btn-action-view btn-xs"
                         disabled={testMut.isPending && testMut.variables === item.id}
