@@ -360,8 +360,8 @@ function TextField({ label, value, onChange, placeholder, type = 'text' }: { lab
   return <Field label={label}><input className="input" type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} /></Field>;
 }
 
-function NumberField({ label, value, min, max, onChange }: { label: string; value: number; min?: number; max?: number; onChange: (v: number) => void }) {
-  return <Field label={label}><input type="number" className="input" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value) || 0)} /></Field>;
+function NumberField({ label, value, min, max, onChange, placeholder }: { label: string; value: number; min?: number; max?: number; onChange: (v: number) => void; placeholder?: string }) {
+  return <Field label={label}><input type="number" className="input" min={min} max={max} value={value || ''} placeholder={placeholder ?? '0'} onChange={(e) => onChange(Number(e.target.value) || 0)} /></Field>;
 }
 
 function formatBytes(bytes: number) {

@@ -188,12 +188,12 @@ export default function RechargePackagesPage() {
             <tbody>
               {rows.map((row, idx) => (
                 <tr key={`${row.id}-${idx}`}>
-                  <td><input className="input w-[76px] tabular-nums" type="number" value={row.sort_order} onChange={(e) => update(idx, { sort_order: Number(e.target.value) || 0 })} /></td>
+                  <td><input className="input w-[76px] tabular-nums" type="number" value={row.sort_order || ''} placeholder="0" onChange={(e) => update(idx, { sort_order: Number(e.target.value) || 0 })} /></td>
                   <td><input className="input min-w-[140px] font-mono" value={row.id} onChange={(e) => update(idx, { id: e.target.value })} placeholder="p100" /></td>
                   <td><input className="input min-w-[160px]" value={row.name} onChange={(e) => update(idx, { name: e.target.value })} placeholder="100 点套餐" /></td>
-                  <td><input className="input w-[110px] tabular-nums" type="number" min={0} step="0.01" value={row.amount} onChange={(e) => update(idx, { amount: Number(e.target.value) || 0 })} /></td>
-                  <td><input className="input w-[120px] tabular-nums" type="number" min={0} value={row.points} onChange={(e) => update(idx, { points: Number(e.target.value) || 0 })} /></td>
-                  <td><input className="input w-[120px] tabular-nums" type="number" min={0} value={row.bonus_points} onChange={(e) => update(idx, { bonus_points: Number(e.target.value) || 0 })} /></td>
+                  <td><input className="input w-[110px] tabular-nums" type="number" min={0} step="0.01" value={row.amount || ''} placeholder="0.00" onChange={(e) => update(idx, { amount: Number(e.target.value) || 0 })} /></td>
+                  <td><input className="input w-[120px] tabular-nums" type="number" min={0} value={row.points || ''} placeholder="0" onChange={(e) => update(idx, { points: Number(e.target.value) || 0 })} /></td>
+                  <td><input className="input w-[120px] tabular-nums" type="number" min={0} value={row.bonus_points || ''} placeholder="0" onChange={(e) => update(idx, { bonus_points: Number(e.target.value) || 0 })} /></td>
                   <td><input className="input min-w-[100px]" value={row.badge} onChange={(e) => update(idx, { badge: e.target.value })} placeholder="推荐" /></td>
                   <td><input className="input min-w-[180px]" value={row.remark} onChange={(e) => update(idx, { remark: e.target.value })} placeholder="内部备注" /></td>
                   <td>

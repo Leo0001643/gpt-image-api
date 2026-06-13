@@ -158,7 +158,7 @@ export function AdminLayout() {
           scrollbar-gutter:stable 保留滚动条空间，防止内容宽度跳变抖动。 */}
       <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen [scrollbar-gutter:stable]">
         {/* topbar */}
-        <header className="sticky top-0 z-20 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-3">
             {/* mobile hamburger */}
             <button className="btn btn-ghost btn-icon btn-sm lg:hidden" onClick={() => setMobileOpen((v) => !v)} aria-label="菜单">

@@ -128,7 +128,8 @@ export default function BillingSettingsPage() {
                     <input
                       className="input pr-12 text-[22px] font-bold tabular-nums"
                       type="number" min={0}
-                      value={form.free_initial_points}
+                      value={form.free_initial_points || ''}
+                      placeholder="0"
                       onChange={(e)=>set('free_initial_points', Number(e.target.value)||0)}
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-small font-medium text-text-tertiary">点</span>

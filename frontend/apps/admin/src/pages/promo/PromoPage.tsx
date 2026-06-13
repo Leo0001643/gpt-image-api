@@ -50,8 +50,8 @@ export default function PromoPage() {
     queryKey: ['admin', 'promo', keyword, status, discountType, page],
     queryFn: () => promoApi.list({
       keyword: keyword.trim() || undefined,
-      status: status === '' ? '' : Number(status) as 0 | 1,
-      discount_type: discountType === '' ? '' : Number(discountType) as 1 | 2 | 3,
+      status: status !== '' ? Number(status) as 0 | 1 : undefined,
+      discount_type: discountType !== '' ? Number(discountType) as 1 | 2 | 3 : undefined,
       page,
       page_size: pageSize,
     }),
@@ -222,12 +222,12 @@ function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormSta
             </select>
           </Field>
           <Field label={form.discount_type === 2 ? '折扣百分比 (%)' : form.discount_type === 3 ? '赠送积分（点）' : '减免金额（元）'}>
-            <input className="input" type="number" min={0} value={form.discount_val} onChange={(e) => set('discount_val', Number(e.target.value) || 0)} />
+            <input className="input" type="number" min={0} value={form.discount_val || ''} placeholder="0" onChange={(e) => set('discount_val', Number(e.target.value) || 0)} />
           </Field>
-          <Field label="最低消费（元）"><input className="input" type="number" min={0} value={form.min_amount} onChange={(e) => set('min_amount', Number(e.target.value) || 0)} /></Field>
+          <Field label="最低消费（元，0=无门槛）"><input className="input" type="number" min={0} value={form.min_amount || ''} placeholder="0" onChange={(e) => set('min_amount', Number(e.target.value) || 0)} /></Field>
           <Field label="适用范围"><input className="input" value={form.apply_to} onChange={(e) => set('apply_to', e.target.value)} placeholder="all / p100 / image" /></Field>
-          <Field label="总数量（0=不限）"><input className="input" type="number" min={0} value={form.total_qty} onChange={(e) => set('total_qty', Number(e.target.value) || 0)} /></Field>
-          <Field label="每用户限用（0=不限）"><input className="input" type="number" min={0} value={form.per_user_limit} onChange={(e) => set('per_user_limit', Number(e.target.value) || 0)} /></Field>
+          <Field label="总数量（不填=不限）"><input className="input" type="number" min={0} value={form.total_qty || ''} placeholder="不限" onChange={(e) => set('total_qty', Number(e.target.value) || 0)} /></Field>
+          <Field label="每用户限用（不填=不限）"><input className="input" type="number" min={0} value={form.per_user_limit || ''} placeholder="不限" onChange={(e) => set('per_user_limit', Number(e.target.value) || 0)} /></Field>
           <Field label="开始时间"><input className="input" type="datetime-local" value={form.start_at} onChange={(e) => set('start_at', e.target.value)} /></Field>
           <Field label="结束时间"><input className="input" type="datetime-local" value={form.end_at} onChange={(e) => set('end_at', e.target.value)} /></Field>
           <Field label="状态">
