@@ -99,7 +99,8 @@ export default function CDKPage() {
             type="number"
             min={1}
             className="input"
-            value={body.points}
+            value={body.points || ''}
+            placeholder="0"
             onChange={(e) =>
               setBody((s) => ({ ...s, points: Math.max(1, Number(e.target.value) || 0) }))
             }
@@ -112,7 +113,8 @@ export default function CDKPage() {
             min={1}
             max={100_000}
             className="input"
-            value={body.qty}
+            value={body.qty || ''}
+            placeholder="0"
             onChange={(e) =>
               setBody((s) => ({ ...s, qty: Math.max(1, Number(e.target.value) || 0) }))
             }
@@ -124,7 +126,8 @@ export default function CDKPage() {
             type="number"
             min={0}
             className="input"
-            value={body.per_user_limit ?? 0}
+            value={body.per_user_limit || ''}
+            placeholder="0"
             onChange={(e) => setBody((s) => ({ ...s, per_user_limit: Number(e.target.value) || 0 }))}
           />
         </Field>

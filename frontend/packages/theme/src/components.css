@@ -913,7 +913,7 @@
     background: #fff;
     height: 52px;
   }
-  .data-table tbody td:last-child { text-align: right; }
+  .data-table tbody td:last-child { text-align: center; }
   .data-table tbody tr:last-child td { border-bottom: none; }
   .data-table tbody tr:nth-child(even) td { background: #fafbff; }
   .data-table tbody tr:hover td { background: rgba(99,102,241,.04) !important; }
@@ -943,6 +943,7 @@
     box-shadow: -4px 0 8px -4px rgba(0,0,0,.1);
     text-align: center;
     white-space: nowrap;
+    padding-inline: 6px;
   }
   .data-table tbody tr:nth-child(even) td.sticky-r { background: #fafbff; }
   .data-table thead th.sticky-r {
@@ -1252,4 +1253,42 @@
     background: var(--klein-gradient);
     transition: width var(--duration-slow) var(--ease-out);
   }
+
+  /* ── FilterSelect custom dropdown ── */
+  .fsel-root { position: relative; display: inline-block; }
+  .fsel-trigger {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: var(--ctl-h-sm); padding-inline: 12px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--surface-1); font-size: var(--fs-small);
+    font-weight: var(--weight-medium); color: var(--text-primary);
+    cursor: pointer; white-space: nowrap; min-width: 108px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .fsel-trigger:hover { border-color: var(--klein-400); }
+  .fsel-trigger:focus { outline: none; border-color: var(--klein-500); box-shadow: 0 0 0 2px rgba(99,102,241,.15); }
+  .fsel-icon { display: inline-flex; align-items: center; flex-shrink: 0; }
+  .fsel-label { flex: 1 1 auto; text-align: left; }
+  .fsel-chevron { flex-shrink: 0; transition: transform .2s; color: var(--text-tertiary); }
+  .fsel-chevron-open { transform: rotate(180deg); }
+  .fsel-menu {
+    position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%;
+    background: #fff; border: 1px solid rgba(0,0,0,.08);
+    border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06);
+    z-index: 200; padding: 4px; animation: fselFadeIn .12s ease;
+  }
+  @keyframes fselFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fsel-item {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 7px 10px; border: none; border-radius: 7px;
+    background: transparent; cursor: pointer; text-align: left;
+    font-size: var(--fs-small); color: var(--text-primary); transition: background .1s;
+  }
+  .fsel-item:hover { background: rgba(99,102,241,.06); }
+  .fsel-item-active { background: rgba(99,102,241,.08); font-weight: var(--weight-semibold); color: var(--klein-600); }
+  .fsel-item-label { flex: 1; }
+  .fsel-check { color: var(--klein-500); flex-shrink: 0; }
 }

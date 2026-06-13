@@ -1,10 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Activity, CheckCircle2, ChevronLeft, ChevronRight, Clock, Globe, Pencil, Plus, Power,
+  Activity, CheckCircle2, ChevronLeft, ChevronRight, Clock, Globe, ListFilter, Pencil, Plus, Power,
   RefreshCw, Search, Server, Settings2, ShieldCheck, Signal, Trash2, Upload, X, XCircle, Zap,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
+import { FilterSelect } from '../../components/FilterSelect';
 import { ApiError } from '../../lib/api';
 import { fmtRelative, fmtTime } from '../../lib/format';
 import { proxiesApi } from '../../lib/services';
@@ -12,6 +13,13 @@ import type { ProxyCreateBody, ProxyItem, ProxyUpdateBody } from '../../lib/type
 import { toast } from '../../stores/toast';
 
 const PROTOCOLS: ProxyCreateBody['protocol'][] = ['http', 'https', 'socks5', 'socks5h'];
+
+type StatusFilter = 'all' | 'enabled' | 'disabled';
+const STATUS_OPTIONS = [
+  { value: 'all' as StatusFilter,      label: '全部',  icon: <ListFilter size={13}/>, iconColor: '#6366f1' },
+  { value: 'enabled' as StatusFilter,  label: '启用',  icon: <CheckCircle2 size={13}/>, iconColor: '#10b981' },
+  { value: 'disabled' as StatusFilter, label: '禁用',  icon: <XCircle size={13}/>, iconColor: '#f43f5e' },
+];
 
 function checkLabel(status?: number): { label: string; cls: string; icon: typeof CheckCircle2 } {
   switch (status) {
@@ -25,10 +33,9 @@ function checkLabel(status?: number): { label: string; cls: string; icon: typeof
 }
 
 export default function ProxiesPage() {
-  const qc = useQueryClient();
 
   const [keyword, setKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [editor, setEditor] = useState<{ mode: 'create' } | { mode: 'edit'; row: ProxyItem } | null>(null);
@@ -51,9 +58,7 @@ export default function ProxiesPage() {
     queryFn: () => proxiesApi.list(query),
   });
 
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: ['admin', 'proxies'] });
-  };
+  const refresh = () => list.refetch();
 
   const toggle = useMutation({
     mutationFn: ({ id, status }: { id: number; status: 0 | 1 }) => proxiesApi.update(id, { status }),
@@ -189,13 +194,11 @@ export default function ProxiesPage() {
               value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
             />
           </div>
-          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
-            {(['all','enabled','disabled'] as const).map((item) => (
-              <button key={item} type="button" className="tab" aria-selected={statusFilter===item} onClick={() => { setStatusFilter(item); setPage(1); }}>
-                {item==='all'?'全部':item==='enabled'?'启用':'禁用'}
-              </button>
-            ))}
-          </div>
+          <FilterSelect
+            value={statusFilter}
+            onChange={(v) => { setStatusFilter(v); setPage(1); }}
+            options={STATUS_OPTIONS}
+          />
           <div className="ml-auto filter-count">共 <strong>{total}</strong> 条{selectedCount>0 && <>，已选 <strong>{selectedCount}</strong> 条</>}</div>
         </div>
       </div>
@@ -300,8 +303,7 @@ export default function ProxiesPage() {
                     )}
                   </td>
                   <td className="sticky-r">
-                    <div className="flex items-center justify-center">
-                    <div className="inline-grid grid-cols-2 gap-1">
+                    <div className="flex items-center justify-center gap-1">
                       <button
                         className="btn btn-outline btn-action-view btn-xs"
                         disabled={testMut.isPending && testMut.variables === item.id}
@@ -331,7 +333,6 @@ export default function ProxiesPage() {
                       >
                         <Trash2 size={13}/> 删除
                       </button>
-                    </div>
                     </div>
                   </td>
                 </tr>

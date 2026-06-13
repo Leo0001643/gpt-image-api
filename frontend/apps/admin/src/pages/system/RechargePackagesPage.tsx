@@ -128,7 +128,9 @@ export default function RechargePackagesPage() {
   /* ── Inline edit helpers ── */
   const startEdit = (idx: number, field: FieldKey) => {
     setEditing({ idx, field });
-    setDraft(String(rows[idx]?.[field] ?? ''));
+    const raw = rows[idx]?.[field] ?? '';
+    // For numeric fields with value 0, start with empty so user just types
+    setDraft(NUM_FIELDS.includes(field) && Number(raw) === 0 ? '' : String(raw));
     setTimeout(() => inputRef.current?.select(), 0);
   };
 

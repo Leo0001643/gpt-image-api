@@ -1,27 +1,40 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, RefreshCw, Search, Wallet } from 'lucide-react';
+import {
+  ArrowLeftRight, ChevronLeft, ChevronRight, CreditCard, Gift, Key,
+  ListFilter, RefreshCw, Search, ShoppingCart, Tag, TrendingDown, TrendingUp, Undo2, Wallet,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { FilterSelect } from '../../components/FilterSelect';
 import { billingApi } from '../../lib/services';
 import type { AdminWalletLogItem } from '../../lib/types';
 import { fmtNumber, fmtPoints, fmtTime } from '../../lib/format';
 
+type BizType = '' | 'recharge' | 'consume' | 'refund' | 'cdk' | 'promo' | 'invite_reward' | 'gift';
+type Direction = '' | '1' | '-1';
+
 const BIZ_OPTIONS = [
-  { value: '', label: '全部业务' },
-  { value: 'recharge', label: '充值' },
-  { value: 'consume', label: '消费' },
-  { value: 'refund', label: '退款' },
-  { value: 'cdk', label: '兑换码' },
-  { value: 'promo', label: '优惠码' },
-  { value: 'invite_reward', label: '邀请奖励' },
-  { value: 'gift', label: '赠送' },
+  { value: ''             as BizType, label: '全部业务', icon: <ListFilter size={13}/>,   iconColor: '#6366f1' },
+  { value: 'recharge'     as BizType, label: '充值',     icon: <CreditCard size={13}/>,   iconColor: '#10b981' },
+  { value: 'consume'      as BizType, label: '消费',     icon: <ShoppingCart size={13}/>, iconColor: '#8b5cf6' },
+  { value: 'refund'       as BizType, label: '退款',     icon: <Undo2 size={13}/>,        iconColor: '#f59e0b' },
+  { value: 'cdk'          as BizType, label: '兑换码',   icon: <Key size={13}/>,           iconColor: '#3b82f6' },
+  { value: 'promo'        as BizType, label: '优惠码',   icon: <Tag size={13}/>,           iconColor: '#ec4899' },
+  { value: 'invite_reward'as BizType, label: '邀请奖励', icon: <Gift size={13}/>,          iconColor: '#f97316' },
+  { value: 'gift'         as BizType, label: '赠送',     icon: <Gift size={13}/>,          iconColor: '#14b8a6' },
+];
+
+const DIR_OPTIONS = [
+  { value: ''   as Direction, label: '收支方向', icon: <ArrowLeftRight size={13}/>, iconColor: '#6366f1' },
+  { value: '1'  as Direction, label: '收入',     icon: <TrendingUp size={13}/>,     iconColor: '#10b981' },
+  { value: '-1' as Direction, label: '支出',     icon: <TrendingDown size={13}/>,   iconColor: '#f43f5e' },
 ];
 
 export default function BillingPage() {
   const [keyword, setKeyword] = useState('');
   const [userID, setUserID] = useState('');
-  const [bizType, setBizType] = useState('');
-  const [direction, setDirection] = useState<'' | '1' | '-1'>('');
+  const [bizType, setBizType] = useState<BizType>('');
+  const [direction, setDirection] = useState<Direction>('');
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -31,7 +44,7 @@ export default function BillingPage() {
       keyword: keyword.trim() || undefined,
       user_id: Number(userID) || undefined,
       biz_type: bizType || undefined,
-      direction: direction ? Number(direction) as 1 | -1 : '',
+      direction: direction ? Number(direction) as 1 | -1 : undefined,
       page,
       page_size: pageSize,
     }),
@@ -81,14 +94,8 @@ export default function BillingPage() {
             />
           </div>
           <input className="filter-input" style={{width:90}} value={userID} onChange={(e) => { setUserID(e.target.value); setPage(1); }} placeholder="用户ID"/>
-          <select className="filter-select" style={{minWidth:110}} value={bizType} onChange={(e) => { setBizType(e.target.value); setPage(1); }}>
-            {BIZ_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-          <select className="filter-select" style={{minWidth:100}} value={direction} onChange={(e) => { setDirection(e.target.value as typeof direction); setPage(1); }}>
-            <option value="">收支方向</option>
-            <option value="1">收入</option>
-            <option value="-1">支出</option>
-          </select>
+          <FilterSelect value={bizType} onChange={(v) => { setBizType(v); setPage(1); }} options={BIZ_OPTIONS} />
+          <FilterSelect value={direction} onChange={(v) => { setDirection(v); setPage(1); }} options={DIR_OPTIONS} />
           <div className="ml-auto filter-count">共 <strong>{fmtNumber(total)}</strong> 条</div>
         </div>
       </div>

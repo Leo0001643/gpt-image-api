@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, AlertCircle, BarChart2, CheckCircle2, ChevronDown, ChevronLeft,
-  ChevronRight, Clock, Database, KeyRound, Pencil, Plus, Power, RefreshCw,
-  RotateCw, Search, Settings2, ShieldCheck, Signal, Tag, Trash2, Upload, X, XCircle,
+  Activity, AlertCircle, BarChart2, Bot, CheckCircle2, ChevronDown, ChevronLeft,
+  ChevronRight, Clock, Database, KeyRound, ListFilter, Pencil, Plus, Power, RefreshCw,
+  RotateCw, Search, Settings2, ShieldCheck, Signal, Tag, Trash2, Upload, X, XCircle, Zap,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+
+import { FilterSelect } from '../../components/FilterSelect';
 
 import { ApiError } from '../../lib/api';
 import { fmtNumber, fmtRelative, fmtTime, statusLabel } from '../../lib/format';
@@ -24,6 +26,12 @@ type PlanTypeFilter = 'all' | 'basic' | 'super' | 'heavy';
 type AuthType = 'api_key' | 'oauth' | 'cookie';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200];
+
+const PROVIDER_OPTIONS = [
+  { value: 'all' as ProviderFilter, label: '全部', icon: <ListFilter size={13}/>, iconColor: '#6366f1' },
+  { value: 'gpt' as ProviderFilter, label: 'GPT', icon: <Bot size={13}/>, iconColor: '#10b981' },
+  { value: 'grok' as ProviderFilter, label: 'Grok', icon: <Zap size={13}/>, iconColor: '#f59e0b' },
+];
 
 const PLAN_TYPE_OPTIONS = [
   { value: 'all', label: '全部类型' },
@@ -152,8 +160,8 @@ export default function TokenAccountsPage() {
   });
 
   const refresh = () => {
-    qc.invalidateQueries({ queryKey: ['admin', 'accounts'] });
-    qc.invalidateQueries({ queryKey: ['admin', 'pool', 'stats'] });
+    list.refetch();
+    qc.refetchQueries({ queryKey: ['admin', 'pool', 'stats'] });
   };
 
   const toggleStatus = useMutation({
@@ -363,13 +371,11 @@ export default function TokenAccountsPage() {
               onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
             />
           </div>
-          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
-            {(['all', 'gpt', 'grok'] as const).map((item) => (
-              <button key={item} type="button" className="tab" aria-selected={provider === item} onClick={() => { setProvider(item); setPage(1); }}>
-                {item === 'all' ? '全部' : item.toUpperCase()}
-              </button>
-            ))}
-          </div>
+          <FilterSelect
+            value={provider}
+            onChange={(v) => { setProvider(v); setPage(1); }}
+            options={PROVIDER_OPTIONS}
+          />
           <select className="filter-select" style={{minWidth:110}} value={planType} onChange={(e) => { setPlanType(e.target.value as PlanTypeFilter); setPage(1); }}>
             {PLAN_TYPE_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
@@ -520,8 +526,7 @@ export default function TokenAccountsPage() {
                     </div>
                   </td>
                   <td className="sticky-r">
-                    <div className="flex items-center justify-center">
-                    <div className="inline-grid grid-cols-2 gap-1">
+                    <div className="flex items-center justify-center gap-1">
                       <button
                         className="btn btn-outline btn-action-view btn-xs"
                         onClick={() => testMut.mutate(item.id)}
@@ -558,7 +563,6 @@ export default function TokenAccountsPage() {
                       >
                         <Trash2 size={13}/> 删除
                       </button>
-                    </div>
                     </div>
                   </td>
                 </tr>

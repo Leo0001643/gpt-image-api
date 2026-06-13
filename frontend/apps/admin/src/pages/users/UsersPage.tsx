@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, Calendar, CheckCircle2, ChevronLeft, ChevronRight, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, Users, X } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Ban, Calendar, CheckCircle2, ChevronLeft, ChevronRight, Coins, ListFilter, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, UserCheck, UserX, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { FilterSelect } from '../../components/FilterSelect';
 import { ApiError } from '../../lib/api';
 import { fmtPoints, fmtRelative, fmtTime } from '../../lib/format';
 import { usersApi } from '../../lib/services';
@@ -12,6 +13,13 @@ type UserDialog =
   | { mode: 'create' }
   | { mode: 'edit'; row: AdminUserItem }
   | { mode: 'points'; row: AdminUserItem; action: 'recharge' | 'deduct' };
+
+type StatusFilter = 'all' | 'enabled' | 'disabled';
+const STATUS_OPTIONS = [
+  { value: 'all'      as StatusFilter, label: '全部', icon: <ListFilter size={13}/>, iconColor: '#6366f1' },
+  { value: 'enabled'  as StatusFilter, label: '正常', icon: <UserCheck size={13}/>,  iconColor: '#10b981' },
+  { value: 'disabled' as StatusFilter, label: '暂停', icon: <UserX size={13}/>,      iconColor: '#f59e0b' },
+];
 
 const pageSize = 20;
 
@@ -24,9 +32,8 @@ function userName(u: AdminUserItem): string {
 }
 
 export default function UsersPage() {
-  const qc = useQueryClient();
   const [keyword, setKeyword] = useState('');
-  const [status, setStatus] = useState<'all' | 'enabled' | 'disabled'>('all');
+  const [status, setStatus] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const [dlg, setDlg] = useState<UserDialog | null>(null);
 
@@ -45,7 +52,7 @@ export default function UsersPage() {
     queryFn: () => usersApi.list(query),
   });
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+  const refresh = () => list.refetch();
   const items = list.data?.list ?? [];
   const total = list.data?.total ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
@@ -86,11 +93,11 @@ export default function UsersPage() {
               value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
             />
           </div>
-          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
-            {[['all','全部'],['enabled','正常'],['disabled','暂停']].map(([k,label]) => (
-              <button key={k} className="tab" aria-selected={status===k} onClick={() => { setStatus(k as typeof status); setPage(1); }}>{label}</button>
-            ))}
-          </div>
+          <FilterSelect
+            value={status}
+            onChange={(v) => { setStatus(v); setPage(1); }}
+            options={STATUS_OPTIONS}
+          />
         </div>
       </div>
 
@@ -155,16 +162,15 @@ export default function UsersPage() {
                   </div>
                 </td>
                 <td className="sticky-r">
-                  <div className="flex items-center justify-center">
-                  <div className="inline-grid grid-cols-2 gap-1">
+                  <div className="flex items-center justify-center gap-1">
                     <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setDlg({ mode: 'edit', row: u })}>
                       <Pencil size={13}/> 编辑
                     </button>
                     <button className="btn btn-outline btn-action-view btn-xs" onClick={() => setDlg({ mode: 'points', row: u, action: 'recharge' })}>
-                      <PlusCircle size={13} /> 充值
+                      <PlusCircle size={13}/> 充值
                     </button>
                     <button className="btn btn-outline btn-action-warn btn-xs" onClick={() => setDlg({ mode: 'points', row: u, action: 'deduct' })}>
-                      <MinusCircle size={13} /> 扣除
+                      <MinusCircle size={13}/> 扣除
                     </button>
                     <button
                       className={u.status === 1 ? 'btn btn-outline btn-action-danger btn-xs' : 'btn btn-outline btn-action-view btn-xs'}
@@ -174,7 +180,6 @@ export default function UsersPage() {
                       {u.status === 1 ? <Ban size={13}/> : <CheckCircle2 size={13}/>}
                       {u.status === 1 ? '暂停' : '启用'}
                     </button>
-                  </div>
                   </div>
                 </td>
               </tr>
