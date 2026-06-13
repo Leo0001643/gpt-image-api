@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, AlertCircle, CheckCircle2, ChevronDown, ChevronLeft,
   ChevronRight, Clock, KeyRound, Pencil, Plus, Power, RefreshCw,
-  RotateCw, ShieldOff, Trash2, Upload, X, XCircle, Zap,
+  RotateCw, Trash2, Upload, X, XCircle,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
