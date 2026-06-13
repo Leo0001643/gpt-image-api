@@ -105,7 +105,7 @@ export default function ModelPricesPage() {
     setDraft({ model_code:'', name:'', kind:'image', provider:'gpt', upstream_model:'', unit_points:0, input_unit_points:0, output_unit_points:0, enabled:true });
     setEdit(-1);
   };
-  const openEdit = (i: number) => { setDraft({ ...rows[i] }); setEdit(i); };
+  const openEdit = (i: number) => { setDraft({ ...rows[i]! } as PriceRow); setEdit(i); };
   const closeEdit = () => { setEdit(null); setDraft(null); };
 
   const commitDraft = () => {
@@ -330,7 +330,7 @@ interface EditModalProps {
   onClose:   () => void;
 }
 function EditModal({ draft, isNew, onChange, onConfirm, onClose }: EditModalProps) {
-  const upd = (patch: Partial<PriceRow>) => onChange({ ...draft, ...patch });
+  const upd = (patch: Partial<PriceRow>) => onChange({ ...draft, ...patch } as PriceRow);
   const isText = draft.kind === 'text';
   const ref = useRef<HTMLDivElement>(null);
 
