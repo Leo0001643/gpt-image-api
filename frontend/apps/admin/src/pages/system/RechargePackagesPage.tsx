@@ -150,9 +150,9 @@ export default function RechargePackagesPage() {
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
             <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}><RefreshCw size={11} className={settings.isFetching?'animate-spin':''}/> 重新加载</button>
-            <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={11}/> 新增套餐</button>
+            <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={13}/> 新增套餐</button>
             <button className="btn btn-primary btn-sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-              <Save size={11}/> {save.isPending?'保存中...':dirty?'保存修改':'已是最新'}
+              <Save size={13}/> {save.isPending?'保存中...':dirty?'保存修改':'已是最新'}
             </button>
           </div>
         </div>
@@ -201,10 +201,10 @@ export default function RechargePackagesPage() {
                       {row.enabled ? '启用' : '停用'}
                     </button>
                   </td>
-                  <td>
+                  <td className="text-center">
                     <div className="inline-grid grid-cols-2 gap-1">
-                      <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => cloneRow(idx)}><Copy size={11}/> 复制</button>
-                      <button className="btn btn-outline btn-action-danger btn-xs" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={11}/> 删除</button>
+                      <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => cloneRow(idx)}><Copy size={13}/> 复制</button>
+                      <button className="btn btn-outline btn-action-danger btn-xs" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={13}/> 删除</button>
                     </div>
                   </td>
                 </tr>

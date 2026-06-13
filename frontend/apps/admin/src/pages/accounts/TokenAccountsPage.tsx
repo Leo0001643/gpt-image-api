@@ -520,33 +520,34 @@ export default function TokenAccountsPage() {
                     </div>
                   </td>
                   <td className="sticky-r">
+                    <div className="flex items-center justify-center">
                     <div className="inline-grid grid-cols-2 gap-1">
                       <button
                         className="btn btn-outline btn-action-view btn-xs"
                         onClick={() => testMut.mutate(item.id)}
                         disabled={testMut.isPending && testMut.variables === item.id}
                       >
-                        <Activity size={11} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
+                        <Activity size={13} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
                         {testMut.isPending && testMut.variables === item.id ? '测试中' : '测试'}
                       </button>
                       {isOAuth && (
                         <button
-                          className="btn btn-outline btn-sm"
+                          className="btn btn-outline btn-xs"
                           onClick={() => refreshOAuthMut.mutate(item.id)}
                           disabled={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id}
                         >
-                          <RotateCw size={11} className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin' : ''}/>
+                          <RotateCw size={13} className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin' : ''}/>
                           刷新
                         </button>
                       )}
                       <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setEditTarget(item)}>
-                        <Pencil size={11}/> 编辑
+                        <Pencil size={13}/> 编辑
                       </button>
                       <button
                         className={`btn btn-xs btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
                         onClick={() => toggleStatus.mutate({ id: item.id, status: enabled ? 0 : 1 })}
                       >
-                        <Power size={11}/>{enabled ? '禁用' : '启用'}
+                        <Power size={13}/>{enabled ? '禁用' : '启用'}
                       </button>
                       <button
                         className="btn btn-outline btn-action-danger btn-xs"
@@ -555,8 +556,9 @@ export default function TokenAccountsPage() {
                           remove.mutate(item.id);
                         }}
                       >
-                        <Trash2 size={11}/> 删除
+                        <Trash2 size={13}/> 删除
                       </button>
+                    </div>
                     </div>
                   </td>
                 </tr>

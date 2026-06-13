@@ -75,13 +75,13 @@ export default function UsersPage() {
             <span className="stat-pill stat-pill-amber"><span className="stat-pill-dot"/><span className="stat-pill-label">总积分</span><span className="stat-pill-val">{(items.reduce((s,u)=>s+(u.points||0),0)/100).toFixed(0)}</span></span>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={11}/> 刷新</button>
-            <button className="list-page-btn-add" onClick={() => setDlg({ mode: 'create' })}><Plus size={11}/> 新增用户</button>
+            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={13}/> 刷新</button>
+            <button className="list-page-btn-add" onClick={() => setDlg({ mode: 'create' })}><Plus size={13}/> 新增用户</button>
           </div>
         </div>
         <div className="list-page-filter-row">
           <div className="search-wrap">
-            <Search size={11}/>
+            <Search size={13}/>
             <input className="filter-input" style={{width:220}} placeholder="搜索 ID / 邮箱 / 手机 / 用户名 / 邀请码"
               value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
             />
@@ -99,12 +99,12 @@ export default function UsersPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th className="sticky-l"><span className="th-icon"><Users size={11}/>用户</span></th>
-              <th><span className="th-icon"><Signal size={11}/>状态</span></th>
-              <th><span className="th-icon"><Coins size={11}/>积分</span></th>
-              <th><span className="th-icon"><Tag size={11}/>套餐</span></th>
-              <th><span className="th-icon"><Calendar size={11}/>注册 / 登录</span></th>
-              <th className="sticky-r"><span className="th-icon"><Settings2 size={11}/>操作</span></th>
+              <th className="sticky-l"><span className="th-icon"><Users size={13}/>用户</span></th>
+              <th><span className="th-icon"><Signal size={13}/>状态</span></th>
+              <th><span className="th-icon"><Coins size={13}/>积分</span></th>
+              <th><span className="th-icon"><Tag size={13}/>套餐</span></th>
+              <th><span className="th-icon"><Calendar size={13}/>注册 / 登录</span></th>
+              <th className="sticky-r"><span className="th-icon"><Settings2 size={13}/>操作</span></th>
             </tr>
           </thead>
           <tbody>
@@ -155,24 +155,26 @@ export default function UsersPage() {
                   </div>
                 </td>
                 <td className="sticky-r">
+                  <div className="flex items-center justify-center">
                   <div className="inline-grid grid-cols-2 gap-1">
                     <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setDlg({ mode: 'edit', row: u })}>
-                      <Pencil size={11}/> 编辑
+                      <Pencil size={13}/> 编辑
                     </button>
                     <button className="btn btn-outline btn-action-view btn-xs" onClick={() => setDlg({ mode: 'points', row: u, action: 'recharge' })}>
-                      <PlusCircle size={11} /> 充值
+                      <PlusCircle size={13} /> 充值
                     </button>
                     <button className="btn btn-outline btn-action-warn btn-xs" onClick={() => setDlg({ mode: 'points', row: u, action: 'deduct' })}>
-                      <MinusCircle size={11} /> 扣除
+                      <MinusCircle size={13} /> 扣除
                     </button>
                     <button
                       className={u.status === 1 ? 'btn btn-outline btn-action-danger btn-xs' : 'btn btn-outline btn-action-view btn-xs'}
                       disabled={toggle.isPending}
                       onClick={() => toggle.mutate({ id: u.id, next: u.status === 1 ? 0 : 1 })}
                     >
-                      {u.status === 1 ? <Ban size={11}/> : <CheckCircle2 size={11}/>}
+                      {u.status === 1 ? <Ban size={13}/> : <CheckCircle2 size={13}/>}
                       {u.status === 1 ? '暂停' : '启用'}
                     </button>
+                  </div>
                   </div>
                 </td>
               </tr>
@@ -186,9 +188,9 @@ export default function UsersPage() {
             <span>共 <strong style={{color:'#10b981'}}>{total}</strong> 个用户 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={11}/> 上一页</button>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
             <span style={{fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
-            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={11}/></button>
+            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={13}/></button>
           </div>
         </div>
       </div>
