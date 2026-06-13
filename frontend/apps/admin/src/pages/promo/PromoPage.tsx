@@ -202,16 +202,16 @@ export default function PromoPage() {
 function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormState; setForm: (f: FormState | null) => void; saving: boolean; onClose: () => void; onSave: () => void }) {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm({ ...form, [k]: v });
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-2xl" onClick={e=>e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-border px-6 py-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4" onClick={onClose}>
+      <div className="dialog-surface w-full max-w-3xl flex flex-col max-h-[88vh] gia-fade-in" onClick={e=>e.stopPropagation()}>
+        <div className="modal-header">
           <div>
-            <h2 className="text-[17px] font-semibold text-text-primary">{form.id ? '编辑优惠码' : '新增优惠码'}</h2>
+            <h3>{form.id ? '编辑优惠码' : '新增优惠码'}</h3>
             <p className="mt-0.5 text-tiny text-text-tertiary">金额单位为元，赠点单位为点</p>
           </div>
           <button className="btn btn-ghost btn-icon btn-sm" type="button" onClick={onClose}><X size={16}/></button>
         </div>
-        <div className="grid gap-3 p-6 md:grid-cols-2">
+        <div className="modal-body grid gap-3 md:grid-cols-2">
           <Field label="优惠码"><input className="input font-mono" value={form.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="SPRING2026" /></Field>
           <Field label="名称"><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="春季活动" /></Field>
           <Field label="类型">
@@ -237,7 +237,7 @@ function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormSta
             </select>
           </Field>
         </div>
-        <div className="flex justify-end gap-2 border-t border-border bg-surface-2/40 px-6 py-4">
+        <div className="modal-footer">
           <button className="btn btn-outline btn-md" onClick={onClose}>取消</button>
           <button className="btn btn-primary btn-md" disabled={saving} onClick={onSave}>{saving ? '保存中…' : '保存'}</button>
         </div>

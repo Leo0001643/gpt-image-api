@@ -573,25 +573,42 @@
   }
   .data-table thead th {
     text-align: left;
-    padding: 10px var(--space-5);
+    padding: 11px var(--space-5);
     font-size: var(--fs-small);
-    font-weight: var(--weight-medium);
+    font-weight: var(--weight-semibold);
     color: var(--text-secondary);
     background: var(--surface-2);
     border-bottom: 1px solid var(--border-default);
     white-space: nowrap;
+    letter-spacing: 0.01em;
   }
   .data-table thead th:first-child { border-top-left-radius: var(--radius-lg); }
   .data-table thead th:last-child  { border-top-right-radius: var(--radius-lg); text-align: right; }
   .data-table tbody td {
-    padding: 14px var(--space-5);
+    padding: 13px var(--space-5);
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-primary);
     vertical-align: middle;
+    transition: background var(--duration-fast) var(--ease-out);
   }
   .data-table tbody td:last-child { text-align: right; }
   .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table tbody tr:hover td { background: var(--surface-2); }
+  .data-table tbody tr:hover td { background: rgba(30,61,255,.035); }
+
+  /* Skeleton row for table loading state */
+  .table-skeleton td { border-bottom: 1px solid var(--border-subtle); }
+  .table-skeleton td > span {
+    display: inline-block;
+    height: 12px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
 
   .list-row {
     display: flex;
@@ -674,8 +691,9 @@
   .dialog-surface {
     background: var(--surface-1);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-4);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 32px 80px rgba(11,18,38,.22), 0 8px 24px rgba(11,18,38,.10);
+    overflow: hidden;
   }
 
   .modal-backdrop {
@@ -686,8 +704,8 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(15, 23, 42, .42);
-    backdrop-filter: blur(8px);
+    background: rgba(11, 18, 38, .50);
+    backdrop-filter: blur(10px);
   }
 
   .modal-panel {
@@ -698,8 +716,8 @@
     flex-direction: column;
     background: var(--surface-1);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-4);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 32px 80px rgba(11,18,38,.22), 0 8px 24px rgba(11,18,38,.10);
   }
 
   .modal-header {
@@ -707,20 +725,22 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 18px 20px 12px;
-    border-bottom: 1px solid var(--border-subtle);
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid var(--border-default);
+    background: var(--surface-2);
   }
-  .modal-header h2 {
+  .modal-header h2, .modal-header h3 {
     margin: 0;
     font-size: var(--fs-h4);
     line-height: var(--lh-snug);
-    font-weight: var(--weight-medium);
+    font-weight: var(--weight-semibold);
     color: var(--text-primary);
   }
 
   .modal-body {
-    padding: 16px 20px;
+    padding: 20px 24px;
     overflow: auto;
+    flex: 1;
   }
 
   .modal-footer {
@@ -728,9 +748,9 @@
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
-    padding: 12px 20px 18px;
-    border-top: 1px solid var(--border-subtle);
-    background: var(--surface-1);
+    padding: 14px 24px 18px;
+    border-top: 1px solid var(--border-default);
+    background: var(--surface-2);
   }
 
   .tabs {

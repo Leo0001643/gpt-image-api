@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Users } from 'lucide-react';
+import { Ban, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -130,11 +130,21 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {list.isLoading && (
-              <tr><td colSpan={6} className="text-center text-text-tertiary py-10">加载中…</td></tr>
-            )}
+            {list.isLoading && Array.from({length: 5}).map((_, i) => (
+              <tr key={i} className="table-skeleton">
+                {[160, 80, 100, 80, 160, 80].map((w, j) => (
+                  <td key={j}><span style={{width: w}} className="block rounded-full"/></td>
+                ))}
+              </tr>
+            ))}
             {!list.isLoading && items.length === 0 && (
-              <tr><td colSpan={6} className="text-center text-text-tertiary py-10">暂无用户</td></tr>
+              <tr><td colSpan={6}>
+                <div className="empty-state">
+                  <div className="empty-state-icon"><Users size={24}/></div>
+                  <p className="empty-state-title">暂无用户</p>
+                  <p className="empty-state-desc">新用户注册后将出现在这里。</p>
+                </div>
+              </td></tr>
             )}
             {items.map((u) => (
               <tr key={u.id}>
@@ -262,7 +272,7 @@ function UserFormDialog(props: {
       <div className="modal-panel max-w-xl">
         <header className="modal-header">
           <h2>{isCreate ? '新增用户' : '编辑用户'}</h2>
-          <button className="btn btn-ghost btn-sm" onClick={props.onClose}>关闭</button>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={props.onClose} aria-label="关闭"><X size={18}/></button>
         </header>
         <div className="modal-body grid gap-3">
           {isCreate ? (
@@ -334,7 +344,7 @@ function PointsDialog(props: {
       <div className="modal-panel max-w-lg">
         <header className="modal-header">
           <h2>{isRecharge ? '充值积分' : '扣除积分'}</h2>
-          <button className="btn btn-ghost btn-sm" onClick={props.onClose}>关闭</button>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={props.onClose} aria-label="关闭"><X size={18}/></button>
         </header>
         <div className="modal-body grid gap-3">
           <div className="rounded-lg border border-border bg-surface-2 p-3 text-small">

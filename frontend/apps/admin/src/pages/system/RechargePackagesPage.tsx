@@ -157,7 +157,14 @@ export default function RechargePackagesPage() {
       </div>
 
       {settings.isLoading ? (
-        <div className="card card-section text-center text-text-tertiary py-10">加载中...</div>
+        <div className="card overflow-x-auto">
+          <table className="data-table min-w-[1180px]">
+            <thead><tr>{['排序','套餐 ID','套餐名称','金额','基础积分','赠送积分','标签','备注','状态','操作'].map(h=><th key={h}>{h}</th>)}</tr></thead>
+            <tbody>{Array.from({length:5}).map((_,i)=>(
+              <tr key={i} className="table-skeleton">{[76,140,160,110,110,110,100,100,80,100].map((w,j)=><td key={j}><span style={{width:w}} className="block rounded-full"/></td>)}</tr>
+            ))}</tbody>
+          </table>
+        </div>
       ) : (
         <div className="card table-wrap">
           <table className="data-table min-w-[1180px]">

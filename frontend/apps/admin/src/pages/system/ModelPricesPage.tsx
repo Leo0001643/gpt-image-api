@@ -347,18 +347,18 @@ function EditModal({ draft, isNew, onChange, onConfirm, onClose }: EditModalProp
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md px-4"
       onClick={onBackdrop}
     >
-      <div ref={ref} className="card w-full max-w-lg shadow-2xl animate-fade-up" onClick={e=>e.stopPropagation()}>
+      <div ref={ref} className="dialog-surface w-full max-w-lg flex flex-col max-h-[88vh] gia-fade-in" onClick={e=>e.stopPropagation()}>
         {/* modal header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <h2 className="text-heading font-semibold">{isNew ? '添加模型' : '编辑模型'}</h2>
-          <button className="btn btn-ghost btn-icon btn-sm text-text-tertiary" onClick={onClose}><X size={16}/></button>
+        <div className="modal-header">
+          <h3>{isNew ? '添加模型' : '编辑模型'}</h3>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭"><X size={18}/></button>
         </div>
 
         {/* modal body */}
-        <div className="px-6 py-5 space-y-5">
+        <div className="modal-body space-y-5">
 
           {/* code + name */}
           <div className="grid grid-cols-2 gap-4">

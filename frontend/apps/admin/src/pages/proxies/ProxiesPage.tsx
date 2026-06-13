@@ -1,15 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity,
-  CheckCircle2,
-  Clock,
-  Pencil,
-  Plus,
-  Power,
-  RefreshCw,
-  Trash2,
-  Upload,
-  XCircle,
+  Activity, CheckCircle2, Clock, Globe, Pencil, Plus, Power,
+  RefreshCw, ShieldOff, Trash2, Upload, X, XCircle, Zap,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -195,7 +187,28 @@ export default function ProxiesPage() {
         </div>
       </header>
 
-      <div className="card card-section flex flex-wrap items-center gap-3 !py-3">
+      {/* ── stat strip ── */}
+      <div className="grid gap-3 sm:grid-cols-4">
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">代理总数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><Globe size={17}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页启用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{items.filter(p=>p.status===1).length}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={17}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页禁用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-rose-600 leading-none">{items.filter(p=>p.status!==1).length}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-rose-600"><ShieldOff size={17}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页可用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-violet-600 leading-none">{items.filter(p=>p.last_check_ok===1).length}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-600"><Zap size={17}/></span>
+        </div>
+      </div>
+
+      {/* ── filter bar ── */}
+      <div className="card p-3 flex flex-wrap items-center gap-3">
         <div className="tabs">
           {(['all', 'enabled', 'disabled'] as const).map((item) => (
             <button
@@ -251,17 +264,18 @@ export default function ProxiesPage() {
             </tr>
           </thead>
           <tbody>
-            {list.isLoading && (
-              <tr>
-                <td colSpan={8} className="py-10 text-center text-small text-text-tertiary">
-                  加载中…
-                </td>
+            {list.isLoading && Array.from({length: 5}).map((_, i) => (
+              <tr key={i} className="table-skeleton">
+                {[10, 140, 70, 170, 120, 80, 140, 80].map((w, j) => (
+                  <td key={j}><span style={{width: w}} className="block rounded-full"/></td>
+                ))}
               </tr>
-            )}
+            ))}
             {!list.isLoading && items.length === 0 && (
               <tr>
                 <td colSpan={8}>
                   <div className="empty-state">
+                    <div className="empty-state-icon"><Globe size={24}/></div>
                     <p className="empty-state-title">暂无代理</p>
                     <p className="empty-state-desc">可以手动新增，也可以在批量添加里一次导入多条代理。</p>
                   </div>
@@ -625,15 +639,18 @@ function Modal({
   children: ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="dialog-surface w-full max-w-xl gia-fade-in">
-        <header className="flex h-12 items-center justify-between border-b border-border px-5">
-          <h3 className="font-semibold text-text-primary">{title}</h3>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md" onClick={onClose}>
+      <div
+        className="dialog-surface w-full max-w-xl gia-fade-in flex flex-col max-h-[88vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h3>{title}</h3>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">
-            ×
+            <X size={18} />
           </button>
-        </header>
-        <div className="max-h-[70vh] overflow-y-auto p-5">{children}</div>
+        </div>
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );

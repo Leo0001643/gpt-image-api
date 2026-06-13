@@ -331,7 +331,7 @@ function UpstreamDialog({ task, onClose }: { task: AdminGenerationLogItem; onClo
   });
   const rows = q.data ?? [];
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
       <div className="dialog-surface gia-fade-in max-h-[86vh] w-full max-w-5xl overflow-hidden">
         <header className="modal-header">
           <div>
@@ -385,7 +385,7 @@ function LogBlock({ title, value, danger }: { title: string; value?: string; dan
 
 function ConfirmDialog({ days, loading, onClose, onConfirm }: { days: number; loading: boolean; onClose: () => void; onConfirm: () => void }) {
   return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
       <div className="dialog-surface gia-fade-in w-full max-w-md p-6">
         <div className="mb-4 flex items-start gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger">
