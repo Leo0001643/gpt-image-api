@@ -61,7 +61,17 @@ export default function CDKPage() {
         </div>
       </header>
 
-      <form onSubmit={submit} className="card card-section grid w-full gap-5 lg:grid-cols-2">
+      <div className="dialog-surface w-full">
+        <div className="modal-header-grad mhg-amber">
+          <div className="flex items-center gap-3">
+            <div className="modal-icon"><Ticket size={20}/></div>
+            <div>
+              <h3>生成兑换码批次</h3>
+              <p>每张 CDK 唯一，使用后自动入账积分</p>
+            </div>
+          </div>
+        </div>
+        <form onSubmit={submit} className="modal-body grid w-full gap-5 lg:grid-cols-2">
         <Field label="批次号" hint="同批次唯一，如 SPRING2026-A">
           <input
             className="input"
@@ -145,24 +155,30 @@ export default function CDKPage() {
             <strong className="text-gia-500 mx-1">{fmtPoints(body.points * body.qty)} 点</strong>
           </div>
           <button type="submit" className="btn btn-primary btn-md md:shrink-0" disabled={m.isPending}>
-            {m.isPending ? '生成中…' : '生成批次'}
+            {m.isPending ? '生成中…' : '立即生成批次'}
           </button>
         </div>
-      </form>
+        </form>
+      </div>
 
       {last && (
-        <div className="card card-section flex w-full items-start gap-3 border-success/40">
-          <CheckCircle2 className="text-success shrink-0 mt-0.5" size={20} />
-          <div className="flex-1 space-y-1">
-            <p className="text-text-primary font-medium">最新生成成功</p>
-            <p className="text-small text-text-secondary">
-              批次 ID #{last.id} · 批次号
-              <code className="kbd mx-1">{last.batch_no}</code>
-              · 共 {fmtNumber(last.total_qty)} 张
-            </p>
-            <p className="text-small text-text-tertiary">
-              详细码列表请前往 DB / 下一阶段补全的 CDK 列表 UI 导出（CSV）。
-            </p>
+        <div className="dialog-surface w-full">
+          <div className="modal-header-grad mhg-emerald">
+            <div className="flex items-center gap-3">
+              <div className="modal-icon"><CheckCircle2 size={20}/></div>
+              <div>
+                <h3>批次生成成功</h3>
+                <p>批次 #{last.id} · {last.batch_no}</p>
+              </div>
+            </div>
+          </div>
+          <div className="modal-body">
+            <div className="flex flex-wrap gap-6 text-small">
+              <div><div className="text-text-tertiary mb-1">批次 ID</div><div className="font-mono font-bold">#{last.id}</div></div>
+              <div><div className="text-text-tertiary mb-1">批次号</div><code className="kbd">{last.batch_no}</code></div>
+              <div><div className="text-text-tertiary mb-1">生成数量</div><div className="font-bold text-success">{fmtNumber(last.total_qty)} 张</div></div>
+            </div>
+            <p className="mt-3 text-tiny text-text-tertiary">详细码列表请前往数据库或后续 CDK 导出功能（CSV）查看。</p>
           </div>
         </div>
       )}

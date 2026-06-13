@@ -30,7 +30,7 @@ export default function DashboardPage() {
       {/* ── page header ─────────────────────────────── */}
       <header className="page-header">
         <div>
-          <h1 className="page-title">运营仪表盘</h1>
+          <h1 className="page-title flex items-center gap-2"><Activity className="text-gia-500" size={24}/>运营仪表盘</h1>
           <p className="page-subtitle">实时追踪生成量、账号池状态、积分消耗与用户活跃。</p>
         </div>
         <button className="btn btn-outline btn-md gap-1.5" onClick={() => refetch()} disabled={isFetching}>

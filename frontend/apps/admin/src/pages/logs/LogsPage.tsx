@@ -115,7 +115,7 @@ export default function LogsPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title">请求日志</h1>
+          <h1 className="page-title flex items-center gap-2"><Eye className="text-gia-500" size={24}/>请求日志</h1>
           <p className="page-subtitle">按任务查看用户、模型、状态与费用；提示词、错误和上游返回收进详情行。</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -385,18 +385,24 @@ function LogBlock({ title, value, danger }: { title: string; value?: string; dan
 
 function ConfirmDialog({ days, loading, onClose, onConfirm }: { days: number; loading: boolean; onClose: () => void; onConfirm: () => void }) {
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
-      <div className="dialog-surface gia-fade-in w-full max-w-md p-6">
-        <div className="mb-4 flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger">
-            <Trash2 size={18} />
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="dialog-surface gia-fade-in w-full max-w-md flex flex-col" onClick={(e)=>e.stopPropagation()}>
+        <div className="modal-header-grad mhg-rose">
+          <div className="flex items-center gap-3">
+            <div className="modal-icon"><Trash2 size={20}/></div>
+            <div>
+              <h3>确认删除日志</h3>
+              <p>删除 {days} 天前的所有请求记录</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-h4">删除请求日志</h2>
-            <p className="mt-1 text-small text-text-secondary">确定删除 {days} 天前的请求日志吗？该操作不可恢复。</p>
+          <button className="modal-close" onClick={onClose}><X size={16}/></button>
+        </div>
+        <div className="modal-body">
+          <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-small text-danger">
+            该操作不可恢复，请谨慎操作。
           </div>
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="modal-footer">
           <button className="btn btn-outline btn-md" disabled={loading} onClick={onClose}>取消</button>
           <button className="btn btn-danger btn-md" disabled={loading} onClick={onConfirm}>
             {loading ? '删除中...' : '确认删除'}

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertCircle, Image as ImageIcon, MessageSquare,
+  AlertCircle, BarChart2, Image as ImageIcon, MessageSquare,
   Pencil, Play, Plus, RefreshCw, Save, Trash2, X,
 } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
@@ -136,7 +136,7 @@ export default function ModelPricesPage() {
       {/* ── page header ─────────────────── */}
       <header className="page-header">
         <div>
-          <h1 className="page-title">模型价格</h1>
+          <h1 className="page-title flex items-center gap-2"><BarChart2 className="text-gia-500" size={24}/>模型价格</h1>
           <p className="page-subtitle">配置前台可用模型、上游映射与计费单价</p>
         </div>
         <div className="flex gap-2">
@@ -153,25 +153,14 @@ export default function ModelPricesPage() {
         </div>
       </header>
 
-      {/* ── kpi strip ─────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label:'全部模型', value:rows.length, sub:`${onN} 启用`,  accent:'#6366f1' },
-          { label:'图片模型', value:imgN,        sub:'image',         accent:'#3b82f6' },
-          { label:'视频模型', value:vidN,        sub:'video',         accent:'#f59e0b' },
-          { label:'文字模型', value:txtN,        sub:'text',          accent:'#10b981' },
-        ].map(({ label, value, sub, accent }) => (
-          <div key={label} className="card overflow-hidden">
-            <div style={{ height:3, background:accent }} />
-            <div className="px-5 py-4">
-              <div className="text-2xl font-bold tabular-nums">{value}</div>
-              <div className="flex justify-between items-center mt-1.5">
-                <span className="text-small text-text-secondary">{label}</span>
-                <span className="text-tiny text-text-tertiary font-mono">{sub}</span>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* ── stat tabs ─────────────────────────────────────── */}
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-violet"><span className="stat-tab-dot"/><span>全部模型</span><span className="stat-tab-val">{rows.length}</span></div>
+        <div className="stat-tab stat-tab-emerald"><span className="stat-tab-dot"/><span>已启用</span><span className="stat-tab-val">{onN}</span></div>
+        <div className="stat-tab stat-tab-rose"><span className="stat-tab-dot"/><span>已禁用</span><span className="stat-tab-val">{rows.length - onN}</span></div>
+        <div className="stat-tab stat-tab-blue"><span className="stat-tab-dot"/><span>图片模型</span><span className="stat-tab-val">{imgN}</span></div>
+        <div className="stat-tab stat-tab-amber"><span className="stat-tab-dot"/><span>视频模型</span><span className="stat-tab-val">{vidN}</span></div>
+        <div className="stat-tab stat-tab-teal"><span className="stat-tab-dot"/><span>文字模型</span><span className="stat-tab-val">{txtN}</span></div>
       </div>
 
       {/* ── alerts ─────────────────────────────────────── */}
@@ -352,9 +341,15 @@ function EditModal({ draft, isNew, onChange, onConfirm, onClose }: EditModalProp
     >
       <div ref={ref} className="dialog-surface w-full max-w-lg flex flex-col max-h-[88vh] gia-fade-in" onClick={e=>e.stopPropagation()}>
         {/* modal header */}
-        <div className="modal-header">
-          <h3>{isNew ? '添加模型' : '编辑模型'}</h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭"><X size={18}/></button>
+        <div className={`modal-header-grad ${isNew ? 'mhg-blue' : 'mhg-violet'}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="modal-icon">{isNew ? <Plus size={20}/> : <Pencil size={20}/>}</div>
+            <div className="min-w-0">
+              <h3>{isNew ? '添加模型' : '编辑模型'}</h3>
+              <p>配置定价、上游模型编码与启用状态</p>
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="关闭"><X size={16}/></button>
         </div>
 
         {/* modal body */}

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, CircleOff, Copy, Plus, RefreshCw, Save, Trash2, WalletCards } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Copy, Plus, RefreshCw, Save, Trash2, WalletCards } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
 import { systemApi } from '../../lib/services';
@@ -134,7 +134,7 @@ export default function RechargePackagesPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title">充值套餐</h1>
+          <h1 className="page-title flex items-center gap-2"><WalletCards className="text-gia-500" size={24}/>充值套餐</h1>
           <p className="page-subtitle">用表单维护前端售卖套餐，金额单位为元，积分单位为点。</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -150,10 +150,11 @@ export default function RechargePackagesPage() {
         </div>
       </header>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <Stat title="套餐总数" value={totals.total} icon={<WalletCards size={18} />} />
-        <Stat title="已启用" value={totals.enabled} icon={<CheckCircle2 size={18} />} />
-        <Stat title="已停用" value={totals.disabled} icon={<CircleOff size={18} />} />
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-blue"><span className="stat-tab-dot"/><span>套餐总数</span><span className="stat-tab-val">{totals.total}</span></div>
+        <div className="stat-tab stat-tab-emerald"><span className="stat-tab-dot"/><span>已启用</span><span className="stat-tab-val">{totals.enabled}</span></div>
+        <div className="stat-tab stat-tab-rose"><span className="stat-tab-dot"/><span>已停用</span><span className="stat-tab-val">{totals.disabled}</span></div>
+        <div className="stat-tab stat-tab-amber"><span className="stat-tab-dot"/><span>未保存修改</span><span className="stat-tab-val">{dirty ? '●' : '—'}</span></div>
       </div>
 
       {settings.isLoading ? (
@@ -200,8 +201,8 @@ export default function RechargePackagesPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-1">
-                      <button className="btn btn-ghost btn-icon btn-sm" title="复制套餐" onClick={() => cloneRow(idx)}><Copy size={14} /></button>
-                      <button className="btn btn-danger-ghost btn-icon btn-sm" title="删除套餐" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={14} /></button>
+                      <button className="btn btn-outline btn-action-edit btn-icon btn-sm" title="复制套餐" onClick={() => cloneRow(idx)}><Copy size={14} /></button>
+                      <button className="btn btn-outline btn-action-danger btn-icon btn-sm" title="删除套餐" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -219,14 +220,3 @@ export default function RechargePackagesPage() {
   );
 }
 
-function Stat({ title, value, icon }: { title: string; value: number; icon: ReactNode }) {
-  return (
-    <section className="card card-section flex items-center justify-between">
-      <div>
-        <div className="text-small text-text-tertiary">{title}</div>
-        <div className="text-[26px] font-semibold text-text-primary tabular-nums mt-1">{value}</div>
-      </div>
-      <span className="grid place-items-center w-10 h-10 rounded-md bg-info-soft text-gia-500">{icon}</span>
-    </section>
-  );
-}

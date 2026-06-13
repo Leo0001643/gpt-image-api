@@ -311,7 +311,7 @@ export default function TokenAccountsPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Token 管理</h1>
+          <h1 className="page-title flex items-center gap-2"><KeyRound className="text-gia-500" size={24}/>Token 账号管理</h1>
           <p className="page-subtitle">统一管理 GPT / GROK 账号、额度、账户类型和代理绑定。</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

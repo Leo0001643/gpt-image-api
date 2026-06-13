@@ -153,7 +153,7 @@ export default function ProxiesPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title">代理管理</h1>
+          <h1 className="page-title flex items-center gap-2"><Globe className="text-gia-500" size={24}/>代理管理</h1>
           <p className="page-subtitle">统一维护账号可用代理，支持批量导入、批量测试和批量删除。</p>
         </div>
         <div className="flex flex-wrap gap-2">
