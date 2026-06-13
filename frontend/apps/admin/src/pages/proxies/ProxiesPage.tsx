@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, CheckCircle2, Clock, Globe, Pencil, Plus, Power,
-  RefreshCw, ShieldOff, Trash2, Upload, X, XCircle, Zap,
+  RefreshCw, Trash2, Upload, X, XCircle,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
