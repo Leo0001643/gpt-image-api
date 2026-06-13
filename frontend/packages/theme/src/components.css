@@ -512,11 +512,13 @@
   /* 吸顶头部：毛玻璃背景，贴边
      top: 56px = topbar 高度，相对于 main（overflow-y:auto 滚动容器）。
      内容区父 div 不能有 overflow-x:hidden，否则该 div 会成为新的滚动容器
-     导致 sticky 定位失效，并产生 56px 的额外空白。 */
+     导致 sticky 定位失效，并产生 56px 的额外空白。
+     z-index: 20 = 与 topbar 同层；低于 modal-backdrop (z-50/z-80)，
+     确保打开弹窗时 backdrop 能正确覆盖吸顶头部。 */
   .list-page-head {
     position: sticky;
     top: 56px;
-    z-index: 88;
+    z-index: 20;
     margin-left: -24px;
     margin-right: -24px;
     background: rgba(255, 255, 255, 0.97);

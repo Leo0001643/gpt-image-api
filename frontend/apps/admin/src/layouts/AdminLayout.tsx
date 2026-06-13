@@ -1,5 +1,5 @@
-import { type FormEvent, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { type FormEvent, Suspense, useEffect, useRef, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   BadgeDollarSign, BarChart2, BookOpen, ChevronDown, Circle,
   FileText, Globe2, KeyRound, LayoutDashboard, LockKeyhole,
@@ -58,9 +58,16 @@ export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen]     = useState(false);
   const [pwdOpen, setPwdOpen]       = useState(false);
-  const me      = useAuthStore((s) => s.me);
-  const logout  = useAuthStore((s) => s.logout);
+  const me       = useAuthStore((s) => s.me);
+  const logout   = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const location = useLocation();
+  const mainRef  = useRef<HTMLElement>(null);
+
+  /* 路由切换时将滚动容器滚回顶部，消除页面抖动 */
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -147,8 +154,9 @@ export function AdminLayout() {
       )}
 
       {/* ── main ──────────────────────────────────────── */}
-      {/* main 是唯一的滚动容器，消除路由切换时的外层背景闪烁 */}
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen">
+      {/* main 是唯一的滚动容器，消除路由切换时的外层背景闪烁。
+          scrollbar-gutter:stable 保留滚动条空间，防止内容宽度跳变抖动。 */}
+      <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen [scrollbar-gutter:stable]">
         {/* topbar */}
         <header className="sticky top-0 z-20 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-3">
@@ -219,7 +227,21 @@ export function AdminLayout() {
             破坏 list-page-head / list-page-pager 的 sticky 定位。
             水平滚动由外层 main 的 overflow-x-hidden 负责裁剪。 */}
         <div className="flex-1 bg-[#f8fafc] p-6">
-          <Outlet />
+          {/* Suspense 放在这里：路由懒加载时只有内容区显示占位，
+              侧栏和顶栏始终可见，不会触发全屏空白 */}
+          <Suspense fallback={
+            <div className="flex h-64 items-center justify-center">
+              <div className="flex items-center gap-3 text-text-tertiary text-[13px]">
+                <svg className="animate-spin h-4 w-4 text-gia-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                加载中…
+              </div>
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 
