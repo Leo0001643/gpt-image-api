@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Search, Wallet } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowDownLeft, ArrowUpRight, FileText, RefreshCw, Search, Wallet } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 import { billingApi } from '../../lib/services';
 import type { AdminWalletLogItem } from '../../lib/types';
@@ -62,10 +62,10 @@ export default function BillingPage() {
         </button>
       </header>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <Stat title="当前页收入" value={fmtPoints(summary.income)} />
-        <Stat title="当前页支出" value={fmtPoints(summary.outcome)} />
-        <Stat title="匹配记录" value={fmtNumber(total)} />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat title="当前页收入" value={fmtPoints(summary.income)} icon={<ArrowUpRight size={18}/>} iconCls="bg-emerald-100 text-emerald-600" />
+        <Stat title="当前页支出" value={fmtPoints(summary.outcome)} icon={<ArrowDownLeft size={18}/>} iconCls="bg-rose-100 text-rose-600" />
+        <Stat title="匹配记录数" value={fmtNumber(total)} icon={<FileText size={18}/>} iconCls="bg-blue-100 text-blue-600" />
       </div>
 
       <div className="card card-section grid gap-2 !py-3 lg:grid-cols-[minmax(320px,1fr)_140px_140px_120px]">
@@ -151,12 +151,17 @@ function LogRow({ row }: { row: AdminWalletLogItem }) {
   );
 }
 
-function Stat({ title, value }: { title: string; value: string }) {
+function Stat({ title, value, icon, iconCls }: { title: string; value: string; icon: ReactNode; iconCls: string }) {
   return (
-    <section className="card card-section !py-3">
-      <div className="text-small text-text-tertiary">{title}</div>
-      <div className="mt-1 text-h3 font-semibold text-text-primary tabular-nums">{value}</div>
-    </section>
+    <div className="card p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="text-tiny text-text-tertiary">{title}</div>
+          <div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{value}</div>
+        </div>
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${iconCls}`}>{icon}</span>
+      </div>
+    </div>
   );
 }
 

@@ -1,15 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ChevronDown,
-  ChevronRight,
-  Eye,
-  ImageIcon,
-  MessageSquare,
-  RefreshCw,
-  Search,
-  Trash2,
-  Video,
-  X,
+  CheckCircle2, ChevronDown, ChevronRight, Eye, FileText,
+  ImageIcon, MessageSquare, RefreshCw, Search, Trash2, Video, X, XCircle,
 } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
 
@@ -116,33 +108,50 @@ export default function LogsPage() {
     onError: (e: ApiError) => toast.error(e.message),
   });
 
+  const successCount = (list.data?.list ?? []).filter(r=>r.status===2).length;
+  const failCount    = (list.data?.list ?? []).filter(r=>r.status===3).length;
+
   return (
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
           <h1 className="page-title">请求日志</h1>
-          <p className="page-subtitle">按任务查看用户、模型、状态和费用；长提示词、错误和上游返回收进详情里。</p>
+          <p className="page-subtitle">按任务查看用户、模型、状态与费用；提示词、错误和上游返回收进详情行。</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <div className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-surface-1 px-2">
-            <span className="text-small text-text-tertiary">删除</span>
+          <div className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-surface-1 px-3">
+            <span className="text-small text-text-tertiary">清除</span>
             <input
-              className="input h-8 w-16 rounded-lg px-2 text-center"
-              value={purgeDays}
-              inputMode="numeric"
+              className="input h-7 w-14 rounded-lg px-2 text-center text-small"
+              value={purgeDays} inputMode="numeric"
               onChange={(e) => setPurgeDays(e.target.value.replace(/\D/g, '').slice(0, 4))}
               aria-label="删除几天前"
             />
             <span className="text-small text-text-tertiary">天前</span>
             <button className="btn btn-danger btn-sm" disabled={purge.isPending || purgeDayNum <= 0} onClick={() => setConfirmPurge(true)}>
-              <Trash2 size={14} /> 删除
+              <Trash2 size={13} />
             </button>
           </div>
           <button className="btn btn-outline btn-md" onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'logs'] })}>
-            <RefreshCw size={16} /> 刷新
+            <RefreshCw size={14} /> 刷新
           </button>
         </div>
       </header>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">查询总记录</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><FileText size={18}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页成功</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{successCount}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={18}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页失败</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-rose-600 leading-none">{failCount}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-rose-600"><XCircle size={18}/></span>
+        </div>
+      </div>
 
       <div className="card card-section grid gap-2 !py-2 xl:grid-cols-[minmax(360px,1fr)_auto_auto]">
         <div className="relative">
