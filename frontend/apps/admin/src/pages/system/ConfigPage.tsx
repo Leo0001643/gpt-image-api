@@ -205,10 +205,12 @@ export default function ConfigPage() {
       </header>
 
       {settings.isLoading ? (
-        <div className="card card-section text-center text-text-tertiary py-10">加载中...</div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          {[0,1,2,3,4].map(i=><div key={i} className="card h-48 animate-pulse bg-surface-2"/>)}
+        </div>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          <Section icon={<ShieldAlert size={18} />} title="重试与容错" desc="控制生成请求失败后的重试次数、超时和账号熔断策略。">
+          <Section icon={<ShieldAlert size={16} />} title="重试与容错" desc="控制生成请求失败后的重试次数、超时和账号熔断策略。" iconCls="bg-orange-100 text-orange-600">
             <NumberField label="最大重试次数" value={form.retry_max_attempts} min={0} max={10} onChange={(v) => set('retry_max_attempts', v)} />
             <NumberField label="重试基础延迟（毫秒）" value={form.retry_base_delay_ms} min={0} onChange={(v) => set('retry_base_delay_ms', v)} />
             <NumberField label="请求超时（秒）" value={form.retry_timeout_seconds} min={30} onChange={(v) => set('retry_timeout_seconds', v)} />
@@ -216,7 +218,7 @@ export default function ConfigPage() {
             <NumberField label="熔断冷却时间（秒）" value={form.tolerance_circuit_cooldown_seconds} min={30} onChange={(v) => set('tolerance_circuit_cooldown_seconds', v)} />
           </Section>
 
-          <Section icon={<Database size={18} />} title="刷新与存储" desc="控制 OAuth 刷新窗口、全局代理和生成历史保留周期。">
+          <Section icon={<Database size={16} />} title="刷新与存储" desc="控制 OAuth 刷新窗口、全局代理和生成历史保留周期。" iconCls="bg-blue-100 text-blue-600">
             <Toggle label="启用全局代理" checked={form.proxy_global_enabled} onChange={(v) => set('proxy_global_enabled', v)} />
             <Field label="全局代理模式">
               <select
@@ -257,7 +259,7 @@ export default function ConfigPage() {
             </Field>
           </Section>
 
-          <Section icon={<Trash2 size={18} />} title="缓存清理" desc="查看并清理本地生成结果缓存，清理后旧作品可能无法继续预览原文件。">
+          <Section icon={<Trash2 size={16} />} title="缓存清理" desc="查看并清理本地生成结果缓存，清理后旧作品可能无法继续预览原文件。" iconCls="bg-rose-100 text-rose-600">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-md border border-border bg-surface-2 p-3">
                 <div className="text-small text-text-tertiary">缓存大小</div>
@@ -294,7 +296,7 @@ export default function ConfigPage() {
             </div>
           </Section>
 
-          <Section icon={<Cloud size={18} />} title="OSS 存储" desc="配置图片、视频和用户上传素材的对象存储位置。">
+          <Section icon={<Cloud size={16} />} title="OSS 存储" desc="配置图片、视频和用户上传素材的对象存储位置。" iconCls="bg-cyan-100 text-cyan-600">
             <Toggle label="启用 OSS 存储" checked={form.oss_enabled} onChange={(v) => set('oss_enabled', v)} />
             <div className="grid gap-3 md:grid-cols-2">
               <TextField label="服务商" value={form.oss_provider} onChange={(v) => set('oss_provider', v)} placeholder="aliyun / s3 / cos" />
@@ -308,7 +310,7 @@ export default function ConfigPage() {
             <TextField label="存储路径前缀" value={form.oss_path_prefix} onChange={(v) => set('oss_path_prefix', v)} />
           </Section>
 
-          <Section icon={<CreditCard size={18} />} title="支付配置" desc="保存支付通道基础参数，后续充值下单与回调会读取这些配置。">
+          <Section icon={<CreditCard size={16} />} title="支付配置" desc="保存支付通道基础参数，后续充值下单与回调会读取这些配置。" iconCls="bg-emerald-100 text-emerald-600">
             <Toggle label="启用在线支付" checked={form.payment_enabled} onChange={(v) => set('payment_enabled', v)} />
             <div className="grid gap-3 md:grid-cols-2">
               <TextField label="默认支付通道" value={form.payment_provider} onChange={(v) => set('payment_provider', v)} placeholder="alipay / wechat" />
@@ -325,17 +327,19 @@ export default function ConfigPage() {
   );
 }
 
-function Section({ icon, title, desc, children }: { icon: ReactNode; title: string; desc: string; children: ReactNode }) {
+function Section({ icon, title, desc, children, iconCls = 'bg-blue-100 text-blue-600' }: {
+  icon: ReactNode; title: string; desc: string; children: ReactNode; iconCls?: string;
+}) {
   return (
-    <section className="card card-section space-y-4">
-      <header className="flex items-start gap-3">
-        <span className="grid place-items-center w-9 h-9 rounded-md bg-info-soft text-gia-500">{icon}</span>
+    <section className="card overflow-hidden">
+      <header className="flex items-start gap-3 border-b border-border bg-surface-2/40 px-5 py-4">
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${iconCls}`}>{icon}</span>
         <div>
-          <h2 className="text-h5 font-semibold text-text-primary">{title}</h2>
-          <p className="text-small text-text-tertiary mt-0.5">{desc}</p>
+          <h2 className="text-[14px] font-semibold text-text-primary">{title}</h2>
+          <p className="text-tiny text-text-tertiary mt-0.5">{desc}</p>
         </div>
       </header>
-      <div className="grid gap-3">{children}</div>
+      <div className="grid gap-3 p-5">{children}</div>
     </section>
   );
 }
@@ -366,10 +370,11 @@ function formatBytes(bytes: number) {
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-surface-2 p-3">
-      <div className="text-small font-medium text-text-primary">{label}</div>
-      <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ' + (checked ? 'bg-gia-500' : 'bg-surface-3')}>
-        <span className={'inline-block h-5 w-5 rounded-full bg-white shadow transition transform ' + (checked ? 'translate-x-5' : 'translate-x-0.5')} />
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-2/50 px-4 py-3">
+      <div className="text-[13.5px] font-medium text-text-primary">{label}</div>
+      <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? 'bg-gia-500' : 'bg-surface-3'}`}>
+        <span className={`my-0.5 inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
       </button>
     </div>
   );
