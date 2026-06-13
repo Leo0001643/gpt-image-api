@@ -877,10 +877,6 @@
   /* ── table wrapper: horizontal scroll ── */
   .table-wrap {
     overflow-x: auto;
-    /* overflow-y:clip prevents the CSS spec quirk where overflow-x:auto forces
-       overflow-y to compute as 'auto', which would make table-wrap a vertical
-       scroll container and break thead position:sticky relative to main. */
-    overflow-y: clip;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -901,12 +897,7 @@
     white-space: nowrap;
     vertical-align: middle;
     user-select: none;
-    /* 表头吸顶：top = topbar(56px) + list-page-head 高度(由 AdminLayout ResizeObserver 写入 --lph)。
-       fallback 160px ≈ 56 + title-row(54px) + filter-row(50px)。
-       需 table-wrap { overflow-y: clip } 以阻止其成为吸顶的 scroll container（CSS spec 修复）。 */
-    position: sticky;
-    top: calc(56px + var(--lph, 104px));
-    z-index: 4;
+    position: relative;
   }
   /* th icon label */
   .data-table thead th .th-icon {

@@ -69,28 +69,6 @@ export function AdminLayout() {
     mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [location.pathname]);
 
-  /* 监听 .list-page-head 高度 → 设置 CSS 变量 --lph（list-page-head height）
-     data-table thead th 使用 top: calc(56px + var(--lph)) 精确贴在 head 正下方。
-     table-wrap 已设 overflow-y:clip 以阻止其成为 sticky 的滚动容器（CSS 规范漏洞修复）。 */
-  useEffect(() => {
-    const main = mainRef.current;
-    if (!main) return;
-    let ro: ResizeObserver | undefined;
-
-    const setup = () => {
-      ro?.disconnect();
-      const head = main.querySelector<HTMLElement>('.list-page-head');
-      if (!head) { main.style.removeProperty('--lph'); return; }
-      const update = () => main.style.setProperty('--lph', `${head.offsetHeight}px`);
-      update();
-      ro = new ResizeObserver(update);
-      ro.observe(head);
-    };
-
-    const timer = setTimeout(setup, 20);
-    return () => { clearTimeout(timer); ro?.disconnect(); };
-  }, [location.pathname]);
-
   const handleLogout = () => {
     logout();
     toast.info('已退出登录');
