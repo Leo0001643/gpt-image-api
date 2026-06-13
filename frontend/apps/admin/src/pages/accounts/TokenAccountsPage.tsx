@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, AlertCircle, BarChart2, Bot, CheckCircle2, ChevronDown, ChevronLeft,
-  ChevronRight, Clock, Database, KeyRound, ListFilter, Pencil, Plus, Power, RefreshCw,
-  RotateCw, Search, Settings2, ShieldCheck, Signal, Tag, Trash2, Upload, X, XCircle, Zap,
+  ChevronRight, Clock, Database, Flame, KeyRound, Layers, ListFilter, Pencil, Plus,
+  Power, RefreshCw, RotateCw, Search, Settings2, ShieldCheck, Signal, Star, Tag,
+  Trash2, Upload, X, XCircle, Zap,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -34,11 +35,11 @@ const PROVIDER_OPTIONS = [
 ];
 
 const PLAN_TYPE_OPTIONS = [
-  { value: 'all', label: '全部类型' },
-  { value: 'basic', label: 'Basic' },
-  { value: 'super', label: 'Super' },
-  { value: 'heavy', label: 'Heavy' },
-] as const;
+  { value: 'all' as PlanTypeFilter,   label: '全部类型', icon: <ListFilter size={13}/>, iconColor: '#6366f1' },
+  { value: 'basic' as PlanTypeFilter, label: 'Basic',    icon: <Layers size={13}/>,     iconColor: '#64748b' },
+  { value: 'super' as PlanTypeFilter, label: 'Super',    icon: <Star size={13}/>,       iconColor: '#f59e0b' },
+  { value: 'heavy' as PlanTypeFilter, label: 'Heavy',    icon: <Flame size={13}/>,      iconColor: '#8b5cf6' },
+];
 
 function normalizeBaseURL(value?: string): string | undefined {
   const trimmed = (value || '').trim();
@@ -376,9 +377,11 @@ export default function TokenAccountsPage() {
             onChange={(v) => { setProvider(v); setPage(1); }}
             options={PROVIDER_OPTIONS}
           />
-          <select className="filter-select" style={{minWidth:110}} value={planType} onChange={(e) => { setPlanType(e.target.value as PlanTypeFilter); setPage(1); }}>
-            {PLAN_TYPE_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
+          <FilterSelect
+            value={planType}
+            onChange={(v) => { setPlanType(v as PlanTypeFilter); setPage(1); }}
+            options={PLAN_TYPE_OPTIONS}
+          />
           <div className="ml-auto filter-count">共 <strong>{fmtNumber(total)}</strong> 条</div>
         </div>
       </div>

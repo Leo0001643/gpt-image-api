@@ -328,8 +328,7 @@ export default function RechargePackagesPage() {
 
                     {/* ── Col 9: 操作 (sticky-r) ── */}
                     <td className="sticky-r">
-                      <div className="flex items-center justify-center">
-                        <div className="inline-grid grid-cols-2 gap-1">
+                      <div className="inline-flex items-center gap-1">
                           <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => cloneRow(idx)}>
                             <Copy size={13}/> 复制
                           </button>
@@ -339,7 +338,6 @@ export default function RechargePackagesPage() {
                           >
                             <Trash2 size={13}/> 删除
                           </button>
-                        </div>
                       </div>
                     </td>
                   </tr>

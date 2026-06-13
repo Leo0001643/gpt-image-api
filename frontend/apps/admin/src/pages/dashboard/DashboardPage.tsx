@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  Activity, ArrowUpRight, BarChart2, Coins, Image,
-  KeyRound, RefreshCw, ShieldCheck, Sparkles, TrendingUp,
-  Users, Video, Zap,
+  Activity, ArrowUp, BarChart3, Clock, Coins, Image,
+  KeyRound, RefreshCw, ShieldCheck, Sparkles, TrendingUp, Users, Video, Zap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -17,21 +16,21 @@ export default function DashboardPage() {
     refetchInterval: 15_000,
   });
 
-  const providers        = data?.account_providers ?? [];
-  const totalAccounts    = providers.reduce((s, r) => s + r.total, 0);
+  const providers         = data?.account_providers ?? [];
+  const totalAccounts     = providers.reduce((s, r) => s + r.total, 0);
   const availableAccounts = providers.reduce((s, r) => s + r.available, 0);
-  const quotaRemaining   = providers.reduce((s, r) => s + r.quota_remaining, 0);
-  const quotaTotal       = providers.reduce((s, r) => s + r.quota_total, 0);
-  const quotaUsed        = Math.max(0, quotaTotal - quotaRemaining);
+  const quotaRemaining    = providers.reduce((s, r) => s + r.quota_remaining, 0);
+  const quotaTotal        = providers.reduce((s, r) => s + r.quota_total, 0);
+  const quotaUsed         = Math.max(0, quotaTotal - quotaRemaining);
 
   return (
     <div className="list-page">
 
-      {/* ── sticky header ────────────────────────────── */}
+      {/* ── sticky header ─────────────────────────────── */}
       <div className="list-page-head">
         <div className="list-page-title-row">
-          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#6366f1,#4f46e5)',boxShadow:'0 4px 14px rgba(99,102,241,.35)'}}>
-            <Activity size={16}/>
+          <div className="page-icon-box" style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', boxShadow: '0 4px 14px rgba(99,102,241,.35)' }}>
+            <Activity size={16} />
           </div>
           <div>
             <div className="list-page-title">运营仪表盘</div>
@@ -39,7 +38,7 @@ export default function DashboardPage() {
           </div>
           <div className="ml-auto flex items-center gap-3">
             {isFetching
-              ? <span className="text-tiny text-gia-500 animate-pulse font-medium">刷新中…</span>
+              ? <span className="text-tiny text-indigo-500 animate-pulse font-medium flex items-center gap-1.5"><RefreshCw size={11} className="animate-spin"/>刷新中…</span>
               : <span className="text-tiny text-text-tertiary">每 15 秒自动刷新</span>
             }
             <button className="btn btn-outline btn-sm gap-1.5" onClick={() => refetch()} disabled={isFetching}>
@@ -50,369 +49,380 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="bg-white px-6 pt-5 pb-8 space-y-5">
+      {/* ── dashboard body ─────────────────────────────── */}
+      <div style={{ padding: '20px 24px 32px', background: '#f5f7ff', minHeight: 'calc(100vh - 110px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* ── Row 1: Quick-stat cards ───────────────────── */}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            icon={<Users size={18}/>}
-            iconCls="bg-violet-100 text-violet-600"
-            label="注册用户"
-            value={fmtNumber(data?.users_total)}
-            sub={`今日新增 +${fmtNumber(data?.users_today)}`}
-            trend="up"
+        {/* ── Row 1: 4 gradient hero metric cards ─────── */}
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4,1fr)' }}>
+          <HeroCard
+            gradient="linear-gradient(135deg,#667eea 0%,#764ba2 100%)"
+            icon={<Users size={20} />}
+            label="注册用户总数"
+            value={isLoading ? '—' : fmtNumber(data?.users_total)}
+            badge={`今日 +${fmtNumber(data?.users_today)}`}
+            badgeIcon={<ArrowUp size={10} />}
+            sub="累计注册用户"
           />
-          <StatCard
-            icon={<Coins size={18}/>}
-            iconCls="bg-amber-100 text-amber-600"
-            label="今日积分消耗"
-            value={fmtPoints(data?.cost_points_today)}
-            sub={`累计 ${fmtPoints(data?.cost_points_total)}`}
-            trend="neutral"
+          <HeroCard
+            gradient="linear-gradient(135deg,#f093fb 0%,#f5576c 100%)"
+            icon={<Zap size={20} />}
+            label="今日生成任务"
+            value={isLoading ? '—' : fmtNumber(data?.generated_today)}
+            badge={`累计 ${fmtNumber(data?.generated_total)}`}
+            sub={`成功率 ${percent(data?.success_rate_today)}`}
           />
-          <StatCard
-            icon={<Image size={18}/>}
-            iconCls="bg-blue-100 text-blue-600"
+          <HeroCard
+            gradient="linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)"
+            icon={<Image size={20} />}
             label="图片产出"
-            value={fmtNumber(data?.image_today)}
+            value={isLoading ? '—' : fmtNumber(data?.image_today)}
+            badge={`今日`}
             sub={`累计 ${fmtNumber(data?.image_total)} 张`}
-            trend="up"
           />
-          <StatCard
-            icon={<Video size={18}/>}
-            iconCls="bg-orange-100 text-orange-600"
-            label="视频产出"
-            value={fmtNumber(data?.video_today)}
-            sub={`累计 ${fmtNumber(data?.video_total)} 个`}
-            trend="up"
+          <HeroCard
+            gradient="linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)"
+            icon={<Coins size={20} />}
+            label="今日积分消耗"
+            value={isLoading ? '—' : fmtPoints(data?.cost_points_today)}
+            badge="今日"
+            sub={`累计 ${fmtPoints(data?.cost_points_total)}`}
           />
         </div>
 
-        {/* ── Row 2: Hero + KPI ─────────────────────────── */}
-        <div className="grid gap-4 xl:grid-cols-[1fr_300px]">
-
-          {/* hero gradient card */}
-          <div className="relative overflow-hidden rounded-2xl bg-gia-gradient p-6 text-white shadow-lg">
-            <div className="pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full bg-white/8" />
-            <div className="pointer-events-none absolute -bottom-8 left-1/3 h-40 w-40 rounded-full bg-white/6" />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 text-white/75 text-small">
-                    <Zap size={13} className="fill-white/60" />
-                    今日生成任务
-                  </div>
-                  <div className="mt-2 text-[64px] font-extrabold leading-none tabular-nums tracking-tight">
-                    {isLoading ? '—' : fmtNumber(data?.generated_today)}
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-small">
-                    <Tag text={`累计 ${fmtNumber(data?.generated_total)}`} />
-                    <Tag text={`成功率 ${percent(data?.success_rate_today)}`} />
-                    <Tag text={`活跃用户 ${fmtNumber(data?.active_users_today)}`} />
-                  </div>
-                </div>
-                <div className="shrink-0 hidden sm:flex flex-col items-end gap-1">
-                  <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-tiny font-medium">
-                    <ArrowUpRight size={12} />
-                    实时监控
-                  </div>
-                  <div className="mt-2 text-tiny text-white/60">每 15 秒刷新</div>
-                </div>
-              </div>
-
-              {/* sub metrics */}
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                <SubMetric label="图片" value={fmtNumber(data?.image_today)} sub={`总 ${fmtNumber(data?.image_total)}`} icon={<Image size={15}/>} />
-                <SubMetric label="视频" value={fmtNumber(data?.video_today)} sub={`总 ${fmtNumber(data?.video_total)}`} icon={<Video size={15}/>} />
-                <SubMetric label="Token" value={compact(data?.text_tokens_today)} sub={`总 ${compact(data?.text_tokens_total)}`} icon={<Sparkles size={15}/>} />
+        {/* ── Row 2: Trend chart (full width) ─────────── */}
+        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 1px 3px rgba(0,0,0,.06),0 4px 20px rgba(99,102,241,.06)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 12px', borderBottom: '1px solid #eef0f8' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: 10, background: 'rgba(99,102,241,.1)', color: '#6366f1' }}>
+                <TrendingUp size={15} />
+              </span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1e1b4b' }}>近 7 天生成趋势</div>
+                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>生成量 · 积分消耗双轴对比</div>
               </div>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: '#9ca3af' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i style={{ display: 'inline-block', width: 24, height: 3, borderRadius: 2, background: '#6366f1' }} />生成量
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i style={{ display: 'inline-block', width: 24, height: 3, borderRadius: 2, background: '#f59e0b', opacity: 0.8 }} />积分消耗
+              </span>
+            </div>
           </div>
+          <div style={{ padding: '16px 20px 12px' }}>
+            <TrendChartSmooth points={data?.trend ?? []} loading={isLoading} />
+          </div>
+        </div>
 
-          {/* right KPI column */}
-          <div className="flex flex-col gap-3">
-            <KpiCard
+        {/* ── Row 3: KPI cards + Provider + Recent tasks ── */}
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr 1fr' }}>
+
+          {/* KPI column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SectionTitle icon={<ShieldCheck size={14} />} title="资源状态" color="#6366f1" />
+            <KpiCard2
               icon={<KeyRound size={18} />}
-              iconCls="bg-blue-100 text-blue-600"
-              label="账号池状态"
+              iconBg="linear-gradient(135deg,#667eea,#764ba2)"
+              label="账号池"
               value={`${fmtNumber(availableAccounts)} / ${fmtNumber(totalAccounts)}`}
               sub="可用 / 总量"
               ratio={totalAccounts > 0 ? availableAccounts / totalAccounts : 0}
-              ratioColor="bg-blue-500"
+              ratioColor="#6366f1"
             />
-            <KpiCard
+            <KpiCard2
               icon={<ShieldCheck size={18} />}
-              iconCls="bg-emerald-100 text-emerald-600"
+              iconBg="linear-gradient(135deg,#43e97b,#38f9d7)"
               label="剩余 API 额度"
               value={fmtNumber(quotaRemaining)}
               sub={quotaTotal > 0 ? `已用 ${fmtNumber(quotaUsed)}` : '等待探测'}
               ratio={quotaTotal > 0 ? quotaRemaining / quotaTotal : 0}
-              ratioColor="bg-emerald-500"
+              ratioColor="#10b981"
             />
-            <KpiCard
+            <KpiCard2
               icon={<Coins size={18} />}
-              iconCls="bg-amber-100 text-amber-600"
-              label="今日消耗积分"
+              iconBg="linear-gradient(135deg,#f093fb,#f5576c)"
+              label="今日钱包消费"
               value={fmtPoints(data?.wallet_spend_today)}
               sub={`累计 ${fmtPoints(data?.wallet_spend_total)}`}
+              ratioColor="#f59e0b"
+            />
+            <KpiCard2
+              icon={<Video size={18} />}
+              iconBg="linear-gradient(135deg,#4facfe,#00f2fe)"
+              label="视频产出"
+              value={fmtNumber(data?.video_today)}
+              sub={`累计 ${fmtNumber(data?.video_total)} 个`}
+              ratioColor="#3b82f6"
+            />
+            <KpiCard2
+              icon={<Sparkles size={18} />}
+              iconBg="linear-gradient(135deg,#f6d365,#fda085)"
+              label="Token 消耗"
+              value={compact(data?.text_tokens_today)}
+              sub={`累计 ${compact(data?.text_tokens_total)}`}
+              ratioColor="#f59e0b"
             />
           </div>
-        </div>
 
-        {/* ── Row 3: Trend chart (dedicated full-width row) ── */}
-        <div className="card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <div className="flex items-center gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-md bg-indigo-50 text-indigo-600">
-                <TrendingUp size={15}/>
+          {/* Provider health */}
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 1px 3px rgba(0,0,0,.06),0 4px 20px rgba(99,102,241,.06)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderBottom: '1px solid #eef0f8' }}>
+              <span style={{ display: 'grid', placeItems: 'center', width: 30, height: 30, borderRadius: 9, background: 'rgba(59,130,246,.1)', color: '#3b82f6' }}>
+                <BarChart3 size={14} />
               </span>
-              <h2 className="text-[14px] font-semibold text-text-primary">近 7 天生成趋势</h2>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#1e1b4b' }}>账号池 · 额度状态</div>
+              <span style={{ marginLeft: 'auto', fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#f0f4ff', color: '#6366f1', fontWeight: 500 }}>每 15s 刷新</span>
             </div>
-            <div className="flex items-center gap-4 text-tiny text-text-tertiary">
-              <span className="flex items-center gap-1.5">
-                <i className="inline-block h-2 w-6 rounded-full bg-indigo-500"/>生成量
-              </span>
-              <span className="flex items-center gap-1.5">
-                <i className="inline-block h-2 w-6 rounded-full bg-amber-400"/>积分消耗
-              </span>
-            </div>
-          </div>
-          <div className="px-5 py-4">
-            <TrendChartLight points={data?.trend ?? []} loading={isLoading} />
-          </div>
-        </div>
-
-        {/* ── Row 4: Provider status + Recent tasks ──────── */}
-        <div className="grid gap-4 xl:grid-cols-2">
-
-          {/* providers */}
-          <div className="card">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <span className="grid h-7 w-7 place-items-center rounded-md bg-blue-50 text-blue-600"><BarChart2 size={15}/></span>
-                <h2 className="text-[14px] font-semibold text-text-primary">账号池与额度</h2>
-              </div>
-              <span className="badge badge-outline text-[11px]">每 15s 刷新</span>
-            </div>
-            <div className="divide-y divide-border">
+            <div style={{ padding: '8px 0' }}>
               {providers.map((row) => <ProviderRow key={row.provider} row={row} />)}
-              {providers.length === 0 && <div className="py-12 text-center text-small text-text-tertiary">暂无账号池数据</div>}
+              {providers.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9ca3af', fontSize: 13 }}>暂无账号池数据</div>
+              )}
             </div>
           </div>
 
-          {/* recent generations */}
-          <div className="card">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <span className="grid h-7 w-7 place-items-center rounded-md bg-rose-50 text-rose-500"><Activity size={15}/></span>
-                <h2 className="text-[14px] font-semibold text-text-primary">最近生成任务</h2>
-              </div>
-              <span className="text-tiny text-text-tertiary">最新 8 条</span>
+          {/* Recent tasks */}
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 1px 3px rgba(0,0,0,.06),0 4px 20px rgba(99,102,241,.06)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderBottom: '1px solid #eef0f8', flexShrink: 0 }}>
+              <span style={{ display: 'grid', placeItems: 'center', width: 30, height: 30, borderRadius: 9, background: 'rgba(239,68,68,.08)', color: '#ef4444' }}>
+                <Activity size={14} />
+              </span>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#1e1b4b' }}>最近生成任务</div>
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>最新 8 条</span>
             </div>
-            <div className="divide-y divide-border">
+            <div style={{ flex: 1, overflowY: 'auto' }}>
               {(data?.recent_generations ?? []).map((row) => <RecentRow key={row.task_id} row={row} />)}
-              {(data?.recent_generations ?? []).length === 0 && <div className="py-12 text-center text-small text-text-tertiary">暂无生成记录</div>}
+              {(data?.recent_generations ?? []).length === 0 && (
+                <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9ca3af', fontSize: 13 }}>暂无生成记录</div>
+              )}
             </div>
           </div>
         </div>
 
-      </div>{/* end bg-white content */}
-    </div>
-  );
-}
-
-/* ── Sub components ─────────────────────────────── */
-
-function Tag({ text }: { text: string }) {
-  return <span className="rounded-lg bg-white/15 px-2.5 py-1 text-small backdrop-blur-sm">{text}</span>;
-}
-
-function SubMetric({ label, value, sub, icon }: { label: string; value: string; sub: string; icon: ReactNode }) {
-  return (
-    <div className="rounded-xl bg-white/12 p-3.5 backdrop-blur-sm">
-      <div className="flex items-center justify-between text-white/70 text-tiny mb-2">
-        <span>{label}</span>
-        <span className="opacity-80">{icon}</span>
       </div>
-      <div className="text-[26px] font-bold leading-none tabular-nums">{value}</div>
-      <div className="mt-1.5 text-tiny text-white/60">{sub}</div>
     </div>
   );
 }
 
-function TrendChartLight({ points, loading }: { points: DashboardTrendPoint[]; loading?: boolean }) {
-  const rows  = points.length > 0 ? points : Array.from({ length: 7 }, (_, i) => ({ date: `D${i+1}`, generated: 0, cost_points: 0 }));
-  const W = 880, H = 140, padX = 20, padY = 16;
-  const maxG  = Math.max(1, ...rows.map((p) => p.generated));
-  const maxC  = Math.max(1, ...rows.map((p) => p.cost_points));
-  const step  = (W - padX * 2) / Math.max(1, rows.length - 1);
-  const yG    = (v: number) => H - padY - (v / maxG) * (H - padY * 2);
-  const yC    = (v: number) => H - padY - (v / maxC) * (H - padY * 2);
-  const lineG = rows.map((p, i) => `${padX + i * step},${yG(p.generated)}`).join(' ');
-  const lineC = rows.map((p, i) => `${padX + i * step},${yC(p.cost_points)}`).join(' ');
-  const areaG = `${padX},${H - padY} ${lineG} ${W - padX},${H - padY}`;
-  const areaC = `${padX},${H - padY} ${lineC} ${W - padX},${H - padY}`;
+/* ── Sub-components ──────────────────────────────── */
 
-  if (loading) return <div className="h-[140px] animate-pulse rounded-xl bg-surface-2" />;
+function SectionTitle({ icon, title, color }: { icon: ReactNode; title: string; color: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color, letterSpacing: '0.02em', textTransform: 'uppercase', marginBottom: -4 }}>
+      {icon}{title}
+    </div>
+  );
+}
+
+function HeroCard({ gradient, icon, label, value, badge, badgeIcon, sub }: {
+  gradient: string; icon: ReactNode; label: string; value: string;
+  badge: string; badgeIcon?: ReactNode; sub: string;
+}) {
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, background: gradient, padding: '20px 20px 18px', color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,.12)' }}>
+      {/* decorative circles */}
+      <div style={{ position: 'absolute', top: -24, right: -24, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,.12)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -16, left: '30%', width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,.08)', pointerEvents: 'none' }} />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.85, letterSpacing: '0.01em' }}>{label}</div>
+          <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,.22)', flexShrink: 0 }}>
+            {icon}
+          </span>
+        </div>
+        <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.1, marginTop: 6, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <span style={{ fontSize: 11, opacity: 0.7 }}>{sub}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, background: 'rgba(255,255,255,.2)', borderRadius: 20, padding: '2px 8px' }}>
+            {badgeIcon}{badge}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiCard2({ icon, iconBg, label, value, sub, ratio, ratioColor }: {
+  icon: ReactNode; iconBg: string; label: string; value: string; sub: string;
+  ratio?: number; ratioColor: string;
+}) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 12, padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,.05),0 2px 8px rgba(99,102,241,.05)', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <span style={{ display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 10, background: iconBg, color: '#fff', flexShrink: 0 }}>
+        {icon}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: '#1e1b4b', lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+        {ratio !== undefined && (
+          <div style={{ height: 3, borderRadius: 2, background: '#eef0f8', marginTop: 4 }}>
+            <div style={{ height: '100%', borderRadius: 2, background: ratioColor, width: `${Math.max(0, Math.min(100, ratio * 100))}%`, transition: 'width .4s ease' }} />
+          </div>
+        )}
+        <div style={{ fontSize: 11, color: '#b0b7c8', marginTop: ratio !== undefined ? 3 : 2 }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+function TrendChartSmooth({ points, loading }: { points: DashboardTrendPoint[]; loading?: boolean }) {
+  const rows   = points.length > 0 ? points : Array.from({ length: 7 }, (_, i) => ({ date: `D${i + 1}`, generated: 0, cost_points: 0 }));
+  const W = 900, H = 160, padX = 32, padY = 20, padBottom = 28;
+  const innerH = H - padY - padBottom;
+  const innerW = W - padX * 2;
+  const n      = rows.length;
+  const step   = n > 1 ? innerW / (n - 1) : innerW;
+  const maxG   = Math.max(1, ...rows.map((p) => p.generated));
+  const maxC   = Math.max(1, ...rows.map((p) => p.cost_points));
+  const xAt    = (i: number) => padX + i * step;
+  const yG     = (v: number) => padY + innerH - (v / maxG) * innerH;
+  const yC     = (v: number) => padY + innerH - (v / maxC) * innerH;
+
+  const smoothPath = (pts: Array<[number, number]>) => {
+    if (pts.length < 2) return '';
+    const first = pts[0]!;
+    const d: string[] = [`M${first[0]},${first[1]}`];
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1]!;
+      const cur  = pts[i]!;
+      const cx   = (prev[0] + cur[0]) / 2;
+      d.push(`C${cx},${prev[1]} ${cx},${cur[1]} ${cur[0]},${cur[1]}`);
+    }
+    return d.join(' ');
+  };
+
+  const ptsG: [number, number][] = rows.map((p, i) => [xAt(i), yG(p.generated)]);
+  const ptsC: [number, number][] = rows.map((p, i) => [xAt(i), yC(p.cost_points)]);
+  const pathG   = smoothPath(ptsG);
+  const pathC   = smoothPath(ptsC);
+  const areaGEnd = `L${xAt(n - 1)},${padY + innerH} L${xAt(0)},${padY + innerH} Z`;
+  const areaCEnd = `L${xAt(n - 1)},${padY + innerH} L${xAt(0)},${padY + innerH} Z`;
+
+  if (loading) {
+    return <div style={{ height: 160, borderRadius: 12, background: 'linear-gradient(90deg,#f0f4ff 0%,#e8edff 50%,#f0f4ff 100%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease infinite' }} />;
+  }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[140px] w-full overflow-visible">
-      {[0, 1, 2, 3].map((i) => (
-        <line key={i} x1={padX} x2={W - padX}
-          y1={padY + i * ((H - padY * 2) / 3)} y2={padY + i * ((H - padY * 2) / 3)}
-          stroke="rgba(99,102,241,.08)" strokeWidth="1" strokeDasharray="4,4" />
-      ))}
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 160, overflow: 'visible' }}>
       <defs>
-        <linearGradient id="lgG" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(99,102,241,.18)" />
+        <linearGradient id="dashGradG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(99,102,241,.2)" />
           <stop offset="100%" stopColor="rgba(99,102,241,.01)" />
         </linearGradient>
-        <linearGradient id="lgC" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(245,158,11,.14)" />
+        <linearGradient id="dashGradC" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(245,158,11,.15)" />
           <stop offset="100%" stopColor="rgba(245,158,11,.01)" />
         </linearGradient>
       </defs>
-      <polygon points={areaG} fill="url(#lgG)" />
-      <polygon points={areaC} fill="url(#lgC)" />
-      <polyline points={lineG} fill="none" stroke="rgb(99,102,241)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points={lineC} fill="none" stroke="rgb(245,158,11)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6,3" />
+
+      {/* grid lines */}
+      {[0, 1, 2, 3].map((i) => {
+        const y = padY + (i / 3) * innerH;
+        return <line key={i} x1={padX} x2={W - padX} y1={y} y2={y} stroke="rgba(99,102,241,.08)" strokeWidth="1" strokeDasharray="4,5" />;
+      })}
+
+      {/* area fills */}
+      <path d={`${pathG} ${areaGEnd}`} fill="url(#dashGradG)" />
+      <path d={`${pathC} ${areaCEnd}`} fill="url(#dashGradC)" />
+
+      {/* lines */}
+      <path d={pathG} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={pathC} fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6,3" />
+
+      {/* dots + labels */}
       {rows.map((p, i) => (
         <g key={p.date}>
-          <circle cx={padX + i * step} cy={yG(p.generated)} r="3.5" fill="white" stroke="rgb(99,102,241)" strokeWidth="2"/>
-          <text x={padX + i * step} y={H + 2} textAnchor="middle" fontSize="14" fill="rgb(156,163,175)">{formatDay(p.date)}</text>
+          <circle cx={xAt(i)} cy={yG(p.generated)} r="4" fill="#fff" stroke="#6366f1" strokeWidth="2.5" />
+          <text x={xAt(i)} y={padY + innerH + 18} textAnchor="middle" fontSize="13" fill="#9ca3af" fontFamily="inherit">{formatDay(p.date)}</text>
+          {p.generated > 0 && (
+            <text x={xAt(i)} y={yG(p.generated) - 8} textAnchor="middle" fontSize="11" fill="#6366f1" fontWeight="600" fontFamily="inherit">{p.generated}</text>
+          )}
         </g>
       ))}
     </svg>
   );
 }
 
-function KpiCard({ icon, iconCls, label, value, sub, ratio, ratioColor }: {
-  icon: ReactNode; iconCls: string; label: string; value: string; sub: string;
-  ratio?: number; ratioColor?: string;
-}) {
-  return (
-    <div className="card flex-1 p-5">
-      <div className="flex items-center gap-3">
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${iconCls}`}>{icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className="text-tiny text-text-tertiary">{label}</div>
-          <div className="mt-0.5 text-[22px] font-bold tabular-nums text-text-primary leading-none">{value}</div>
-        </div>
-      </div>
-      {ratio !== undefined && (
-        <div className="mt-3">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
-            <div className={`h-full rounded-full transition-all ${ratioColor}`} style={{ width: `${Math.max(0, Math.min(100, ratio * 100))}%` }} />
-          </div>
-        </div>
-      )}
-      <div className="mt-2 text-tiny text-text-tertiary">{sub}</div>
-    </div>
-  );
-}
-
-function StatCard({ icon, iconCls, label, value, sub, trend }: {
-  icon: ReactNode; iconCls: string; label: string; value: string; sub: string;
-  trend?: 'up' | 'down' | 'neutral';
-}) {
-  return (
-    <div className="card p-5">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-tiny text-text-tertiary">{label}</div>
-          <div className="mt-1.5 text-[28px] font-bold tabular-nums text-text-primary leading-none">{value}</div>
-          <div className="mt-1.5 flex items-center gap-1 text-tiny">
-            {trend === 'up' && <span className="text-emerald-500">↑</span>}
-            {trend === 'down' && <span className="text-red-500">↓</span>}
-            <span className="text-text-tertiary">{sub}</span>
-          </div>
-        </div>
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${iconCls}`}>{icon}</span>
-      </div>
-    </div>
-  );
-}
-
 function ProviderRow({ row }: { row: DashboardProviderRow }) {
-  const avail = row.total > 0 ? row.available / row.total : 0;
-  const quota = row.quota_total > 0 ? row.quota_remaining / row.quota_total : 0;
-  const health = avail === 0 ? 'danger' : avail < 0.5 ? 'warning' : 'success';
-  const healthDot = health === 'danger' ? 'bg-red-400' : health === 'warning' ? 'bg-amber-400' : 'bg-emerald-400';
-  const healthBadge = health === 'danger' ? 'badge-danger' : health === 'warning' ? 'badge-warning' : 'badge-success';
+  const avail   = row.total > 0 ? row.available / row.total : 0;
+  const quota   = row.quota_total > 0 ? row.quota_remaining / row.quota_total : 0;
+  const health  = avail === 0 ? 'danger' : avail < 0.5 ? 'warning' : 'ok';
+  const dotCls  = health === 'danger' ? '#ef4444' : health === 'warning' ? '#f59e0b' : '#10b981';
+  const badgeBg = health === 'danger' ? 'rgba(239,68,68,.1)' : health === 'warning' ? 'rgba(245,158,11,.1)' : 'rgba(16,185,129,.1)';
+  const badgeColor = health === 'danger' ? '#dc2626' : health === 'warning' ? '#d97706' : '#059669';
 
   return (
-    <div className="px-5 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <span className={`h-2 w-2 rounded-full ${healthDot} shadow-sm`} />
-          <span className="text-[14px] font-bold uppercase text-text-primary">{row.provider}</span>
-          <span className="text-tiny text-text-tertiary hidden sm:inline">
-            OK {fmtNumber(row.test_ok)} · 熔断 {fmtNumber(row.broken)} · 成功 {fmtNumber(row.success_count)}
-          </span>
+    <div style={{ padding: '12px 18px', borderBottom: '1px solid #f4f5fb' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotCls, boxShadow: `0 0 0 3px ${dotCls}22`, flexShrink: 0 }} />
+          <span style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', color: '#1e1b4b', letterSpacing: '0.04em' }}>{row.provider}</span>
+          <span style={{ fontSize: 11, color: '#9ca3af' }}>OK {fmtNumber(row.test_ok)} · 熔断 {fmtNumber(row.broken)}</span>
         </div>
-        <span className={`badge ${healthBadge} text-[11px]`}>
-          可用 {fmtNumber(row.available)}/{fmtNumber(row.total)}
+        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: badgeBg, color: badgeColor }}>
+          {fmtNumber(row.available)}/{fmtNumber(row.total)} 可用
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <MiniProgress label="账号可用率" pct={avail} />
-        <MiniProgress label="额度剩余率" pct={quota} text={row.quota_total > 0 ? `${fmtNumber(row.quota_remaining)}/${fmtNumber(row.quota_total)}` : '未探测'} />
+      <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <RingProgress label="账号可用率" pct={avail} />
+        <RingProgress label="额度剩余率" pct={quota} text={row.quota_total > 0 ? `${fmtNumber(row.quota_remaining)}` : '未探测'} />
       </div>
     </div>
   );
 }
 
-function MiniProgress({ label, pct, text }: { label: string; pct: number; text?: string }) {
-  const color = pct === 0 ? 'bg-red-400' : pct < 0.5 ? 'bg-amber-400' : 'bg-emerald-400';
+function RingProgress({ label, pct, text }: { label: string; pct: number; text?: string }) {
+  const color = pct === 0 ? '#ef4444' : pct < 0.5 ? '#f59e0b' : '#10b981';
+  const pctStr = text ?? `${Math.round(pct * 100)}%`;
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between text-tiny text-text-tertiary">
-        <span>{label}</span>
-        <span>{text ?? `${Math.round(pct * 100)}%`}</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginBottom: 5 }}>
+        <span>{label}</span><span style={{ fontWeight: 600, color }}>{pctStr}</span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(0, Math.min(100, pct * 100))}%` }} />
+      <div style={{ height: 4, borderRadius: 3, background: '#eef0f8' }}>
+        <div style={{ height: '100%', borderRadius: 3, background: color, width: `${Math.max(0, Math.min(100, pct * 100))}%`, transition: 'width .4s ease' }} />
       </div>
     </div>
   );
 }
 
 function RecentRow({ row }: { row: DashboardRecentTask }) {
+  const isVideo   = row.kind === 'video';
+  const statusCfg = statusConfig(row.status);
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-2/50 transition-colors">
-      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-text-tertiary">
-        {row.kind === 'video' ? <Video size={14}/> : <Image size={14}/>}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid #f4f5fb' }}>
+      <div style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: isVideo ? 'rgba(59,130,246,.1)' : 'rgba(99,102,241,.1)', color: isVideo ? '#3b82f6' : '#6366f1', flexShrink: 0 }}>
+        {isVideo ? <Video size={14} /> : <Image size={14} />}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[13px] font-medium text-text-primary">{row.user_label}</span>
-          <span className="badge badge-outline text-[11px]">{row.model_code}</span>
-          <span className={statusBadge(row.status)}>{statusText(row.status)}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#1e1b4b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 100 }}>{row.user_label}</span>
+          <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 5, background: '#f0f4ff', color: '#6366f1', fontWeight: 500 }}>{row.model_code}</span>
+          <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 20, background: statusCfg.bg, color: statusCfg.color, fontWeight: 600 }}>{statusCfg.text}</span>
         </div>
-        <div className="mt-0.5 text-tiny text-text-tertiary">{fmtTime(row.created_at)}</div>
+        <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 4, color: '#9ca3af', fontSize: 11 }}>
+          <Clock size={10} />
+          {fmtTime(row.created_at)}
+        </div>
       </div>
-      <div className="shrink-0 text-right">
-        <div className="text-[13px] font-semibold tabular-nums text-text-primary">{fmtPoints(row.cost_points)}</div>
-        <div className="text-tiny text-text-tertiary">点</div>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#1e1b4b', fontVariantNumeric: 'tabular-nums' }}>{fmtPoints(row.cost_points)}</div>
+        <div style={{ fontSize: 11, color: '#9ca3af' }}>pt</div>
       </div>
     </div>
   );
 }
 
-function statusText(s: number) {
-  if (s === 2) return '成功';
-  if (s === 3) return '失败';
-  if (s === 4) return '已退款';
-  if (s === 1) return '运行中';
-  return '排队中';
+function statusConfig(s: number): { text: string; bg: string; color: string } {
+  if (s === 2) return { text: '成功', bg: 'rgba(16,185,129,.1)', color: '#059669' };
+  if (s === 3) return { text: '失败', bg: 'rgba(239,68,68,.1)', color: '#dc2626' };
+  if (s === 4) return { text: '已退款', bg: 'rgba(245,158,11,.1)', color: '#d97706' };
+  if (s === 1) return { text: '运行中', bg: 'rgba(59,130,246,.1)', color: '#2563eb' };
+  return { text: '排队中', bg: 'rgba(156,163,175,.1)', color: '#6b7280' };
 }
-function statusBadge(s: number) {
-  if (s === 2) return 'badge badge-success text-[11px]';
-  if (s === 3 || s === 4) return 'badge badge-danger text-[11px]';
-  if (s === 1) return 'badge badge-warning text-[11px]';
-  return 'badge badge-outline text-[11px]';
-}
+
 function percent(v?: number) { return v == null ? '—' : `${Math.round(v * 100)}%`; }
 function compact(v?: number | null) {
   const n = Number(v || 0);

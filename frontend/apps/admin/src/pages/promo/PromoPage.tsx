@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Edit3, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X } from 'lucide-react';
+import {
+  CheckCircle2, ChevronLeft, ChevronRight, Edit3, Gift, ListFilter, MinusCircle,
+  Percent, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X, XCircle,
+} from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
+import { FilterSelect } from '../../components/FilterSelect';
 import { ApiError } from '../../lib/api';
 import { promoApi } from '../../lib/services';
 import type { AdminPromoBody, AdminPromoItem } from '../../lib/types';
@@ -36,6 +40,19 @@ const DEFAULT_FORM: FormState = {
   end_at: '',
   status: 1,
 };
+
+const STATUS_OPTIONS = [
+  { value: '',  label: '全部状态', icon: <ListFilter size={13}/>,   iconColor: '#6366f1' },
+  { value: '1', label: '启用',     icon: <CheckCircle2 size={13}/>, iconColor: '#10b981' },
+  { value: '0', label: '停用',     icon: <XCircle size={13}/>,      iconColor: '#ef4444' },
+];
+
+const DISCOUNT_TYPE_OPTIONS = [
+  { value: '',  label: '全部类型', icon: <ListFilter size={13}/>, iconColor: '#6366f1' },
+  { value: '1', label: '满减',     icon: <MinusCircle size={13}/>, iconColor: '#f59e0b' },
+  { value: '2', label: '折扣',     icon: <Percent size={13}/>,    iconColor: '#8b5cf6' },
+  { value: '3', label: '赠点',     icon: <Gift size={13}/>,       iconColor: '#10b981' },
+];
 
 export default function PromoPage() {
   const qc = useQueryClient();
@@ -117,17 +134,16 @@ export default function PromoPage() {
             <Search size={13}/>
             <input className="filter-input" style={{width:220}} value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} placeholder="搜索优惠码、名称、ID"/>
           </div>
-          <select className="filter-select" style={{minWidth:100}} value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}>
-            <option value="">全部状态</option>
-            <option value="1">启用</option>
-            <option value="0">停用</option>
-          </select>
-          <select className="filter-select" style={{minWidth:110}} value={discountType} onChange={(e) => { setDiscountType(e.target.value as typeof discountType); setPage(1); }}>
-            <option value="">全部类型</option>
-            <option value="1">满减</option>
-            <option value="2">折扣</option>
-            <option value="3">赠点</option>
-          </select>
+          <FilterSelect
+            value={status}
+            onChange={(v) => { setStatus(v as typeof status); setPage(1); }}
+            options={STATUS_OPTIONS}
+          />
+          <FilterSelect
+            value={discountType}
+            onChange={(v) => { setDiscountType(v as typeof discountType); setPage(1); }}
+            options={DISCOUNT_TYPE_OPTIONS}
+          />
           <div className="ml-auto filter-count">共 <strong>{fmtNumber(total)}</strong> 条</div>
         </div>
       </div>
