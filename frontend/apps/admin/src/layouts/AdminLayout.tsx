@@ -156,7 +156,7 @@ export function AdminLayout() {
       {/* ── main ──────────────────────────────────────── */}
       {/* main 是唯一的滚动容器，消除路由切换时的外层背景闪烁。
           scrollbar-gutter:stable 保留滚动条空间，防止内容宽度跳变抖动。 */}
-      <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen [scrollbar-gutter:stable]">
+      <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen [scrollbar-gutter:stable] overscroll-none">
         {/* topbar */}
         <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-3">
