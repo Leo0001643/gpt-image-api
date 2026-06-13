@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit3, Plus, RefreshCw, Search, Tag, Trash2 } from 'lucide-react';
+import { Edit3, Percent, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -178,6 +178,22 @@ export default function PromoPage() {
         </div>
       </div>
 
+      {/* stat strip */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">优惠码总数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-orange-100 text-orange-600"><Tag size={18}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">满减 / 折扣 / 赠点</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{rows.filter(r=>r.discount_type===1).length}/{rows.filter(r=>r.discount_type===2).length}/{rows.filter(r=>r.discount_type===3).length}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><Percent size={18}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页启用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{rows.filter(r=>r.status===1).length}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><Ticket size={18}/></span>
+        </div>
+      </div>
+
       {form && <PromoDialog form={form} setForm={setForm} saving={save.isPending} onClose={() => setForm(null)} onSave={() => save.mutate(form)} />}
     </div>
   );
@@ -186,16 +202,16 @@ export default function PromoPage() {
 function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormState; setForm: (f: FormState | null) => void; saving: boolean; onClose: () => void; onSave: () => void }) {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm({ ...form, [k]: v });
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-surface-overlay p-4">
-      <div className="card card-section w-full max-w-3xl space-y-4">
-        <header className="flex items-center justify-between gap-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-2xl" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-6 py-5">
           <div>
-            <h2 className="text-h4 font-semibold text-text-primary">{form.id ? '编辑优惠码' : '新增优惠码'}</h2>
-            <p className="text-small text-text-tertiary">金额单位为元，赠点单位为点。</p>
+            <h2 className="text-[17px] font-semibold text-text-primary">{form.id ? '编辑优惠码' : '新增优惠码'}</h2>
+            <p className="mt-0.5 text-tiny text-text-tertiary">金额单位为元，赠点单位为点</p>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>关闭</button>
-        </header>
-        <div className="grid gap-3 md:grid-cols-2">
+          <button className="btn btn-ghost btn-icon btn-sm" type="button" onClick={onClose}><X size={16}/></button>
+        </div>
+        <div className="grid gap-3 p-6 md:grid-cols-2">
           <Field label="优惠码"><input className="input font-mono" value={form.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="SPRING2026" /></Field>
           <Field label="名称"><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="春季活动" /></Field>
           <Field label="类型">
@@ -205,13 +221,13 @@ function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormSta
               <option value={3}>赠点</option>
             </select>
           </Field>
-          <Field label={form.discount_type === 2 ? '折扣百分比' : form.discount_type === 3 ? '赠送积分（点）' : '减免金额（元）'}>
+          <Field label={form.discount_type === 2 ? '折扣百分比 (%)' : form.discount_type === 3 ? '赠送积分（点）' : '减免金额（元）'}>
             <input className="input" type="number" min={0} value={form.discount_val} onChange={(e) => set('discount_val', Number(e.target.value) || 0)} />
           </Field>
           <Field label="最低消费（元）"><input className="input" type="number" min={0} value={form.min_amount} onChange={(e) => set('min_amount', Number(e.target.value) || 0)} /></Field>
           <Field label="适用范围"><input className="input" value={form.apply_to} onChange={(e) => set('apply_to', e.target.value)} placeholder="all / p100 / image" /></Field>
-          <Field label="总数量"><input className="input" type="number" min={0} value={form.total_qty} onChange={(e) => set('total_qty', Number(e.target.value) || 0)} /></Field>
-          <Field label="每用户限用"><input className="input" type="number" min={0} value={form.per_user_limit} onChange={(e) => set('per_user_limit', Number(e.target.value) || 0)} /></Field>
+          <Field label="总数量（0=不限）"><input className="input" type="number" min={0} value={form.total_qty} onChange={(e) => set('total_qty', Number(e.target.value) || 0)} /></Field>
+          <Field label="每用户限用（0=不限）"><input className="input" type="number" min={0} value={form.per_user_limit} onChange={(e) => set('per_user_limit', Number(e.target.value) || 0)} /></Field>
           <Field label="开始时间"><input className="input" type="datetime-local" value={form.start_at} onChange={(e) => set('start_at', e.target.value)} /></Field>
           <Field label="结束时间"><input className="input" type="datetime-local" value={form.end_at} onChange={(e) => set('end_at', e.target.value)} /></Field>
           <Field label="状态">
@@ -221,9 +237,9 @@ function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormSta
             </select>
           </Field>
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-border bg-surface-2/40 px-6 py-4">
           <button className="btn btn-outline btn-md" onClick={onClose}>取消</button>
-          <button className="btn btn-primary btn-md" disabled={saving} onClick={onSave}>{saving ? '保存中...' : '保存'}</button>
+          <button className="btn btn-primary btn-md" disabled={saving} onClick={onSave}>{saving ? '保存中…' : '保存'}</button>
         </div>
       </div>
     </div>

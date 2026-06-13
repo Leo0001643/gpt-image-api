@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, CheckCircle2, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search } from 'lucide-react';
+import { Ban, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -73,7 +73,23 @@ export default function UsersPage() {
         </div>
       </header>
 
-      <div className="card card-section flex flex-wrap items-center gap-2 !py-2">
+      {/* stat strip */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">总用户数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-600"><Users size={18}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页正常</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{items.filter(u=>u.status===1).length}</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={18}/></span>
+        </div>
+        <div className="card p-4 flex items-start justify-between">
+          <div><div className="text-tiny text-text-tertiary">当页总积分</div><div className="mt-1.5 text-[24px] font-bold tabular-nums text-text-primary leading-none">{(items.reduce((s,u)=>s+(u.points||0),0)/100).toFixed(0)} 点</div></div>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-600"><Coins size={18}/></span>
+        </div>
+      </div>
+
+      <div className="card p-3 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[260px] flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
           <input
