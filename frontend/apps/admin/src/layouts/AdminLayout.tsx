@@ -215,7 +215,10 @@ export function AdminLayout() {
         </header>
 
         {/* content area — pages use list-page pattern to negate this padding */}
-        <div className="flex-1 overflow-x-hidden bg-[#f8fafc] p-6">
+        {/* 注意：此 div 不能加 overflow-x-hidden，否则会创建新的滚动容器，
+            破坏 list-page-head / list-page-pager 的 sticky 定位。
+            水平滚动由外层 main 的 overflow-x-hidden 负责裁剪。 */}
+        <div className="flex-1 bg-[#f8fafc] p-6">
           <Outlet />
         </div>
       </main>

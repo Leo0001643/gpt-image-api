@@ -509,10 +509,13 @@
     margin-top: -24px;
   }
 
-  /* 吸顶头部：毛玻璃背景，贴边 */
+  /* 吸顶头部：毛玻璃背景，贴边
+     top: 56px = topbar 高度，相对于 main（overflow-y:auto 滚动容器）。
+     内容区父 div 不能有 overflow-x:hidden，否则该 div 会成为新的滚动容器
+     导致 sticky 定位失效，并产生 56px 的额外空白。 */
   .list-page-head {
     position: sticky;
-    top: 56px;      /* topbar 高度 */
+    top: 56px;
     z-index: 88;
     margin-left: -24px;
     margin-right: -24px;
@@ -560,6 +563,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 6px 20px;
+    height: 44px;
     border-top: 1px solid #eef0f8;
     background: linear-gradient(180deg, #fafbff 0%, #f5f7ff 100%);
     font-size: 12px;
