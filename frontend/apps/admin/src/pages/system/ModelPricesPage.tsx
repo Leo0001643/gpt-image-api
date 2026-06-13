@@ -253,24 +253,23 @@ export default function ModelPricesPage() {
                   {/* action buttons — visible on hover */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
-                      className="btn btn-ghost btn-icon btn-sm text-text-secondary"
+                      className="btn btn-outline btn-action-edit btn-sm"
                       onClick={() => openEdit(i)}
-                      title="编辑"
                     >
-                      <Pencil size={14}/>
+                      <Pencil size={13}/> 编辑
                     </button>
                     {delIdx === i ? (
                       <>
-                        <button className="btn btn-danger btn-icon btn-sm" onClick={()=>del(i)} title="确认删除">
-                          <Trash2 size={13}/>
+                        <button className="btn btn-outline btn-action-danger btn-sm" onClick={()=>del(i)}>
+                          <Trash2 size={13}/> 确认
                         </button>
-                        <button className="btn btn-ghost btn-icon btn-sm text-text-tertiary" onClick={()=>setDelIdx(null)} title="取消">
-                          <X size={13}/>
+                        <button className="btn btn-outline btn-sm" onClick={()=>setDelIdx(null)}>
+                          <X size={13}/> 取消
                         </button>
                       </>
                     ) : (
-                      <button className="btn btn-ghost btn-icon btn-sm text-text-tertiary" onClick={()=>setDelIdx(i)} title="删除">
-                        <Trash2 size={14}/>
+                      <button className="btn btn-outline btn-action-danger btn-sm" onClick={()=>setDelIdx(i)}>
+                        <Trash2 size={13}/> 删除
                       </button>
                     )}
                   </div>

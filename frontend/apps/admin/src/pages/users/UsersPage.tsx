@@ -166,11 +166,11 @@ export default function UsersPage() {
                       <MinusCircle size={14} /> 扣除
                     </button>
                     <button
-                      className={u.status === 1 ? 'btn btn-danger-ghost btn-sm' : 'btn btn-ghost btn-sm'}
+                      className={u.status === 1 ? 'btn btn-outline btn-action-danger btn-sm' : 'btn btn-outline btn-action-view btn-sm'}
                       disabled={toggle.isPending}
                       onClick={() => toggle.mutate({ id: u.id, next: u.status === 1 ? 0 : 1 })}
                     >
-                      {u.status === 1 ? <Ban size={14} /> : <CheckCircle2 size={14} />}
+                      {u.status === 1 ? <Ban size={13}/> : <CheckCircle2 size={13}/>}
                       {u.status === 1 ? '暂停' : '启用'}
                     </button>
                   </div>

@@ -207,11 +207,11 @@ export default function LogsPage() {
                   <tr className="align-middle">
                     <td className="sticky-l">
                       <button
-                        className="btn btn-ghost btn-icon btn-sm"
-                        title={isOpen ? '收起详情' : '展开详情'}
+                        className="btn btn-outline btn-sm"
                         onClick={() => setExpanded(isOpen ? null : row.task_id)}
                       >
-                        {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        {isOpen ? <ChevronDown size={13}/> : <ChevronRight size={13}/>}
+                        {isOpen ? '收起' : '详情'}
                       </button>
                     </td>
                     <td className="whitespace-nowrap">
