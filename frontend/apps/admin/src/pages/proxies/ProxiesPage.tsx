@@ -169,14 +169,14 @@ export default function ProxiesPage() {
             {selectedCount > 0 && <span className="stat-pill stat-pill-violet"><span className="stat-pill-dot"/><span className="stat-pill-label">已选</span><span className="stat-pill-val">{selectedCount}</span></span>}
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={13}/> 刷新</button>
-            <button className="btn btn-outline btn-sm" onClick={() => setImportOpen(true)}><Upload size={13}/> 批量添加</button>
+            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={11}/> 刷新</button>
+            <button className="btn btn-outline btn-sm" onClick={() => setImportOpen(true)}><Upload size={11}/> 批量添加</button>
             <button className="btn btn-outline btn-sm" disabled={selectedCount === 0 || batchTest.isPending} onClick={() => batchTest.mutate([...selected])}>
-              <Activity size={13} className={batchTest.isPending ? 'animate-pulse' : ''}/> 批量测试
+              <Activity size={11} className={batchTest.isPending ? 'animate-pulse' : ''}/> 批量测试
             </button>
             {selectedCount > 0 && (
               <button className="btn btn-danger btn-sm" disabled={batchDelete.isPending} onClick={() => { if (!confirm(`确认删除选中的 ${selectedCount} 个代理吗？`)) return; batchDelete.mutate([...selected]); }}>
-                <Trash2 size={13}/> 批量删除
+                <Trash2 size={11}/> 批量删除
               </button>
             )}
             <button className="list-page-btn-add" onClick={() => setEditor({ mode: 'create' })}><Plus size={14}/> 新增代理</button>
@@ -184,7 +184,7 @@ export default function ProxiesPage() {
         </div>
         <div className="list-page-filter-row">
           <div className="search-wrap">
-            <Search size={13}/>
+            <Search size={11}/>
             <input className="filter-input" style={{width:200}} placeholder="搜索名称、主机、备注"
               value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
             />
@@ -216,13 +216,13 @@ export default function ProxiesPage() {
                   title="全选当前页"
                 />
               </th>
-              <th><span className="th-icon"><Globe size={13}/>名称</span></th>
-              <th><span className="th-icon"><Zap size={13}/>协议</span></th>
-              <th><span className="th-icon"><Server size={13}/>地址</span></th>
-              <th><span className="th-icon"><ShieldCheck size={13}/>认证</span></th>
-              <th><span className="th-icon"><Signal size={13}/>状态</span></th>
-              <th><span className="th-icon"><Activity size={13}/>最近测试</span></th>
-              <th className="sticky-r"><span className="th-icon"><Settings2 size={13}/>操作</span></th>
+              <th><span className="th-icon"><Globe size={11}/>名称</span></th>
+              <th><span className="th-icon"><Zap size={11}/>协议</span></th>
+              <th><span className="th-icon"><Server size={11}/>地址</span></th>
+              <th><span className="th-icon"><ShieldCheck size={11}/>认证</span></th>
+              <th><span className="th-icon"><Signal size={11}/>状态</span></th>
+              <th><span className="th-icon"><Activity size={11}/>最近测试</span></th>
+              <th className="sticky-r"><span className="th-icon"><Settings2 size={11}/>操作</span></th>
             </tr>
           </thead>
           <tbody>
@@ -300,35 +300,35 @@ export default function ProxiesPage() {
                     )}
                   </td>
                   <td className="sticky-r">
-                    <div className="inline-grid grid-cols-2 gap-1 w-[108px]">
+                    <div className="inline-grid grid-cols-2 gap-1">
                       <button
-                        className="btn btn-outline btn-action-view btn-sm"
+                        className="btn btn-outline btn-action-view btn-xs"
                         disabled={testMut.isPending && testMut.variables === item.id}
                         onClick={() => testMut.mutate(item.id)}
                       >
-                        <Activity size={13} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
+                        <Activity size={11} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
                         {testMut.isPending && testMut.variables === item.id ? '测试中' : '测试'}
                       </button>
                       <button
-                        className="btn btn-outline btn-action-edit btn-sm"
+                        className="btn btn-outline btn-action-edit btn-xs"
                         onClick={() => setEditor({ mode: 'edit', row: item })}
                       >
-                        <Pencil size={13}/> 编辑
+                        <Pencil size={11}/> 编辑
                       </button>
                       <button
-                        className={`btn btn-sm btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
+                        className={`btn btn-xs btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
                         onClick={() => toggle.mutate({ id: item.id, status: enabled ? 0 : 1 })}
                       >
-                        <Power size={13}/>{enabled ? '禁用' : '启用'}
+                        <Power size={11}/>{enabled ? '禁用' : '启用'}
                       </button>
                       <button
-                        className="btn btn-outline btn-action-danger btn-sm"
+                        className="btn btn-outline btn-action-danger btn-xs"
                         onClick={() => {
                           if (!confirm(`确认删除代理"${item.name}"吗？`)) return;
                           remove.mutate(item.id);
                         }}
                       >
-                        <Trash2 size={13}/> 删除
+                        <Trash2 size={11}/> 删除
                       </button>
                     </div>
                   </td>
@@ -344,9 +344,9 @@ export default function ProxiesPage() {
             <span>共 <strong style={{color:'#6366f1'}}>{total}</strong> 条代理 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={11}/> 上一页</button>
             <span style={{fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
-            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={13}/></button>
+            <button className="btn btn-outline btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}>下一页 <ChevronRight size={11}/></button>
           </div>
         </div>
       </div>

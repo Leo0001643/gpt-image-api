@@ -149,10 +149,10 @@ export default function RechargePackagesPage() {
             {dirty && <span className="stat-pill stat-pill-orange"><span className="stat-pill-dot"/><span className="stat-pill-label">有未保存修改</span></span>}
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}><RefreshCw size={13} className={settings.isFetching?'animate-spin':''}/> 重新加载</button>
-            <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={13}/> 新增套餐</button>
+            <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}><RefreshCw size={11} className={settings.isFetching?'animate-spin':''}/> 重新加载</button>
+            <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={11}/> 新增套餐</button>
             <button className="btn btn-primary btn-sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-              <Save size={13}/> {save.isPending?'保存中...':dirty?'保存修改':'已是最新'}
+              <Save size={11}/> {save.isPending?'保存中...':dirty?'保存修改':'已是最新'}
             </button>
           </div>
         </div>
@@ -202,9 +202,9 @@ export default function RechargePackagesPage() {
                     </button>
                   </td>
                   <td>
-                    <div className="inline-grid grid-cols-2 gap-1 w-[108px]">
-                      <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => cloneRow(idx)}><Copy size={13}/> 复制</button>
-                      <button className="btn btn-outline btn-action-danger btn-sm" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={13}/> 删除</button>
+                    <div className="inline-grid grid-cols-2 gap-1">
+                      <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => cloneRow(idx)}><Copy size={11}/> 复制</button>
+                      <button className="btn btn-outline btn-action-danger btn-xs" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={11}/> 删除</button>
                     </div>
                   </td>
                 </tr>

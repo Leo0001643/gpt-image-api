@@ -941,7 +941,8 @@
     z-index: 3;
     background: #fff;
     box-shadow: -4px 0 8px -4px rgba(0,0,0,.1);
-    text-align: right;
+    text-align: center;
+    white-space: nowrap;
   }
   .data-table tbody tr:nth-child(even) td.sticky-r { background: #fafbff; }
   .data-table thead th.sticky-r {

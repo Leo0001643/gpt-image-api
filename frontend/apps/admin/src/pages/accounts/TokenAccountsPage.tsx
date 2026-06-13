@@ -331,20 +331,20 @@ export default function TokenAccountsPage() {
           </div>
           {/* 操作按钮 */}
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={13}/> 刷新</button>
+            <button className="btn btn-outline btn-sm" onClick={refresh}><RefreshCw size={11}/> 刷新</button>
             <button className="btn btn-outline btn-sm" onClick={() => batchRefresh.mutate(provider === 'all' ? '' : provider)} disabled={batchRefresh.isPending}>
-              <RotateCw size={13} className={batchRefresh.isPending ? 'animate-spin' : ''}/> 批量刷新
+              <RotateCw size={11} className={batchRefresh.isPending ? 'animate-spin' : ''}/> 批量刷新
             </button>
             <button className="btn btn-outline btn-sm" onClick={() => batchProbe.mutate(provider === 'all' ? '' : provider)} disabled={batchProbe.isPending}>
-              <Activity size={13} className={batchProbe.isPending ? 'animate-pulse' : ''}/> 批量检测
+              <Activity size={11} className={batchProbe.isPending ? 'animate-pulse' : ''}/> 批量检测
             </button>
-            <button className="btn btn-outline btn-sm" onClick={() => setOpenImport(true)}><Upload size={13}/> 导入</button>
+            <button className="btn btn-outline btn-sm" onClick={() => setOpenImport(true)}><Upload size={11}/> 导入</button>
             <button className="btn btn-outline btn-sm" disabled={selected.size === 0 || batchAssignProxy.isPending} onClick={() => setOpenAssignProxy(true)}>
-              <ChevronDown size={13}/> 批量代理
+              <ChevronDown size={11}/> 批量代理
             </button>
             {selected.size > 0 && (
               <button className="btn btn-danger btn-sm" disabled={batchDelete.isPending} onClick={() => { if (!confirm(`确认删除选中的 ${selected.size} 个账号吗？`)) return; batchDelete.mutate([...selected]); }}>
-                <Trash2 size={13}/> 批量删除
+                <Trash2 size={11}/> 批量删除
               </button>
             )}
             <button className="list-page-btn-add" onClick={() => setOpenCreate(true)}><Plus size={14}/> 新增账号</button>
@@ -354,7 +354,7 @@ export default function TokenAccountsPage() {
         {/* 筛选行 */}
         <div className="list-page-filter-row">
           <div className="search-wrap">
-            <Search size={13}/>
+            <Search size={11}/>
             <input
               className="filter-input"
               style={{width:180}}
@@ -393,14 +393,14 @@ export default function TokenAccountsPage() {
                   disabled={list.isLoading || items.length === 0}
                 />
               </th>
-              <th><span className="th-icon"><KeyRound size={13}/>名称</span></th>
-              <th><span className="th-icon"><Database size={13}/>Provider</span></th>
-              <th><span className="th-icon"><Tag size={13}/>账户类型</span></th>
-              <th><span className="th-icon"><Signal size={13}/>状态</span></th>
-              <th><span className="th-icon"><ShieldCheck size={13}/>凭证 / 测试</span></th>
-              <th><span className="th-icon"><BarChart2 size={13}/>用量</span></th>
-              <th><span className="th-icon"><Clock size={13}/>到期时间</span></th>
-              <th className="sticky-r"><span className="th-icon"><Settings2 size={13}/>操作</span></th>
+              <th><span className="th-icon"><KeyRound size={11}/>名称</span></th>
+              <th><span className="th-icon"><Database size={11}/>Provider</span></th>
+              <th><span className="th-icon"><Tag size={11}/>账户类型</span></th>
+              <th><span className="th-icon"><Signal size={11}/>状态</span></th>
+              <th><span className="th-icon"><ShieldCheck size={11}/>凭证 / 测试</span></th>
+              <th><span className="th-icon"><BarChart2 size={11}/>用量</span></th>
+              <th><span className="th-icon"><Clock size={11}/>到期时间</span></th>
+              <th className="sticky-r"><span className="th-icon"><Settings2 size={11}/>操作</span></th>
             </tr>
           </thead>
           <tbody>
@@ -520,13 +520,13 @@ export default function TokenAccountsPage() {
                     </div>
                   </td>
                   <td className="sticky-r">
-                    <div className="inline-grid grid-cols-2 gap-1 w-[108px]">
+                    <div className="inline-grid grid-cols-2 gap-1">
                       <button
-                        className="btn btn-outline btn-action-view btn-sm"
+                        className="btn btn-outline btn-action-view btn-xs"
                         onClick={() => testMut.mutate(item.id)}
                         disabled={testMut.isPending && testMut.variables === item.id}
                       >
-                        <Activity size={13} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
+                        <Activity size={11} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
                         {testMut.isPending && testMut.variables === item.id ? '测试中' : '测试'}
                       </button>
                       {isOAuth && (
@@ -535,27 +535,27 @@ export default function TokenAccountsPage() {
                           onClick={() => refreshOAuthMut.mutate(item.id)}
                           disabled={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id}
                         >
-                          <RotateCw size={13} className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin' : ''}/>
+                          <RotateCw size={11} className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin' : ''}/>
                           刷新
                         </button>
                       )}
-                      <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => setEditTarget(item)}>
-                        <Pencil size={13}/> 编辑
+                      <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setEditTarget(item)}>
+                        <Pencil size={11}/> 编辑
                       </button>
                       <button
-                        className={`btn btn-sm btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
+                        className={`btn btn-xs btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
                         onClick={() => toggleStatus.mutate({ id: item.id, status: enabled ? 0 : 1 })}
                       >
-                        <Power size={13}/>{enabled ? '禁用' : '启用'}
+                        <Power size={11}/>{enabled ? '禁用' : '启用'}
                       </button>
                       <button
-                        className="btn btn-outline btn-action-danger btn-sm"
+                        className="btn btn-outline btn-action-danger btn-xs"
                         onClick={() => {
                           if (!confirm(`确认删除账号"${item.name}"吗？`)) return;
                           remove.mutate(item.id);
                         }}
                       >
-                        <Trash2 size={13}/> 删除
+                        <Trash2 size={11}/> 删除
                       </button>
                     </div>
                   </td>
@@ -580,9 +580,9 @@ export default function TokenAccountsPage() {
               </select>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:4}}>
-              <button className="btn btn-outline btn-icon btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/></button>
+              <button className="btn btn-outline btn-icon btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={11}/></button>
               <span style={{minWidth:'3rem',textAlign:'center',fontSize:12,color:'#374151'}}>{page} / {lastPage}</span>
-              <button className="btn btn-outline btn-icon btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}><ChevronRight size={13}/></button>
+              <button className="btn btn-outline btn-icon btn-sm" disabled={page>=lastPage} onClick={()=>setPage(p=>Math.min(lastPage,p+1))}><ChevronRight size={11}/></button>
             </div>
           </div>
         </div>

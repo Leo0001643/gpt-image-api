@@ -108,13 +108,13 @@ export default function PromoPage() {
             <span className="stat-pill stat-pill-green"><span className="stat-pill-dot"/><span className="stat-pill-label">赠点</span><span className="stat-pill-val">{rows.filter(r=>r.discount_type===3).length}</span></span>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
-            <button className="btn btn-outline btn-sm" onClick={() => query.refetch()} disabled={query.isFetching}><RefreshCw size={13} className={query.isFetching?'animate-spin':''}/> 刷新</button>
+            <button className="btn btn-outline btn-sm" onClick={() => query.refetch()} disabled={query.isFetching}><RefreshCw size={11} className={query.isFetching?'animate-spin':''}/> 刷新</button>
             <button className="list-page-btn-add" onClick={() => setForm(DEFAULT_FORM)}><Plus size={14}/> 新增优惠码</button>
           </div>
         </div>
         <div className="list-page-filter-row">
           <div className="search-wrap">
-            <Search size={13}/>
+            <Search size={11}/>
             <input className="filter-input" style={{width:220}} value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} placeholder="搜索优惠码、名称、ID"/>
           </div>
           <select className="filter-select" style={{minWidth:100}} value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}>
@@ -165,9 +165,9 @@ export default function PromoPage() {
                 <td className="whitespace-nowrap">{fmtTime(row.start_at)} - {fmtTime(row.end_at)}</td>
                 <td><button className={row.status === 1 ? 'btn btn-outline btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => toggle.mutate(row)}>{row.status === 1 ? '启用' : '停用'}</button></td>
                 <td>
-                  <div className="inline-grid grid-cols-2 gap-1 w-[108px]">
-                    <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => setForm(rowToForm(row))}><Edit3 size={13}/> 编辑</button>
-                    <button className="btn btn-outline btn-action-danger btn-sm" onClick={() => { if (confirm(`删除优惠码 ${row.code}？`)) remove.mutate(row.id); }}><Trash2 size={13}/> 删除</button>
+                  <div className="inline-grid grid-cols-2 gap-1">
+                    <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setForm(rowToForm(row))}><Edit3 size={11}/> 编辑</button>
+                    <button className="btn btn-outline btn-action-danger btn-xs" onClick={() => { if (confirm(`删除优惠码 ${row.code}？`)) remove.mutate(row.id); }}><Trash2 size={11}/> 删除</button>
                   </div>
                 </td>
               </tr>
@@ -184,9 +184,9 @@ export default function PromoPage() {
             <span>共 <strong style={{color:'#f97316'}}>{fmtNumber(total)}</strong> 个优惠码 · 第 <strong style={{color:'#374151'}}>{page}</strong> 页</span>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={13}/> 上一页</button>
+            <button className="btn btn-outline btn-sm" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}><ChevronLeft size={11}/> 上一页</button>
             <span style={{fontSize:12,color:'#374151'}}>{page} / {pages}</span>
-            <button className="btn btn-outline btn-sm" disabled={page>=pages} onClick={()=>setPage(p=>p+1)}>下一页 <ChevronRight size={13}/></button>
+            <button className="btn btn-outline btn-sm" disabled={page>=pages} onClick={()=>setPage(p=>p+1)}>下一页 <ChevronRight size={11}/></button>
           </div>
         </div>
       </div>
