@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDownLeft, ArrowUpRight, FileText, RefreshCw, Search, Wallet } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { RefreshCw, Search, Wallet } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 import { billingApi } from '../../lib/services';
 import type { AdminWalletLogItem } from '../../lib/types';
@@ -154,20 +154,6 @@ function LogRow({ row }: { row: AdminWalletLogItem }) {
       <td className="tabular-nums">{fmtPoints(row.points_after)}</td>
       <td className="max-w-[240px] truncate" title={row.remark}>{row.remark || '-'}</td>
     </tr>
-  );
-}
-
-function Stat({ title, value, icon, iconCls }: { title: string; value: string; icon: ReactNode; iconCls: string }) {
-  return (
-    <div className="card p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-tiny text-text-tertiary">{title}</div>
-          <div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{value}</div>
-        </div>
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${iconCls}`}>{icon}</span>
-      </div>
-    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  CheckCircle2, ChevronDown, ChevronRight, Eye, FileText,
-  ImageIcon, MessageSquare, RefreshCw, Search, Trash2, Video, X, XCircle,
+  ChevronDown, ChevronRight, Eye,
+  ImageIcon, MessageSquare, RefreshCw, Search, Trash2, Video, X,
 } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
 
