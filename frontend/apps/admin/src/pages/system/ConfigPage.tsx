@@ -210,7 +210,7 @@ export default function ConfigPage() {
         </div>
       </div>
 
-      <div className="-mx-6 py-5">
+      <div className="bg-white px-6 pt-5 pb-8">
         {settings.isLoading ? (
           <div className="grid gap-4 xl:grid-cols-2">
             {[0,1,2,3,4].map(i=><div key={i} className="card h-48 animate-pulse bg-surface-2"/>)}

@@ -60,9 +60,9 @@ export default function CDKPage() {
           </div>
         </div>
       </div>
-      <div className="-mx-6 space-y-5 py-5">
+      <div className="bg-white px-6 pt-5 pb-8 space-y-5">
 
-      <div className="dialog-surface w-full">
+      <div className="overflow-hidden rounded-2xl border border-border shadow-sm">
         <div className="modal-header-grad mhg-amber">
           <div className="flex items-center gap-3">
             <div className="modal-icon"><Ticket size={20}/></div>
@@ -72,7 +72,7 @@ export default function CDKPage() {
             </div>
           </div>
         </div>
-        <form onSubmit={submit} className="modal-body grid w-full gap-5 lg:grid-cols-2">
+        <form onSubmit={submit} className="grid w-full gap-5 p-6 lg:grid-cols-2">
         <Field label="批次号" hint="同批次唯一，如 SPRING2026-A">
           <input
             className="input"
@@ -163,7 +163,7 @@ export default function CDKPage() {
       </div>
 
       {last && (
-        <div className="dialog-surface w-full">
+        <div className="overflow-hidden rounded-2xl border border-success/30 bg-success-soft shadow-sm">
           <div className="modal-header-grad mhg-emerald">
             <div className="flex items-center gap-3">
               <div className="modal-icon"><CheckCircle2 size={20}/></div>
@@ -173,7 +173,7 @@ export default function CDKPage() {
               </div>
             </div>
           </div>
-          <div className="modal-body">
+          <div className="p-6">
             <div className="flex flex-wrap gap-6 text-small">
               <div><div className="text-text-tertiary mb-1">批次 ID</div><div className="font-mono font-bold">#{last.id}</div></div>
               <div><div className="text-text-tertiary mb-1">批次号</div><code className="kbd">{last.batch_no}</code></div>

@@ -519,8 +519,6 @@
     position: sticky;
     top: 56px;
     z-index: 20;
-    margin-left: -24px;
-    margin-right: -24px;
     background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -547,10 +545,8 @@
     padding: 8px 24px 12px;
   }
 
-  /* 表格 + 分页器容器，贴边延伸到底 */
+  /* 表格 + 分页器容器，延伸到底 */
   .list-page-body {
-    margin-left: -24px;
-    margin-right: -24px;
     margin-bottom: -24px;
     background: #fff;
     border-top: 1px solid #eef0f8;

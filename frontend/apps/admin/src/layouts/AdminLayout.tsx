@@ -226,7 +226,7 @@ export function AdminLayout() {
         {/* 注意：此 div 不能加 overflow-x-hidden，否则会创建新的滚动容器，
             破坏 list-page-head / list-page-pager 的 sticky 定位。
             水平滚动由外层 main 的 overflow-x-hidden 负责裁剪。 */}
-        <div className="flex-1 bg-[#f8fafc] p-6">
+        <div className="flex-1 bg-[#f8fafc] py-6">
           {/* Suspense 放在这里：路由懒加载时只有内容区显示占位，
               侧栏和顶栏始终可见，不会触发全屏空白 */}
           <Suspense fallback={
