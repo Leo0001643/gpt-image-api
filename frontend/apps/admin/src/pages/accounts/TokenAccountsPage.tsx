@@ -520,50 +520,42 @@ export default function TokenAccountsPage() {
                     </div>
                   </td>
                   <td className="sticky-r">
-                    <div className="inline-flex gap-1 justify-end">
+                    <div className="inline-flex flex-wrap gap-1 justify-end">
                       <button
-                        className="btn btn-outline btn-action-view btn-icon btn-sm"
-                        title="测试连通性"
+                        className="btn btn-outline btn-action-view btn-sm"
                         onClick={() => testMut.mutate(item.id)}
                         disabled={testMut.isPending && testMut.variables === item.id}
                       >
-                        <Activity
-                          size={14}
-                          className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse text-gia-500' : 'text-text-secondary'}
-                        />
+                        <Activity size={13} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
+                        {testMut.isPending && testMut.variables === item.id ? '测试中' : '测试'}
                       </button>
                       {isOAuth && (
                         <button
-                          className="btn btn-ghost btn-icon btn-sm"
-                          title="刷新 access_token"
+                          className="btn btn-outline btn-sm"
                           onClick={() => refreshOAuthMut.mutate(item.id)}
                           disabled={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id}
                         >
-                          <RotateCw
-                            size={14}
-                            className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin text-gia-500' : 'text-text-secondary'}
-                          />
+                          <RotateCw size={13} className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin' : ''}/>
+                          刷新
                         </button>
                       )}
-                      <button className="btn btn-outline btn-action-edit btn-icon btn-sm" title="编辑" onClick={() => setEditTarget(item)}>
-                        <Pencil size={14} className="text-text-secondary" />
+                      <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => setEditTarget(item)}>
+                        <Pencil size={13}/> 编辑
                       </button>
                       <button
-                        className="btn btn-ghost btn-icon btn-sm"
-                        title={enabled ? '禁用' : '启用'}
+                        className={`btn btn-sm btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
                         onClick={() => toggleStatus.mutate({ id: item.id, status: enabled ? 0 : 1 })}
                       >
-                        <Power size={14} className={enabled ? 'text-success' : 'text-text-tertiary'} />
+                        <Power size={13}/>{enabled ? '禁用' : '启用'}
                       </button>
                       <button
-                        className="btn btn-outline btn-action-danger btn-icon btn-sm"
-                        title="删除"
+                        className="btn btn-outline btn-action-danger btn-sm"
                         onClick={() => {
-                          if (!confirm(`确认删除账号“${item.name}”吗？`)) return;
+                          if (!confirm(`确认删除账号"${item.name}"吗？`)) return;
                           remove.mutate(item.id);
                         }}
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13}/> 删除
                       </button>
                     </div>
                   </td>

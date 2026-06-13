@@ -300,41 +300,35 @@ export default function ProxiesPage() {
                     )}
                   </td>
                   <td className="sticky-r">
-                    <div className="inline-flex gap-1 justify-end">
+                    <div className="inline-flex flex-wrap gap-1 justify-end">
                       <button
-                        className="btn btn-ghost btn-icon btn-sm"
-                        title="测试代理"
+                        className="btn btn-outline btn-action-view btn-sm"
                         disabled={testMut.isPending && testMut.variables === item.id}
                         onClick={() => testMut.mutate(item.id)}
                       >
-                        <Activity
-                          size={14}
-                          className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse text-gia-500' : 'text-text-secondary'}
-                        />
+                        <Activity size={13} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
+                        {testMut.isPending && testMut.variables === item.id ? '测试中' : '测试'}
                       </button>
                       <button
-                        className="btn btn-outline btn-action-edit btn-icon btn-sm"
-                        title="编辑"
+                        className="btn btn-outline btn-action-edit btn-sm"
                         onClick={() => setEditor({ mode: 'edit', row: item })}
                       >
-                        <Pencil size={14} />
+                        <Pencil size={13}/> 编辑
                       </button>
                       <button
-                        className="btn btn-ghost btn-icon btn-sm"
-                        title={enabled ? '禁用' : '启用'}
+                        className={`btn btn-sm btn-outline ${enabled ? 'btn-action-warn' : 'btn-action-view'}`}
                         onClick={() => toggle.mutate({ id: item.id, status: enabled ? 0 : 1 })}
                       >
-                        <Power size={14} className={enabled ? 'text-success' : 'text-text-tertiary'} />
+                        <Power size={13}/>{enabled ? '禁用' : '启用'}
                       </button>
                       <button
-                        className="btn btn-outline btn-action-danger btn-icon btn-sm"
-                        title="删除"
+                        className="btn btn-outline btn-action-danger btn-sm"
                         onClick={() => {
-                          if (!confirm(`确认删除代理“${item.name}”吗？`)) return;
+                          if (!confirm(`确认删除代理"${item.name}"吗？`)) return;
                           remove.mutate(item.id);
                         }}
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13}/> 删除
                       </button>
                     </div>
                   </td>

@@ -203,8 +203,8 @@ export default function RechargePackagesPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-1">
-                      <button className="btn btn-outline btn-action-edit btn-icon btn-sm" title="复制套餐" onClick={() => cloneRow(idx)}><Copy size={14} /></button>
-                      <button className="btn btn-outline btn-action-danger btn-icon btn-sm" title="删除套餐" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={14} /></button>
+                      <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => cloneRow(idx)}><Copy size={13}/> 复制</button>
+                      <button className="btn btn-outline btn-action-danger btn-sm" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={13}/> 删除</button>
                     </div>
                   </td>
                 </tr>

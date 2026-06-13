@@ -166,8 +166,8 @@ export default function PromoPage() {
                 <td><button className={row.status === 1 ? 'btn btn-outline btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => toggle.mutate(row)}>{row.status === 1 ? '启用' : '停用'}</button></td>
                 <td>
                   <div className="flex items-center gap-1">
-                    <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setForm(rowToForm(row))} title="编辑"><Edit3 size={14} /></button>
-                    <button className="btn btn-danger-ghost btn-icon btn-sm" onClick={() => { if (confirm(`删除优惠码 ${row.code}？`)) remove.mutate(row.id); }} title="删除"><Trash2 size={14} /></button>
+                    <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => setForm(rowToForm(row))}><Edit3 size={13}/> 编辑</button>
+                    <button className="btn btn-outline btn-action-danger btn-sm" onClick={() => { if (confirm(`删除优惠码 ${row.code}？`)) remove.mutate(row.id); }}><Trash2 size={13}/> 删除</button>
                   </div>
                 </td>
               </tr>

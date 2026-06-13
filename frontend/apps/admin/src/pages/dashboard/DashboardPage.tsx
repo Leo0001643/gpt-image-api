@@ -25,19 +25,30 @@ export default function DashboardPage() {
   const quotaUsed        = Math.max(0, quotaTotal - quotaRemaining);
 
   return (
-    <div className="page page-wide space-y-6">
+    <div className="list-page">
 
-      {/* ── page header ─────────────────────────────── */}
-      <header className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2"><Activity className="text-gia-500" size={18}/>运营仪表盘</h1>
-          <p className="page-subtitle">实时追踪生成量、账号池状态、积分消耗与用户活跃。</p>
+      {/* ── sticky header ────────────────────────────── */}
+      <div className="list-page-head">
+        <div className="list-page-title-row">
+          <div className="page-icon-box" style={{background:'linear-gradient(135deg,#6366f1,#4f46e5)',boxShadow:'0 4px 14px rgba(99,102,241,.35)'}}>
+            <Activity size={16}/>
+          </div>
+          <div>
+            <div className="list-page-title">运营仪表盘</div>
+            <div className="list-page-subtitle">实时追踪生成量、账号池状态、积分消耗与用户活跃</div>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            {isFetching && <span className="text-tiny text-text-tertiary animate-pulse">刷新中…</span>}
+            {!isFetching && <span className="text-tiny text-text-tertiary">每 15 秒自动刷新</span>}
+            <button className="btn btn-outline btn-sm gap-1.5" onClick={() => refetch()} disabled={isFetching}>
+              <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
+              手动刷新
+            </button>
+          </div>
         </div>
-        <button className="btn btn-outline btn-md gap-1.5" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-          <span>{isFetching ? '刷新中…' : '刷新'}</span>
-        </button>
-      </header>
+      </div>
+
+      <div className="bg-white px-6 pt-5 pb-8 space-y-6">
 
       {/* ── hero row ─────────────────────────────────── */}
       <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
@@ -156,6 +167,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      </div>{/* end bg-white content */}
     </div>
   );
 }

@@ -156,8 +156,8 @@ export default function UsersPage() {
                 </td>
                 <td className="sticky-r">
                   <div className="inline-flex flex-wrap gap-1 justify-end">
-                    <button className="btn btn-outline btn-action-edit btn-icon btn-sm" title="编辑" onClick={() => setDlg({ mode: 'edit', row: u })}>
-                      <Pencil size={14} />
+                    <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => setDlg({ mode: 'edit', row: u })}>
+                      <Pencil size={13}/> 编辑
                     </button>
                     <button className="btn btn-outline btn-action-view btn-sm" onClick={() => setDlg({ mode: 'points', row: u, action: 'recharge' })}>
                       <PlusCircle size={14} /> 充值
