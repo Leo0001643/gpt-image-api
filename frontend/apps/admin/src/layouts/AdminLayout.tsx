@@ -156,7 +156,7 @@ export function AdminLayout() {
       )}
 
       {/* ── main ──────────────────────────────────────── */}
-      <main className="flex min-w-0 flex-col">
+      <main className="flex min-w-0 flex-col overflow-x-hidden">
         {/* topbar */}
         <header className="sticky top-0 z-20 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-surface-1/95 px-6 backdrop-blur-sm">
           <div className="flex items-center gap-2 text-tiny text-text-tertiary">
@@ -216,7 +216,7 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-x-hidden">
           <Outlet />
         </div>
       </main>

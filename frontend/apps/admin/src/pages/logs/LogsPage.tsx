@@ -115,7 +115,7 @@ export default function LogsPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title flex items-center gap-2"><Eye className="text-gia-500" size={24}/>请求日志</h1>
+          <h1 className="page-title flex items-center gap-2"><Eye className="text-gia-500" size={18}/>请求日志</h1>
           <p className="page-subtitle">按任务查看用户、模型、状态与费用；提示词、错误和上游返回收进详情行。</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">

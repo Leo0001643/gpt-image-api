@@ -60,7 +60,7 @@ export default function UsersPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title flex items-center gap-2"><Users className="text-gia-500" size={24}/>用户管理</h1>
+          <h1 className="page-title flex items-center gap-2"><Users className="text-gia-500" size={18}/>用户管理</h1>
           <p className="page-subtitle">管理注册用户、账号状态、资料和积分余额</p>
         </div>
         <div className="flex flex-wrap gap-2">

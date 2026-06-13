@@ -134,7 +134,7 @@ export default function RechargePackagesPage() {
     <div className="page page-wide space-y-4">
       <header className="page-header">
         <div>
-          <h1 className="page-title flex items-center gap-2"><WalletCards className="text-gia-500" size={24}/>充值套餐</h1>
+          <h1 className="page-title flex items-center gap-2"><WalletCards className="text-gia-500" size={18}/>充值套餐</h1>
           <p className="page-subtitle">用表单维护前端售卖套餐，金额单位为元，积分单位为点。</p>
         </div>
         <div className="flex flex-wrap gap-2">

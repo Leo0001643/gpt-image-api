@@ -384,10 +384,10 @@
     border-radius: var(--radius-lg);
   }
   .card-section {
-    padding: var(--space-5);
+    padding: var(--space-4);
   }
   @media (min-width: 1024px) {
-    .card-section { padding: var(--space-6); }
+    .card-section { padding: var(--space-5); }
   }
 
   /* 旧 alias */
@@ -470,42 +470,38 @@
    6. Page header / Section header
    ----------------------------------------------------------- */
 @layer components {
-  /* 所有内容页统一的水平内边距与最大宽度。
-     默认 max-width 1280px，已充分覆盖侧栏外的可阅读宽度；
-     padding 在三档断点之间稳定阶梯，确保左右间距一致。 */
+  /* 内容页统一布局：充满右侧面板宽度，只保留顶部和左右的最小内边距。 */
   .page {
-    padding: var(--space-5) var(--space-5);
-    max-width: 1280px;
-    margin-inline: auto;
+    padding: var(--space-5) var(--space-4);
     width: 100%;
   }
-  @media (min-width: 768px)  { .page { padding: var(--space-6) var(--space-6); } }
-  @media (min-width: 1280px) { .page { padding: var(--space-8) var(--space-8); } }
+  @media (min-width: 768px)  { .page { padding: var(--space-5) var(--space-5); } }
+  @media (min-width: 1280px) { .page { padding: var(--space-6) var(--space-6); } }
 
-  /* 文档/表单/落地页等需要更窄阅读栏宽的页面 */
-  .page-narrow { max-width: 880px; }
-  /* 数据后台等需要更宽布局，仅 admin 用 */
-  .page-wide   { max-width: 1440px; }
+  /* 文档/表单页可限宽 */
+  .page-narrow { max-width: 880px; margin-inline: auto; }
+  /* admin 数据页全宽，无最大宽度限制 */
+  .page-wide   { max-width: none; }
 
   .page-header {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
-    margin-bottom: var(--space-5);
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
   }
   .page-title {
-    font-size: var(--fs-h1);
+    font-size: 18px;
     line-height: var(--lh-tight);
     letter-spacing: var(--tracking-tight);
     font-weight: var(--weight-bold);
     color: var(--text-primary);
   }
   .page-subtitle {
-    margin-top: 4px;
-    font-size: var(--fs-small);
-    color: var(--text-secondary);
+    margin-top: 2px;
+    font-size: var(--fs-tiny);
+    color: var(--text-tertiary);
     line-height: var(--lh-normal);
   }
 
@@ -515,7 +511,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-4);
+    padding: 8px var(--space-3);
     background: var(--surface-1);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-xl);
@@ -653,31 +649,33 @@
   }
   .data-table thead th {
     text-align: left;
-    padding: 10px var(--space-4);
-    font-size: var(--fs-small);
+    padding: 9px var(--space-3);
+    font-size: 11.5px;
     font-weight: var(--weight-semibold);
     color: var(--text-secondary);
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border-default);
+    background: rgba(30,61,255,.045);
+    border-bottom: 1px solid rgba(30,61,255,.12);
     white-space: nowrap;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
     position: relative;
+    user-select: none;
   }
   /* th icon label */
   .data-table thead th .th-icon {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     color: inherit;
   }
   .data-table thead th .th-icon svg {
     flex-shrink: 0;
-    opacity: 0.65;
+    color: var(--brand-500);
+    opacity: 0.7;
   }
   .data-table thead th:first-child { border-top-left-radius: var(--radius-lg); }
   .data-table thead th:last-child  { border-top-right-radius: var(--radius-lg); text-align: right; }
   .data-table tbody td {
-    padding: 11px var(--space-4);
+    padding: 10px var(--space-3);
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-primary);
     vertical-align: middle;
@@ -686,9 +684,9 @@
   }
   .data-table tbody td:last-child { text-align: right; }
   .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table tbody tr:hover td { background: rgba(30,61,255,.035); }
+  .data-table tbody tr:hover td { background: rgba(30,61,255,.028); }
   .data-table tbody tr:hover td.sticky-l,
-  .data-table tbody tr:hover td.sticky-r { background: rgba(30,61,255,.035); }
+  .data-table tbody tr:hover td.sticky-r { background: rgba(30,61,255,.028); }
 
   /* ── sticky columns ── */
   .data-table th.sticky-l,
@@ -697,10 +695,10 @@
     left: 0;
     z-index: 3;
     background: var(--surface-1);
-    box-shadow: 2px 0 6px -2px rgba(11,18,38,.10);
+    box-shadow: 2px 0 8px -2px rgba(11,18,38,.08);
   }
   .data-table thead th.sticky-l {
-    background: var(--surface-2);
+    background: rgba(30,61,255,.045);
     z-index: 4;
   }
   .data-table th.sticky-r,
@@ -709,11 +707,11 @@
     right: 0;
     z-index: 3;
     background: var(--surface-1);
-    box-shadow: -2px 0 6px -2px rgba(11,18,38,.10);
+    box-shadow: -2px 0 8px -2px rgba(11,18,38,.08);
     text-align: right;
   }
   .data-table thead th.sticky-r {
-    background: var(--surface-2);
+    background: rgba(30,61,255,.045);
     z-index: 4;
   }
 
@@ -933,18 +931,18 @@
   .stat-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
   .stat-tab {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 36px;
-    padding: 0 14px;
+    gap: 5px;
+    height: 30px;
+    padding: 0 11px;
     border-radius: var(--radius-pill);
     background: var(--surface-1);
-    border: 1.5px solid var(--border-default);
-    font-size: var(--fs-small);
+    border: 1px solid var(--border-default);
+    font-size: 12px;
     font-weight: var(--weight-medium);
     color: var(--text-secondary);
     cursor: default;
@@ -953,7 +951,7 @@
     transition: border-color var(--duration-fast) var(--ease-out);
   }
   .stat-tab-dot {
-    width: 8px; height: 8px;
+    width: 7px; height: 7px;
     border-radius: 999px;
     flex-shrink: 0;
   }

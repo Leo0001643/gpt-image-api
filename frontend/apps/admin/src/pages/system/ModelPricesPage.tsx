@@ -136,7 +136,7 @@ export default function ModelPricesPage() {
       {/* ── page header ─────────────────── */}
       <header className="page-header">
         <div>
-          <h1 className="page-title flex items-center gap-2"><BarChart2 className="text-gia-500" size={24}/>模型价格</h1>
+          <h1 className="page-title flex items-center gap-2"><BarChart2 className="text-gia-500" size={18}/>模型价格</h1>
           <p className="page-subtitle">配置前台可用模型、上游映射与计费单价</p>
         </div>
         <div className="flex gap-2">
