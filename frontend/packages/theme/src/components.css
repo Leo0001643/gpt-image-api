@@ -517,7 +517,9 @@
      确保打开弹窗时 backdrop 能正确覆盖吸顶头部。 */
   .list-page-head {
     position: sticky;
-    top: 56px;
+    /* top:0 — 滚动容器现在是 content-div（topbar 已从滚动流中分离），
+       sticky 相对于 content-div 顶部而非 main 顶部。 */
+    top: 0;
     /* z-index 25 > pager(10): dropdown menus from filter row paint above sticky pager */
     z-index: 25;
     background: rgba(255, 255, 255, 0.97);
@@ -896,7 +898,11 @@
     white-space: nowrap;
     vertical-align: middle;
     user-select: none;
-    position: relative;
+    /* 表头吸顶：top = list-page-head 高度 (由 AdminLayout ResizeObserver 写入 --lph)。
+       fallback 100px 是 title-row(50px) + filter-row(50px) 的近似值。 */
+    position: sticky;
+    top: var(--lph, 100px);
+    z-index: 4;
   }
   /* th icon label */
   .data-table thead th .th-icon {
