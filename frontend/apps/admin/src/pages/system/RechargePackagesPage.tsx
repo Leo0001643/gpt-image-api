@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Plus, RefreshCw, Save, Trash2, WalletCards } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Copy, Pencil, Plus, RefreshCw, Save, Trash2, WalletCards } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
 import { systemApi } from '../../lib/services';
@@ -19,15 +19,17 @@ interface RechargePackage {
   remark: string;
 }
 
+type FieldKey = keyof RechargePackage;
+type EditState = { idx: number; field: FieldKey } | null;
+
 const DEFAULT_ROWS: RechargePackage[] = [
   { id: 'p100', name: '100 点套餐', amount: 10, points: 100, bonus_points: 0, enabled: true, sort_order: 10, badge: '', remark: '' },
   { id: 'p500', name: '500 点套餐', amount: 45, points: 500, bonus_points: 50, enabled: true, sort_order: 20, badge: '推荐', remark: '' },
 ];
 
-const asNum = (v: unknown, fallback: number) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-};
+const NUM_FIELDS: FieldKey[] = ['sort_order', 'amount', 'points', 'bonus_points'];
+
+const asNum = (v: unknown, fallback: number) => { const n = Number(v); return Number.isFinite(n) ? n : fallback; };
 const asBool = (v: unknown, fallback = false) => (v == null ? fallback : Boolean(v));
 
 function fromValue(v: unknown): RechargePackage[] {
@@ -64,26 +66,33 @@ function toPayload(rows: RechargePackage[]): Partial<SystemSettings> {
   };
 }
 
+/** Display helper for "—" when value is falsy */
+function Empty() {
+  return <span className="text-text-tertiary select-none">—</span>;
+}
+
 export default function RechargePackagesPage() {
   const qc = useQueryClient();
   const settings = useQuery({ queryKey: ['admin', 'system', 'settings'], queryFn: () => systemApi.get() });
   const [rows, setRows] = useState<RechargePackage[]>(DEFAULT_ROWS);
   const [dirty, setDirty] = useState(false);
 
+  /* ── Inline editing state ── */
+  const [editing, setEditing] = useState<EditState>(null);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (settings.data) {
       setRows(fromValue(settings.data['recharge.packages']));
       setDirty(false);
+      setEditing(null);
     }
   }, [settings.data]);
 
   const totals = useMemo(() => {
-    const enabled = rows.filter((row) => row.enabled);
-    return {
-      total: rows.length,
-      enabled: enabled.length,
-      disabled: rows.length - enabled.length,
-    };
+    const enabled = rows.filter((r) => r.enabled);
+    return { total: rows.length, enabled: enabled.length, disabled: rows.length - enabled.length };
   }, [rows]);
 
   const update = (idx: number, patch: Partial<RechargePackage>) => {
@@ -92,20 +101,10 @@ export default function RechargePackagesPage() {
   };
 
   const addRow = () => {
-    setRows((old) => [
-      ...old,
-      {
-        id: `pkg_${Date.now()}`,
-        name: '',
-        amount: 0,
-        points: 0,
-        bonus_points: 0,
-        enabled: true,
-        sort_order: (old.length + 1) * 10,
-        badge: '',
-        remark: '',
-      },
-    ]);
+    setRows((old) => [...old, {
+      id: `pkg_${Date.now()}`, name: '', amount: 0, points: 0,
+      bonus_points: 0, enabled: true, sort_order: (old.length + 1) * 10, badge: '', remark: '',
+    }]);
     setDirty(true);
   };
 
@@ -122,13 +121,69 @@ export default function RechargePackagesPage() {
 
   const save = useMutation({
     mutationFn: () => systemApi.update(toPayload(rows)),
-    onSuccess: () => {
-      toast.success('充值套餐已保存');
-      setDirty(false);
-      qc.invalidateQueries({ queryKey: ['admin', 'system'] });
-    },
+    onSuccess: () => { toast.success('充值套餐已保存'); setDirty(false); qc.invalidateQueries({ queryKey: ['admin', 'system'] }); },
     onError: (e: ApiError | Error) => toast.error(e.message),
   });
+
+  /* ── Inline edit helpers ── */
+  const startEdit = (idx: number, field: FieldKey) => {
+    setEditing({ idx, field });
+    setDraft(String(rows[idx]?.[field] ?? ''));
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
+
+  const commitEdit = () => {
+    if (!editing) return;
+    const { idx, field } = editing;
+    const raw = draft.trim();
+    const value: string | number = NUM_FIELDS.includes(field) ? (Number(raw) || 0) : raw;
+    update(idx, { [field]: value });
+    setEditing(null);
+  };
+
+  const cancelEdit = () => setEditing(null);
+
+  /** Renders a single editable text/number td cell */
+  const EC = ({
+    idx, field, display, type = 'text', placeholder = '', inputCls = '',
+  }: {
+    idx: number; field: FieldKey; display: React.ReactNode;
+    type?: 'text' | 'number'; placeholder?: string; inputCls?: string;
+  }) => {
+    const isEditing = editing?.idx === idx && editing?.field === field;
+    if (isEditing) {
+      return (
+        <td>
+          <input
+            ref={inputRef}
+            autoFocus
+            type={type}
+            value={draft}
+            placeholder={placeholder}
+            className={`input ${inputCls}`}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+              if (e.key === 'Escape') cancelEdit();
+            }}
+          />
+        </td>
+      );
+    }
+    return (
+      <td
+        className="group/cell cursor-pointer select-none"
+        onDoubleClick={() => startEdit(idx, field)}
+        title="双击编辑"
+      >
+        <div className="flex items-center gap-1.5 rounded px-1.5 -mx-1.5 py-0.5 group-hover/cell:bg-indigo-50 transition-colors">
+          {display}
+          <Pencil size={10} className="shrink-0 text-indigo-400 opacity-0 group-hover/cell:opacity-100 transition-opacity" />
+        </div>
+      </td>
+    );
+  };
 
   return (
     <div className="list-page">
@@ -139,7 +194,7 @@ export default function RechargePackagesPage() {
           </div>
           <div>
             <div className="list-page-title">充值套餐</div>
-            <div className="list-page-subtitle">用表单维护前端售卖套餐，金额单位为元，积分单位为点</div>
+            <div className="list-page-subtitle">双击单元格即可原地修改，金额单位：元，积分单位：点</div>
           </div>
           <div className="list-divider"/>
           <div className="flex flex-wrap gap-1.5">
@@ -149,10 +204,12 @@ export default function RechargePackagesPage() {
             {dirty && <span className="stat-pill stat-pill-orange"><span className="stat-pill-dot"/><span className="stat-pill-label">有未保存修改</span></span>}
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}><RefreshCw size={11} className={settings.isFetching?'animate-spin':''}/> 重新加载</button>
+            <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()} disabled={settings.isFetching}>
+              <RefreshCw size={11} className={settings.isFetching ? 'animate-spin' : ''}/> 重新加载
+            </button>
             <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={13}/> 新增套餐</button>
             <button className="btn btn-primary btn-sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-              <Save size={13}/> {save.isPending?'保存中...':dirty?'保存修改':'已是最新'}
+              <Save size={13}/> {save.isPending ? '保存中...' : dirty ? '保存修改' : '已是最新'}
             </button>
           </div>
         </div>
@@ -160,66 +217,141 @@ export default function RechargePackagesPage() {
 
       <div className="list-page-body">
         {settings.isLoading ? (
-        <div className="table-wrap">
-          <table className="data-table min-w-[1180px]">
-            <thead><tr>{['排序','套餐 ID','套餐名称','金额','基础积分','赠送积分','标签','备注','状态','操作'].map(h=><th key={h}><span className="th-icon">{h}</span></th>)}</tr></thead>
-            <tbody>{Array.from({length:5}).map((_,i)=>(
-              <tr key={i} className="table-skeleton">{[76,140,160,110,110,110,100,100,80,100].map((w,j)=><td key={j}><span style={{width:w}} className="block rounded-full"/></td>)}</tr>
-            ))}</tbody>
-          </table>
-        </div>
+          <div className="table-wrap">
+            <table className="data-table min-w-[1100px]">
+              <thead><tr>{['排序','套餐 ID','套餐名称','金额','基础积分','赠送积分','标签','备注','状态','操作'].map(h=><th key={h}><span className="th-icon">{h}</span></th>)}</tr></thead>
+              <tbody>{Array.from({length:5}).map((_,i)=>(
+                <tr key={i} className="table-skeleton">{[70,140,160,100,100,100,90,150,80,100].map((w,j)=><td key={j}><span style={{width:w}} className="block rounded-full"/></td>)}</tr>
+              ))}</tbody>
+            </table>
+          </div>
         ) : (
-        <div className="table-wrap">
-          <table className="data-table min-w-[1180px]">
-            <thead>
-              <tr>
-                <th><span className="th-icon">排序</span></th>
-                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>套餐 ID</span></th>
-                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>套餐名称</span></th>
-                <th><span className="th-icon">金额（元）</span></th>
-                <th><span className="th-icon">基础积分</span></th>
-                <th><span className="th-icon">赠送积分</span></th>
-                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>标签</span></th>
-                <th><span className="th-icon" style={{justifyContent:'flex-start'}}>备注</span></th>
-                <th><span className="th-icon">状态</span></th>
-                <th><span className="th-icon">操作</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, idx) => (
-                <tr key={`${row.id}-${idx}`}>
-                  <td><input className="input w-[76px] tabular-nums" type="number" value={row.sort_order || ''} placeholder="0" onChange={(e) => update(idx, { sort_order: Number(e.target.value) || 0 })} /></td>
-                  <td><input className="input min-w-[140px] font-mono" value={row.id} onChange={(e) => update(idx, { id: e.target.value })} placeholder="p100" /></td>
-                  <td><input className="input min-w-[160px]" value={row.name} onChange={(e) => update(idx, { name: e.target.value })} placeholder="100 点套餐" /></td>
-                  <td><input className="input w-[110px] tabular-nums" type="number" min={0} step="0.01" value={row.amount || ''} placeholder="0.00" onChange={(e) => update(idx, { amount: Number(e.target.value) || 0 })} /></td>
-                  <td><input className="input w-[120px] tabular-nums" type="number" min={0} value={row.points || ''} placeholder="0" onChange={(e) => update(idx, { points: Number(e.target.value) || 0 })} /></td>
-                  <td><input className="input w-[120px] tabular-nums" type="number" min={0} value={row.bonus_points || ''} placeholder="0" onChange={(e) => update(idx, { bonus_points: Number(e.target.value) || 0 })} /></td>
-                  <td><input className="input min-w-[100px]" value={row.badge} onChange={(e) => update(idx, { badge: e.target.value })} placeholder="推荐" /></td>
-                  <td><input className="input min-w-[180px]" value={row.remark} onChange={(e) => update(idx, { remark: e.target.value })} placeholder="内部备注" /></td>
-                  <td>
-                    <button className={row.enabled ? 'btn btn-outline btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => update(idx, { enabled: !row.enabled })}>
-                      {row.enabled ? '启用' : '停用'}
-                    </button>
-                  </td>
-                  <td className="text-center">
-                    <div className="inline-grid grid-cols-2 gap-1">
-                      <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => cloneRow(idx)}><Copy size={13}/> 复制</button>
-                      <button className="btn btn-outline btn-action-danger btn-xs" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={13}/> 删除</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
+          <div className="table-wrap">
+            <table className="data-table min-w-[1100px]">
+              <thead>
                 <tr>
-                  <td colSpan={10} className="text-center text-text-tertiary py-10">暂无套餐，点击右上角新增。</td>
+                  <th className="sticky-l w-[70px]"><span className="th-icon">排序</span></th>
+                  <th style={{minWidth:130}}><span className="th-icon" style={{justifyContent:'flex-start'}}>套餐 ID</span></th>
+                  <th style={{minWidth:150}}><span className="th-icon" style={{justifyContent:'flex-start'}}>套餐名称</span></th>
+                  <th style={{minWidth:100}}><span className="th-icon">金额（元）</span></th>
+                  <th style={{minWidth:100}}><span className="th-icon">基础积分</span></th>
+                  <th style={{minWidth:100}}><span className="th-icon">赠送积分</span></th>
+                  <th style={{minWidth:90}}><span className="th-icon" style={{justifyContent:'flex-start'}}>标签</span></th>
+                  <th style={{minWidth:150}}><span className="th-icon" style={{justifyContent:'flex-start'}}>备注</span></th>
+                  <th style={{minWidth:72}}><span className="th-icon">状态</span></th>
+                  <th className="sticky-r"><span className="th-icon">操作</span></th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row, idx) => (
+                  <tr key={`${row.id}-${idx}`} className="group">
+                    {/* ── Col 0: 排序 (sticky-l, always input) ── */}
+                    <td className="sticky-l">
+                      {editing?.idx === idx && editing.field === 'sort_order' ? (
+                        <input
+                          ref={inputRef} autoFocus type="number" value={draft}
+                          placeholder="0" className="input w-[62px] tabular-nums text-center"
+                          onChange={(e) => setDraft(e.target.value)}
+                          onBlur={commitEdit}
+                          onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                        />
+                      ) : (
+                        <div
+                          className="flex items-center justify-center gap-1 rounded px-1 py-0.5 cursor-pointer group-hover:bg-indigo-50 transition-colors"
+                          onDoubleClick={() => startEdit(idx, 'sort_order')} title="双击编辑"
+                        >
+                          <span className="tabular-nums text-text-secondary font-mono text-sm w-[46px] text-center">{row.sort_order}</span>
+                          <Pencil size={10} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"/>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* ── Col 1: 套餐 ID ── */}
+                    <EC idx={idx} field="id" placeholder="p100" inputCls="font-mono w-[130px]"
+                      display={row.id
+                        ? <code className="font-mono text-xs bg-slate-100 text-slate-700 rounded px-1.5 py-0.5">{row.id}</code>
+                        : <Empty/>}
+                    />
+
+                    {/* ── Col 2: 套餐名称 ── */}
+                    <EC idx={idx} field="name" placeholder="套餐名称" inputCls="w-[148px]"
+                      display={row.name
+                        ? <span className="font-medium text-text-primary">{row.name}</span>
+                        : <Empty/>}
+                    />
+
+                    {/* ── Col 3: 金额 ── */}
+                    <EC idx={idx} field="amount" type="number" placeholder="0.00" inputCls="w-[90px] tabular-nums text-right"
+                      display={<span className="tabular-nums font-semibold text-emerald-600">¥ {Number(row.amount).toFixed(2)}</span>}
+                    />
+
+                    {/* ── Col 4: 基础积分 ── */}
+                    <EC idx={idx} field="points" type="number" placeholder="0" inputCls="w-[90px] tabular-nums text-right"
+                      display={<span className="tabular-nums font-semibold text-violet-600">{row.points} pt</span>}
+                    />
+
+                    {/* ── Col 5: 赠送积分 ── */}
+                    <EC idx={idx} field="bonus_points" type="number" placeholder="0" inputCls="w-[90px] tabular-nums text-right"
+                      display={row.bonus_points
+                        ? <span className="tabular-nums font-semibold text-sky-600">+{row.bonus_points} pt</span>
+                        : <span className="text-text-tertiary tabular-nums">+0</span>}
+                    />
+
+                    {/* ── Col 6: 标签 ── */}
+                    <EC idx={idx} field="badge" placeholder="推荐" inputCls="w-[80px]"
+                      display={row.badge
+                        ? <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">{row.badge}</span>
+                        : <Empty/>}
+                    />
+
+                    {/* ── Col 7: 备注 ── */}
+                    <EC idx={idx} field="remark" placeholder="内部备注" inputCls="w-[148px]"
+                      display={row.remark
+                        ? <span className="text-text-secondary text-sm truncate max-w-[140px]" title={row.remark}>{row.remark}</span>
+                        : <Empty/>}
+                    />
+
+                    {/* ── Col 8: 状态 (click toggle) ── */}
+                    <td className="text-center">
+                      <button
+                        className={row.enabled
+                          ? 'badge badge-success cursor-pointer hover:opacity-80 transition-opacity'
+                          : 'badge badge-warning cursor-pointer hover:opacity-80 transition-opacity'}
+                        onClick={() => update(idx, { enabled: !row.enabled })}
+                        title="点击切换状态"
+                      >
+                        {row.enabled ? '启用' : '停用'}
+                      </button>
+                    </td>
+
+                    {/* ── Col 9: 操作 (sticky-r) ── */}
+                    <td className="sticky-r">
+                      <div className="flex items-center justify-center">
+                        <div className="inline-grid grid-cols-2 gap-1">
+                          <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => cloneRow(idx)}>
+                            <Copy size={13}/> 复制
+                          </button>
+                          <button
+                            className="btn btn-outline btn-action-danger btn-xs"
+                            onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}
+                          >
+                            <Trash2 size={13}/> 删除
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={10} className="text-center text-text-tertiary py-10">暂无套餐，点击右上角新增。</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
   );
 }
-
