@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, CheckCircle2, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Users, X } from 'lucide-react';
+import { Ban, BarChart2, Calendar, CheckCircle2, Coins, MinusCircle, Pencil, Plus, PlusCircle, RefreshCw, Search, Settings2, Signal, Tag, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -89,19 +89,21 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className="card p-3 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[260px] flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+      <div className="filter-bar">
+        <span className="filter-bar-icon"><Search size={14}/></span>
+        <div className="search-wrap flex-1 min-w-[220px]">
+          <Search size={13}/>
           <input
-            className="input pl-8"
+            className="input input-sm w-full"
             placeholder="搜索 ID / 邮箱 / 手机 / 用户名 / 邀请码"
             value={keyword}
             onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
           />
         </div>
+        <span className="filter-divider"/>
         <div className="tabs">
           {[
-            ['all', '全部'],
+            ['all', '全部用户'],
             ['enabled', '正常'],
             ['disabled', '暂停'],
           ].map(([k, label]) => (
@@ -121,19 +123,19 @@ export default function UsersPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>用户</th>
-              <th>状态</th>
-              <th>积分</th>
-              <th>套餐</th>
-              <th>注册 / 登录</th>
-              <th>操作</th>
+              <th className="sticky-l"><span className="th-icon"><Users size={13}/>用户</span></th>
+              <th><span className="th-icon"><Signal size={13}/>状态</span></th>
+              <th><span className="th-icon"><Coins size={13}/>积分</span></th>
+              <th><span className="th-icon"><Tag size={13}/>套餐</span></th>
+              <th><span className="th-icon"><Calendar size={13}/>注册 / 登录</span></th>
+              <th className="sticky-r"><span className="th-icon"><Settings2 size={13}/>操作</span></th>
             </tr>
           </thead>
           <tbody>
             {list.isLoading && Array.from({length: 5}).map((_, i) => (
               <tr key={i} className="table-skeleton">
                 {[160, 80, 100, 80, 160, 80].map((w, j) => (
-                  <td key={j}><span style={{width: w}} className="block rounded-full"/></td>
+                  <td key={j} className={j===0?"sticky-l":j===5?"sticky-r":""}><span style={{width: w}} className="block rounded-full"/></td>
                 ))}
               </tr>
             ))}
@@ -148,7 +150,7 @@ export default function UsersPage() {
             )}
             {items.map((u) => (
               <tr key={u.id}>
-                <td>
+                <td className="sticky-l">
                   <div className="font-medium">{userName(u)}</div>
                   <div className="text-tiny text-text-tertiary mt-0.5">
                     ID {u.id} · {u.email || u.phone || u.uuid}
@@ -176,15 +178,15 @@ export default function UsersPage() {
                     {u.last_login_at ? `${fmtRelative(u.last_login_at)} · ${u.last_login_ip || '未知 IP'}` : '未登录'}
                   </div>
                 </td>
-                <td>
-                  <div className="inline-flex flex-wrap gap-1">
-                    <button className="btn btn-ghost btn-icon btn-sm" title="编辑" onClick={() => setDlg({ mode: 'edit', row: u })}>
+                <td className="sticky-r">
+                  <div className="inline-flex flex-wrap gap-1 justify-end">
+                    <button className="btn btn-outline btn-action-edit btn-icon btn-sm" title="编辑" onClick={() => setDlg({ mode: 'edit', row: u })}>
                       <Pencil size={14} />
                     </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setDlg({ mode: 'points', row: u, action: 'recharge' })}>
+                    <button className="btn btn-outline btn-action-view btn-sm" onClick={() => setDlg({ mode: 'points', row: u, action: 'recharge' })}>
                       <PlusCircle size={14} /> 充值
                     </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setDlg({ mode: 'points', row: u, action: 'deduct' })}>
+                    <button className="btn btn-outline btn-action-warn btn-sm" onClick={() => setDlg({ mode: 'points', row: u, action: 'deduct' })}>
                       <MinusCircle size={14} /> 扣除
                     </button>
                     <button

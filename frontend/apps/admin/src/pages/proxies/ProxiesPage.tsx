@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, CheckCircle2, Clock, Globe, Pencil, Plus, Power,
-  RefreshCw, Trash2, Upload, X, XCircle,
+  RefreshCw, Search, Server, Settings2, ShieldCheck, Signal, Tag, Trash2, Upload, X, XCircle, Zap,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -207,7 +207,18 @@ export default function ProxiesPage() {
       </div>
 
       {/* ── filter bar ── */}
-      <div className="card p-3 flex flex-wrap items-center gap-3">
+      <div className="filter-bar">
+        <span className="filter-bar-icon"><Search size={14}/></span>
+        <div className="search-wrap flex-1 min-w-[200px]">
+          <Search size={13}/>
+          <input
+            className="input input-sm w-full"
+            placeholder="搜索名称、主机、备注"
+            value={keyword}
+            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+          />
+        </div>
+        <span className="filter-divider"/>
         <div className="tabs">
           {(['all', 'enabled', 'disabled'] as const).map((item) => (
             <button
@@ -215,34 +226,20 @@ export default function ProxiesPage() {
               type="button"
               className="tab"
               aria-selected={statusFilter === item}
-              onClick={() => {
-                setStatusFilter(item);
-                setPage(1);
-              }}
+              onClick={() => { setStatusFilter(item); setPage(1); }}
             >
-              {item === 'all' ? '全部' : item === 'enabled' ? '启用' : '禁用'}
+              {item === 'all' ? '全部代理' : item === 'enabled' ? '启用' : '禁用'}
             </button>
           ))}
         </div>
-        <input
-          className="input flex-1 min-w-[220px]"
-          placeholder="搜索名称、主机、备注"
-          value={keyword}
-          onChange={(e) => {
-            setKeyword(e.target.value);
-            setPage(1);
-          }}
-        />
-        <span className="text-small text-text-tertiary">
-          共 {total} 条，已选 {selectedCount} 条
-        </span>
+        <span className="filter-count">共 <strong>{total}</strong> 条，已选 <strong>{selectedCount}</strong> 条</span>
       </div>
 
-      <div className="card overflow-x-auto">
-        <table className="data-table min-w-[1180px]">
+      <div className="card table-wrap">
+        <table className="data-table min-w-[960px]">
           <thead>
             <tr>
-              <th className="w-10">
+              <th className="sticky-l w-10">
                 <input
                   ref={headerCbRef}
                   type="checkbox"
@@ -253,20 +250,20 @@ export default function ProxiesPage() {
                   title="全选当前页"
                 />
               </th>
-              <th>名称</th>
-              <th>协议</th>
-              <th>地址</th>
-              <th>认证</th>
-              <th>状态</th>
-              <th>最近测试</th>
-              <th>操作</th>
+              <th><span className="th-icon"><Globe size={13}/>名称</span></th>
+              <th><span className="th-icon"><Zap size={13}/>协议</span></th>
+              <th><span className="th-icon"><Server size={13}/>地址</span></th>
+              <th><span className="th-icon"><ShieldCheck size={13}/>认证</span></th>
+              <th><span className="th-icon"><Signal size={13}/>状态</span></th>
+              <th><span className="th-icon"><Activity size={13}/>最近测试</span></th>
+              <th className="sticky-r"><span className="th-icon"><Settings2 size={13}/>操作</span></th>
             </tr>
           </thead>
           <tbody>
             {list.isLoading && Array.from({length: 5}).map((_, i) => (
               <tr key={i} className="table-skeleton">
                 {[10, 140, 70, 170, 120, 80, 140, 80].map((w, j) => (
-                  <td key={j}><span style={{width: w}} className="block rounded-full"/></td>
+                  <td key={j} className={j===0?"sticky-l":j===7?"sticky-r":""}><span style={{width: w}} className="block rounded-full"/></td>
                 ))}
               </tr>
             ))}
@@ -287,7 +284,7 @@ export default function ProxiesPage() {
               const TestIcon = test.icon;
               return (
                 <tr key={item.id}>
-                  <td className="w-10">
+                  <td className="sticky-l w-10">
                     <input
                       type="checkbox"
                       className="rounded border-border"
@@ -336,8 +333,8 @@ export default function ProxiesPage() {
                       </span>
                     )}
                   </td>
-                  <td>
-                    <div className="inline-flex gap-1">
+                  <td className="sticky-r">
+                    <div className="inline-flex gap-1 justify-end">
                       <button
                         className="btn btn-ghost btn-icon btn-sm"
                         title="测试代理"

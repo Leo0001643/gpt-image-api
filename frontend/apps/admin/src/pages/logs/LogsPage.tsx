@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ChevronDown, ChevronRight, Eye,
-  ImageIcon, MessageSquare, RefreshCw, Search, Trash2, Video, X,
+  Activity, ChevronDown, ChevronRight, Clock, Coins, Eye,
+  ImageIcon, Key, MessageSquare, RefreshCw, Search, Settings2, Signal, Tag, Trash2, User, Video, X,
 } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
 
@@ -150,22 +150,21 @@ export default function LogsPage() {
         </div>
       </div>
 
-      <div className="card card-section grid gap-2 !py-2 xl:grid-cols-[minmax(360px,1fr)_auto_auto]">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+      <div className="filter-bar">
+        <span className="filter-bar-icon"><Search size={14}/></span>
+        <div className="search-wrap flex-1 min-w-[240px]">
+          <Search size={13}/>
           <input
-            className="input h-11 pl-8"
+            className="input input-sm w-full"
             placeholder="搜索用户 / Key / 模型 / 提示词 / task_id"
             value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
           />
         </div>
-        <div className="tabs h-11">
+        <span className="filter-divider"/>
+        <div className="tabs">
           {[
-            ['all', '全部'],
+            ['all', '全部类型'],
             ['chat', '文字'],
             ['image', '图片'],
             ['video', '视频'],
@@ -174,22 +173,16 @@ export default function LogsPage() {
               key={k}
               className="tab"
               aria-selected={kind === k}
-              onClick={() => {
-                setKind(k as typeof kind);
-                setPage(1);
-              }}
+              onClick={() => { setKind(k as typeof kind); setPage(1); }}
             >
               {label}
             </button>
           ))}
         </div>
         <select
-          className="input h-11 w-full xl:w-[132px]"
+          className="select select-sm min-w-[110px]"
           value={status}
-          onChange={(e) => {
-            setStatus(e.target.value as typeof status);
-            setPage(1);
-          }}
+          onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }}
         >
           <option value="all">全部状态</option>
           <option value="0">待处理</option>
@@ -198,22 +191,23 @@ export default function LogsPage() {
           <option value="3">失败</option>
           <option value="4">已退款</option>
         </select>
+        <span className="filter-count">共 <strong>{total}</strong> 条</span>
       </div>
 
       <div className="card table-wrap overflow-hidden">
-        <table className="data-table table-fixed text-small">
+        <table className="data-table text-small min-w-[960px]">
           <thead>
             <tr>
-              <th className="w-[42px]" />
-              <th className="w-[156px]">时间</th>
-              <th className="w-[160px]">用户</th>
-              <th className="w-[150px]">Key</th>
-              <th className="w-[170px]">模型</th>
-              <th className="w-[92px]">状态</th>
-              <th className="w-[86px]">耗时</th>
-              <th className="w-[86px]">费用</th>
-              <th className="w-[88px]">预览</th>
-              <th className="w-[118px]">上游</th>
+              <th className="sticky-l w-[42px]" />
+              <th className="w-[150px]"><span className="th-icon"><Clock size={13}/>时间</span></th>
+              <th className="w-[150px]"><span className="th-icon"><User size={13}/>用户</span></th>
+              <th className="w-[140px]"><span className="th-icon"><Key size={13}/>Key</span></th>
+              <th className="w-[160px]"><span className="th-icon"><Tag size={13}/>模型</span></th>
+              <th className="w-[88px]"><span className="th-icon"><Signal size={13}/>状态</span></th>
+              <th className="w-[80px]"><span className="th-icon"><Activity size={13}/>耗时</span></th>
+              <th className="w-[80px]"><span className="th-icon"><Coins size={13}/>费用</span></th>
+              <th className="w-[80px]"><span className="th-icon"><Eye size={13}/>预览</span></th>
+              <th className="sticky-r w-[110px]"><span className="th-icon"><Settings2 size={13}/>上游</span></th>
             </tr>
           </thead>
           <tbody>
@@ -235,7 +229,7 @@ export default function LogsPage() {
               return (
                 <Fragment key={row.task_id}>
                   <tr className="align-middle">
-                    <td>
+                    <td className="sticky-l">
                       <button
                         className="btn btn-ghost btn-icon btn-sm"
                         title={isOpen ? '收起详情' : '展开详情'}
@@ -265,8 +259,8 @@ export default function LogsPage() {
                     <td>{fmtDuration(row.duration_ms)}</td>
                     <td>{fmtPoints(row.cost_points)}</td>
                     <td><Preview row={row} /></td>
-                    <td>
-                      <button className="btn btn-ghost btn-sm" onClick={() => setUpstreamTask(row)}>
+                    <td className="sticky-r">
+                      <button className="btn btn-outline btn-action-view btn-sm" onClick={() => setUpstreamTask(row)}>
                         <Eye size={14} /> 日志
                       </button>
                     </td>

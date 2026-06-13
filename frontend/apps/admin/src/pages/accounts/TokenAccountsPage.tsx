@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, AlertCircle, CheckCircle2, ChevronDown, ChevronLeft,
-  ChevronRight, Clock, KeyRound, Pencil, Plus, Power, RefreshCw,
-  RotateCw, Trash2, Upload, X, XCircle,
+  Activity, AlertCircle, BarChart2, CheckCircle2, ChevronDown, ChevronLeft,
+  ChevronRight, Clock, Database, KeyRound, Pencil, Plus, Power, RefreshCw,
+  RotateCw, Search, Settings2, ShieldCheck, Signal, Tag, Trash2, Upload, X, XCircle,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -380,7 +380,18 @@ export default function TokenAccountsPage() {
       </div>
 
       {/* ── filter bar ── */}
-      <div className="card p-3 flex flex-wrap items-center gap-2">
+      <div className="filter-bar">
+        <span className="filter-bar-icon"><Search size={14}/></span>
+        <div className="search-wrap flex-1 min-w-[180px]">
+          <Search size={13}/>
+          <input
+            className="input input-sm w-full"
+            placeholder="搜索名称或备注"
+            value={keyword}
+            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+          />
+        </div>
+        <span className="filter-divider"/>
         <div className="tabs">
           {(['all', 'gpt', 'grok'] as const).map((item) => (
             <button
@@ -390,18 +401,12 @@ export default function TokenAccountsPage() {
               aria-selected={provider === item}
               onClick={() => { setProvider(item); setPage(1); }}
             >
-              {item === 'all' ? '全部' : item.toUpperCase()}
+              {item === 'all' ? '全部 Provider' : item.toUpperCase()}
             </button>
           ))}
         </div>
-        <input
-          className="input input-sm min-w-[180px] flex-1"
-          placeholder="搜索名称或备注"
-          value={keyword}
-          onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-        />
         <select
-          className="select select-sm min-w-[132px]"
+          className="select select-sm min-w-[120px]"
           value={planType}
           onChange={(e) => { setPlanType(e.target.value as PlanTypeFilter); setPage(1); }}
         >
@@ -409,16 +414,14 @@ export default function TokenAccountsPage() {
             <option key={item.value} value={item.value}>{item.label}</option>
           ))}
         </select>
-        <span className="whitespace-nowrap text-tiny text-text-tertiary">
-          共 <span className="font-medium tabular-nums text-text-secondary">{fmtNumber(total)}</span> 条
-        </span>
+        <span className="filter-count">共 <strong>{fmtNumber(total)}</strong> 条</span>
       </div>
 
-      <div className="card overflow-x-auto">
-        <table className="data-table min-w-[1280px]">
+      <div className="card table-wrap">
+        <table className="data-table min-w-[1100px]">
           <thead>
             <tr>
-              <th className="w-10">
+              <th className="sticky-l w-10">
                 <input
                   ref={headerCbRef}
                   type="checkbox"
@@ -428,21 +431,21 @@ export default function TokenAccountsPage() {
                   disabled={list.isLoading || items.length === 0}
                 />
               </th>
-              <th>名称</th>
-              <th>Provider</th>
-              <th>账户类型</th>
-              <th>状态</th>
-              <th>凭证 / 最近测试</th>
-              <th>用量</th>
-              <th>到期时间</th>
-              <th>操作</th>
+              <th><span className="th-icon"><KeyRound size={13}/>名称</span></th>
+              <th><span className="th-icon"><Database size={13}/>Provider</span></th>
+              <th><span className="th-icon"><Tag size={13}/>账户类型</span></th>
+              <th><span className="th-icon"><Signal size={13}/>状态</span></th>
+              <th><span className="th-icon"><ShieldCheck size={13}/>凭证 / 测试</span></th>
+              <th><span className="th-icon"><BarChart2 size={13}/>用量</span></th>
+              <th><span className="th-icon"><Clock size={13}/>到期时间</span></th>
+              <th className="sticky-r"><span className="th-icon"><Settings2 size={13}/>操作</span></th>
             </tr>
           </thead>
           <tbody>
             {list.isLoading && Array.from({length: 5}).map((_, i) => (
               <tr key={i} className="table-skeleton">
                 {[10, 160, 80, 80, 80, 140, 100, 80, 80].map((w, j) => (
-                  <td key={j}><span style={{width: w}} className="block rounded-full" /></td>
+                  <td key={j} className={j===0?"sticky-l":j===8?"sticky-r":""}><span style={{width: w}} className="block rounded-full" /></td>
                 ))}
               </tr>
             ))}
@@ -471,7 +474,7 @@ export default function TokenAccountsPage() {
 
               return (
                 <tr key={item.id}>
-                  <td className="w-10">
+                  <td className="sticky-l w-10">
                     <input
                       type="checkbox"
                       className="rounded border-border"
@@ -554,8 +557,8 @@ export default function TokenAccountsPage() {
                       <span className="text-tiny text-text-tertiary">{expire.detail}</span>
                     </div>
                   </td>
-                  <td>
-                    <div className="inline-flex gap-1">
+                  <td className="sticky-r">
+                    <div className="inline-flex gap-1 justify-end">
                       <button
                         className="btn btn-outline btn-action-view btn-icon btn-sm"
                         title="测试连通性"
