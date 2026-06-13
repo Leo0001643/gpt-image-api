@@ -202,7 +202,7 @@ export default function RechargePackagesPage() {
                     </button>
                   </td>
                   <td>
-                    <div className="inline-grid grid-cols-2 gap-1">
+                    <div className="inline-grid grid-cols-2 gap-1 w-[108px]">
                       <button className="btn btn-outline btn-action-edit btn-sm" onClick={() => cloneRow(idx)}><Copy size={13}/> 复制</button>
                       <button className="btn btn-outline btn-action-danger btn-sm" onClick={() => { setRows((old) => old.filter((_, i) => i !== idx)); setDirty(true); }}><Trash2 size={13}/> 删除</button>
                     </div>

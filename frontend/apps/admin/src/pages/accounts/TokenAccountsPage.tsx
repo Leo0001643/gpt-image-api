@@ -520,7 +520,7 @@ export default function TokenAccountsPage() {
                     </div>
                   </td>
                   <td className="sticky-r">
-                    <div className="inline-grid grid-cols-2 gap-1">
+                    <div className="inline-grid grid-cols-2 gap-1 w-[108px]">
                       <button
                         className="btn btn-outline btn-action-view btn-sm"
                         onClick={() => testMut.mutate(item.id)}
