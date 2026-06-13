@@ -187,23 +187,22 @@ export default function ProxiesPage() {
         </div>
       </header>
 
-      {/* ── stat strip ── */}
-      <div className="grid gap-3 sm:grid-cols-4">
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">代理总数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><Globe size={17}/></span>
+      {/* ── stat tabs (pill style) ── */}
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-blue">
+          <span className="stat-tab-dot"/><span>代理总数</span><span className="stat-tab-val">{total}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页启用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{items.filter(p=>p.status===1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={17}/></span>
+        <div className="stat-tab stat-tab-emerald">
+          <span className="stat-tab-dot"/><span>当页启用</span><span className="stat-tab-val">{items.filter(p=>p.status===1).length}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页禁用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-rose-600 leading-none">{items.filter(p=>p.status!==1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-rose-600"><ShieldOff size={17}/></span>
+        <div className="stat-tab stat-tab-rose">
+          <span className="stat-tab-dot"/><span>当页禁用</span><span className="stat-tab-val">{items.filter(p=>p.status!==1).length}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页可用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-violet-600 leading-none">{items.filter(p=>p.last_check_ok===1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-600"><Zap size={17}/></span>
+        <div className="stat-tab stat-tab-teal">
+          <span className="stat-tab-dot"/><span>测试可用</span><span className="stat-tab-val">{items.filter(p=>p.last_check_ok===1).length}</span>
+        </div>
+        <div className="stat-tab stat-tab-violet">
+          <span className="stat-tab-dot"/><span>已选中</span><span className="stat-tab-val">{selectedCount}</span>
         </div>
       </div>
 
@@ -351,7 +350,7 @@ export default function ProxiesPage() {
                         />
                       </button>
                       <button
-                        className="btn btn-ghost btn-icon btn-sm"
+                        className="btn btn-outline btn-action-edit btn-icon btn-sm"
                         title="编辑"
                         onClick={() => setEditor({ mode: 'edit', row: item })}
                       >
@@ -365,7 +364,7 @@ export default function ProxiesPage() {
                         <Power size={14} className={enabled ? 'text-success' : 'text-text-tertiary'} />
                       </button>
                       <button
-                        className="btn btn-danger-ghost btn-icon btn-sm"
+                        className="btn btn-outline btn-action-danger btn-icon btn-sm"
                         title="删除"
                         onClick={() => {
                           if (!confirm(`确认删除代理“${item.name}”吗？`)) return;
@@ -498,7 +497,7 @@ function ProxyDialog({
   const submitting = create.isPending || update.isPending;
 
   return (
-    <Modal title={mode === 'create' ? '新增代理' : '编辑代理'} onClose={onClose}>
+    <Modal title={mode === 'create' ? '新增代理' : '编辑代理'} subtitle={mode === 'create' ? '配置代理协议、主机与认证信息' : '修改代理配置'} icon={<Globe size={20}/>} gradientCls={mode === 'create' ? 'mhg-emerald' : 'mhg-teal'} onClose={onClose}>
       <form className="space-y-3" onSubmit={submit}>
         <div className="grid grid-cols-2 gap-3">
           <Field label="名称">
@@ -584,7 +583,7 @@ function BatchImportDialog({ onClose, onSuccess }: { onClose: () => void; onSucc
   });
 
   return (
-    <Modal title="批量添加代理" onClose={onClose}>
+    <Modal title="批量添加代理" subtitle="每行一条代理，自动解析 host:port:user:pass 格式" icon={<Upload size={20}/>} gradientCls="mhg-indigo" onClose={onClose}>
       <form
         className="space-y-3"
         onSubmit={(e) => {
@@ -631,10 +630,16 @@ function BatchImportDialog({ onClose, onSuccess }: { onClose: () => void; onSucc
 
 function Modal({
   title,
+  subtitle,
+  icon,
+  gradientCls = 'mhg-emerald',
   onClose,
   children,
 }: {
   title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  gradientCls?: string;
   onClose: () => void;
   children: ReactNode;
 }) {
@@ -644,11 +649,15 @@ function Modal({
         className="dialog-surface w-full max-w-xl gia-fade-in flex flex-col max-h-[88vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">
-            <X size={18} />
-          </button>
+        <div className={`modal-header-grad ${gradientCls}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            {icon && <div className="modal-icon">{icon}</div>}
+            <div className="min-w-0">
+              <h3>{title}</h3>
+              {subtitle && <p>{subtitle}</p>}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="关闭"><X size={16}/></button>
         </div>
         <div className="modal-body">{children}</div>
       </div>

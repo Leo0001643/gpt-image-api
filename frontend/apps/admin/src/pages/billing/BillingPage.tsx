@@ -62,10 +62,16 @@ export default function BillingPage() {
         </button>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat title="当前页收入" value={fmtPoints(summary.income)} icon={<ArrowUpRight size={18}/>} iconCls="bg-emerald-100 text-emerald-600" />
-        <Stat title="当前页支出" value={fmtPoints(summary.outcome)} icon={<ArrowDownLeft size={18}/>} iconCls="bg-rose-100 text-rose-600" />
-        <Stat title="匹配记录数" value={fmtNumber(total)} icon={<FileText size={18}/>} iconCls="bg-blue-100 text-blue-600" />
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-emerald">
+          <span className="stat-tab-dot"/><span>当前页收入</span><span className="stat-tab-val">{fmtPoints(summary.income)}</span>
+        </div>
+        <div className="stat-tab stat-tab-rose">
+          <span className="stat-tab-dot"/><span>当前页支出</span><span className="stat-tab-val">{fmtPoints(summary.outcome)}</span>
+        </div>
+        <div className="stat-tab stat-tab-blue">
+          <span className="stat-tab-dot"/><span>匹配记录数</span><span className="stat-tab-val">{fmtNumber(total)}</span>
+        </div>
       </div>
 
       <div className="card card-section grid gap-2 !py-3 lg:grid-cols-[minmax(320px,1fr)_140px_140px_120px]">

@@ -138,18 +138,15 @@ export default function LogsPage() {
         </div>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">查询总记录</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><FileText size={18}/></span>
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-blue">
+          <span className="stat-tab-dot"/><span>查询总记录</span><span className="stat-tab-val">{total}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页成功</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{successCount}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={18}/></span>
+        <div className="stat-tab stat-tab-emerald">
+          <span className="stat-tab-dot"/><span>当页成功</span><span className="stat-tab-val">{successCount}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页失败</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-rose-600 leading-none">{failCount}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-rose-600"><XCircle size={18}/></span>
+        <div className="stat-tab stat-tab-rose">
+          <span className="stat-tab-dot"/><span>当页失败</span><span className="stat-tab-val">{failCount}</span>
         </div>
       </div>
 
@@ -333,13 +330,16 @@ function UpstreamDialog({ task, onClose }: { task: AdminGenerationLogItem; onClo
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
       <div className="dialog-surface gia-fade-in max-h-[86vh] w-full max-w-5xl overflow-hidden">
-        <header className="modal-header">
-          <div>
-            <h2 className="text-h4">上游日志</h2>
-            <p className="text-small text-text-tertiary">{task.task_id} · {task.model_code}</p>
+        <div className="modal-header-grad mhg-indigo">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="modal-icon"><Eye size={20}/></div>
+            <div className="min-w-0">
+              <h3>上游日志</h3>
+              <p>{task.task_id} · {task.model_code}</p>
+            </div>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={16} /></button>
-        </header>
+          <button className="modal-close" onClick={onClose}><X size={16}/></button>
+        </div>
         <div className="modal-body max-h-[70vh] space-y-3 overflow-auto">
           {q.isLoading && <div className="py-10 text-center text-text-tertiary">加载中...</div>}
           {!q.isLoading && rows.length === 0 && <div className="py-10 text-center text-text-tertiary">暂无上游日志，新任务会自动记录。</div>}

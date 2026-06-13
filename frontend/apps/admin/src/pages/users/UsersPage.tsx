@@ -73,19 +73,19 @@ export default function UsersPage() {
         </div>
       </header>
 
-      {/* stat strip */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">总用户数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-600"><Users size={18}/></span>
+      {/* stat tabs */}
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-violet">
+          <span className="stat-tab-dot"/><span>总用户数</span><span className="stat-tab-val">{total}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页正常</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{items.filter(u=>u.status===1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={18}/></span>
+        <div className="stat-tab stat-tab-emerald">
+          <span className="stat-tab-dot"/><span>当页正常</span><span className="stat-tab-val">{items.filter(u=>u.status===1).length}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页总积分</div><div className="mt-1.5 text-[24px] font-bold tabular-nums text-text-primary leading-none">{(items.reduce((s,u)=>s+(u.points||0),0)/100).toFixed(0)} 点</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-600"><Coins size={18}/></span>
+        <div className="stat-tab stat-tab-rose">
+          <span className="stat-tab-dot"/><span>当页停用</span><span className="stat-tab-val">{items.filter(u=>u.status!==1).length}</span>
+        </div>
+        <div className="stat-tab stat-tab-amber">
+          <span className="stat-tab-dot"/><span>当页总积分</span><span className="stat-tab-val">{(items.reduce((s,u)=>s+(u.points||0),0)/100).toFixed(0)}</span>
         </div>
       </div>
 
@@ -268,12 +268,18 @@ function UserFormDialog(props: {
   });
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-panel max-w-xl">
-        <header className="modal-header">
-          <h2>{isCreate ? '新增用户' : '编辑用户'}</h2>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={props.onClose} aria-label="关闭"><X size={18}/></button>
-        </header>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md" onClick={props.onClose}>
+      <div className="dialog-surface w-full max-w-xl gia-fade-in flex flex-col max-h-[88vh]" onClick={(e)=>e.stopPropagation()}>
+        <div className={`modal-header-grad ${isCreate ? 'mhg-blue' : 'mhg-violet'}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="modal-icon">{isCreate ? <Users size={20}/> : <Pencil size={20}/>}</div>
+            <div className="min-w-0">
+              <h3>{isCreate ? '新增用户' : '编辑用户'}</h3>
+              <p>{isCreate ? '创建新账号并设置初始积分' : '修改用户基本信息与状态'}</p>
+            </div>
+          </div>
+          <button className="modal-close" onClick={props.onClose} aria-label="关闭"><X size={16}/></button>
+        </div>
         <div className="modal-body grid gap-3">
           {isCreate ? (
             <label className="field">
@@ -304,10 +310,10 @@ function UserFormDialog(props: {
             )}
           </div>
         </div>
-        <footer className="modal-footer">
+        <div className="modal-footer">
           <button className="btn btn-outline" onClick={props.onClose}>取消</button>
           <button className="btn btn-primary" disabled={mut.isPending} onClick={() => mut.mutate()}>{mut.isPending ? '保存中…' : '保存'}</button>
-        </footer>
+        </div>
       </div>
     </div>
   );
@@ -340,12 +346,18 @@ function PointsDialog(props: {
     onError: (e: ApiError) => toast.error(e.message),
   });
   return (
-    <div className="modal-backdrop">
-      <div className="modal-panel max-w-lg">
-        <header className="modal-header">
-          <h2>{isRecharge ? '充值积分' : '扣除积分'}</h2>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={props.onClose} aria-label="关闭"><X size={18}/></button>
-        </header>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md" onClick={props.onClose}>
+      <div className="dialog-surface w-full max-w-lg gia-fade-in flex flex-col max-h-[88vh]" onClick={(e)=>e.stopPropagation()}>
+        <div className={`modal-header-grad ${isRecharge ? 'mhg-emerald' : 'mhg-rose'}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="modal-icon">{isRecharge ? <PlusCircle size={20}/> : <MinusCircle size={20}/>}</div>
+            <div className="min-w-0">
+              <h3>{isRecharge ? '充值积分' : '扣除积分'}</h3>
+              <p>{userName(props.row)}</p>
+            </div>
+          </div>
+          <button className="modal-close" onClick={props.onClose} aria-label="关闭"><X size={16}/></button>
+        </div>
         <div className="modal-body grid gap-3">
           <div className="rounded-lg border border-border bg-surface-2 p-3 text-small">
             <div className="text-text-secondary">{userName(props.row)}</div>
@@ -396,12 +408,12 @@ function PointsDialog(props: {
             充值会计入用户累计充值，扣除只记录人工扣除流水，不会减少累计充值。
           </div>
         </div>
-        <footer className="modal-footer">
+        <div className="modal-footer">
           <button className="btn btn-outline" onClick={props.onClose}>取消</button>
           <button className={isRecharge ? 'btn btn-primary' : 'btn btn-danger'} disabled={mut.isPending || !isValid} onClick={() => mut.mutate()}>
             {mut.isPending ? '处理中…' : isRecharge ? '确认充值' : '确认扣除'}
           </button>
-        </footer>
+        </div>
       </div>
     </div>
   );

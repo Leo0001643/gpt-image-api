@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit3, Percent, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X } from 'lucide-react';
+import { Edit3, Plus, RefreshCw, Search, Tag, Ticket, Trash2, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { ApiError } from '../../lib/api';
@@ -178,19 +178,22 @@ export default function PromoPage() {
         </div>
       </div>
 
-      {/* stat strip */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">优惠码总数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-orange-100 text-orange-600"><Tag size={18}/></span>
+      {/* stat tabs */}
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-amber">
+          <span className="stat-tab-dot"/><span>优惠码总数</span><span className="stat-tab-val">{total}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">满减 / 折扣 / 赠点</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{rows.filter(r=>r.discount_type===1).length}/{rows.filter(r=>r.discount_type===2).length}/{rows.filter(r=>r.discount_type===3).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><Percent size={18}/></span>
+        <div className="stat-tab stat-tab-blue">
+          <span className="stat-tab-dot"/><span>满减</span><span className="stat-tab-val">{rows.filter(r=>r.discount_type===1).length}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页启用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{rows.filter(r=>r.status===1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><Ticket size={18}/></span>
+        <div className="stat-tab stat-tab-violet">
+          <span className="stat-tab-dot"/><span>折扣</span><span className="stat-tab-val">{rows.filter(r=>r.discount_type===2).length}</span>
+        </div>
+        <div className="stat-tab stat-tab-teal">
+          <span className="stat-tab-dot"/><span>赠点</span><span className="stat-tab-val">{rows.filter(r=>r.discount_type===3).length}</span>
+        </div>
+        <div className="stat-tab stat-tab-emerald">
+          <span className="stat-tab-dot"/><span>当页启用</span><span className="stat-tab-val">{rows.filter(r=>r.status===1).length}</span>
         </div>
       </div>
 
@@ -204,12 +207,15 @@ function PromoDialog({ form, setForm, saving, onClose, onSave }: { form: FormSta
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4" onClick={onClose}>
       <div className="dialog-surface w-full max-w-3xl flex flex-col max-h-[88vh] gia-fade-in" onClick={e=>e.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <h3>{form.id ? '编辑优惠码' : '新增优惠码'}</h3>
-            <p className="mt-0.5 text-tiny text-text-tertiary">金额单位为元，赠点单位为点</p>
+        <div className={`modal-header-grad ${form.id ? 'mhg-violet' : 'mhg-orange'}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="modal-icon">{form.id ? <Edit3 size={20}/> : <Ticket size={20}/>}</div>
+            <div className="min-w-0">
+              <h3>{form.id ? '编辑优惠码' : '新增优惠码'}</h3>
+              <p>金额单位为元，赠点单位为积分点</p>
+            </div>
           </div>
-          <button className="btn btn-ghost btn-icon btn-sm" type="button" onClick={onClose}><X size={16}/></button>
+          <button className="modal-close" type="button" onClick={onClose}><X size={16}/></button>
         </div>
         <div className="modal-body grid gap-3 md:grid-cols-2">
           <Field label="优惠码"><input className="input font-mono" value={form.code} onChange={(e) => set('code', e.target.value.toUpperCase())} placeholder="SPRING2026" /></Field>

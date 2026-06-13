@@ -360,23 +360,22 @@ export default function TokenAccountsPage() {
         </div>
       </header>
 
-      {/* ── stat strip ── */}
-      <div className="grid gap-3 sm:grid-cols-4">
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">账号总数</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-text-primary leading-none">{total}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-100 text-blue-600"><KeyRound size={17}/></span>
+      {/* ── stat tabs (pill style) ── */}
+      <div className="stat-tabs">
+        <div className="stat-tab stat-tab-blue">
+          <span className="stat-tab-dot"/><span>账号总数</span><span className="stat-tab-val">{total}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页启用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-emerald-600 leading-none">{items.filter(a=>a.status===1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-600"><CheckCircle2 size={17}/></span>
+        <div className="stat-tab stat-tab-emerald">
+          <span className="stat-tab-dot"/><span>当页启用</span><span className="stat-tab-val">{items.filter(a=>a.status===1).length}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页禁用</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-rose-600 leading-none">{items.filter(a=>a.status!==1).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-rose-600"><ShieldOff size={17}/></span>
+        <div className="stat-tab stat-tab-rose">
+          <span className="stat-tab-dot"/><span>当页禁用</span><span className="stat-tab-val">{items.filter(a=>a.status!==1).length}</span>
         </div>
-        <div className="card p-4 flex items-start justify-between">
-          <div><div className="text-tiny text-text-tertiary">当页有异常</div><div className="mt-1.5 text-[26px] font-bold tabular-nums text-amber-600 leading-none">{items.filter(a=>{const r=accountRowStatus(a);return r.tone==='err'||r.tone==='warn';}).length}</div></div>
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-600"><Zap size={17}/></span>
+        <div className="stat-tab stat-tab-amber">
+          <span className="stat-tab-dot"/><span>当页异常</span><span className="stat-tab-val">{items.filter(a=>{const r=accountRowStatus(a);return r.tone==='err'||r.tone==='warn';}).length}</span>
+        </div>
+        <div className="stat-tab stat-tab-violet">
+          <span className="stat-tab-dot"/><span>已选中</span><span className="stat-tab-val">{selected.size}</span>
         </div>
       </div>
 
@@ -558,7 +557,7 @@ export default function TokenAccountsPage() {
                   <td>
                     <div className="inline-flex gap-1">
                       <button
-                        className="btn btn-ghost btn-icon btn-sm"
+                        className="btn btn-outline btn-action-view btn-icon btn-sm"
                         title="测试连通性"
                         onClick={() => testMut.mutate(item.id)}
                         disabled={testMut.isPending && testMut.variables === item.id}
@@ -581,7 +580,7 @@ export default function TokenAccountsPage() {
                           />
                         </button>
                       )}
-                      <button className="btn btn-ghost btn-icon btn-sm" title="编辑" onClick={() => setEditTarget(item)}>
+                      <button className="btn btn-outline btn-action-edit btn-icon btn-sm" title="编辑" onClick={() => setEditTarget(item)}>
                         <Pencil size={14} className="text-text-secondary" />
                       </button>
                       <button
@@ -592,7 +591,7 @@ export default function TokenAccountsPage() {
                         <Power size={14} className={enabled ? 'text-success' : 'text-text-tertiary'} />
                       </button>
                       <button
-                        className="btn btn-danger-ghost btn-icon btn-sm"
+                        className="btn btn-outline btn-action-danger btn-icon btn-sm"
                         title="删除"
                         onClick={() => {
                           if (!confirm(`确认删除账号“${item.name}”吗？`)) return;
@@ -764,7 +763,7 @@ function CreateDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
   };
 
   return (
-    <Modal title="新增账号" onClose={onClose}>
+    <Modal title="新增账号" subtitle="配置 GPT / GROK 账号凭证与策略" icon={<KeyRound size={20}/>} gradientCls="mhg-blue" onClose={onClose}>
       <form className="space-y-3" onSubmit={submit}>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Provider">
@@ -978,7 +977,7 @@ function ImportDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
   };
 
   return (
-    <Modal title="批量导入账号" onClose={onClose} wide>
+    <Modal title="批量导入账号" subtitle="从文件或文本批量添加账号" icon={<Upload size={20}/>} gradientCls="mhg-indigo" onClose={onClose} wide>
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">
           <button type="button" className={`btn btn-sm ${importMode === 'lines' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setImportMode('lines')}>
@@ -1172,7 +1171,7 @@ function BatchAssignProxyDialog({
   };
 
   return (
-    <Modal title="批量设置代理" onClose={onClose}>
+    <Modal title="批量设置代理" subtitle={`为 ${selectedCount} 个账号统一绑定代理`} icon={<ChevronDown size={20}/>} gradientCls="mhg-teal" onClose={onClose}>
       <div className="space-y-4">
         <div className="card card-flat p-3 text-small text-text-secondary">
           已选择 <span className="font-medium text-text-primary">{selectedCount}</span> 个 Token。
@@ -1334,7 +1333,7 @@ function EditDialog({
   };
 
   return (
-    <Modal title={`编辑账号 / ${item.name}`} onClose={onClose}>
+    <Modal title={`编辑账号 · ${item.name}`} subtitle="修改凭证、额度与代理设置" icon={<Pencil size={20}/>} gradientCls="mhg-violet" onClose={onClose}>
       <form className="space-y-3" onSubmit={submit}>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Provider">
@@ -1433,11 +1432,17 @@ function EditDialog({
 
 function Modal({
   title,
+  subtitle,
+  icon,
+  gradientCls = 'mhg-blue',
   onClose,
   wide,
   children,
 }: {
   title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  gradientCls?: string;
   onClose: () => void;
   wide?: boolean;
   children: ReactNode;
@@ -1448,11 +1453,15 @@ function Modal({
         className={`dialog-surface w-full ${wide ? 'max-w-2xl' : 'max-w-xl'} gia-fade-in flex flex-col max-h-[88vh]`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="关闭">
-            <X size={18} />
-          </button>
+        <div className={`modal-header-grad ${gradientCls}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            {icon && <div className="modal-icon">{icon}</div>}
+            <div className="min-w-0">
+              <h3>{title}</h3>
+              {subtitle && <p>{subtitle}</p>}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="关闭"><X size={16}/></button>
         </div>
         <div className="modal-body">{children}</div>
       </div>
