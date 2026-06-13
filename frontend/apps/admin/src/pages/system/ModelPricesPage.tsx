@@ -1,442 +1,470 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle, Image as ImageIcon, MessageSquare,
-  Play, Plus, RefreshCw, Save, Trash2, X,
+  Pencil, Play, Plus, RefreshCw, Save, Trash2, X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { ApiError } from '../../lib/api';
 import { systemApi } from '../../lib/services';
 import { toast } from '../../stores/toast';
 
-/* ─── types ─── */
+/* ─────────────────── types ─────────────────── */
 interface PriceRow {
-  model_code: string;
-  name: string;
-  kind: 'text' | 'image' | 'video';
-  provider: 'gpt' | 'grok' | string;
-  upstream_model: string;
-  unit_points: number;
-  input_unit_points: number;
+  model_code:         string;
+  name:               string;
+  kind:               'text' | 'image' | 'video';
+  provider:           string;
+  upstream_model:     string;
+  unit_points:        number;
+  input_unit_points:  number;
   output_unit_points: number;
-  enabled: boolean;
+  enabled:            boolean;
 }
 
-const PROVIDERS = ['gpt', 'grok'] as const;
-
-/* ─── kind visual config ─── */
+/* ─────────────────── visual config ─────────────────── */
 const KIND_CFG = {
-  image: { label: '图片', Icon: ImageIcon,      bg: 'bg-blue-50',   text: 'text-blue-500',   bar: 'bg-blue-400' },
-  video: { label: '视频', Icon: Play,           bg: 'bg-amber-50',  text: 'text-amber-500',  bar: 'bg-amber-400' },
-  text:  { label: '文字', Icon: MessageSquare,  bg: 'bg-emerald-50',text: 'text-emerald-600', bar: 'bg-emerald-400' },
+  image: { label: '图片', Icon: ImageIcon,     cls: 'bg-blue-100 text-blue-600',    dot: 'bg-blue-500'   },
+  video: { label: '视频', Icon: Play,          cls: 'bg-amber-100 text-amber-600',  dot: 'bg-amber-500'  },
+  text:  { label: '文字', Icon: MessageSquare, cls: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
 } as const;
 
-/* ─── defaults ─── */
+const PROVIDER_CLR: Record<string, string> = {
+  gpt:  'bg-violet-100 text-violet-700',
+  grok: 'bg-cyan-100 text-cyan-700',
+};
+
+/* ─────────────────── default rows ─────────────────── */
 const DEFAULT_ROWS: PriceRow[] = [
-  { model_code: 'gpt-image-2',       name: 'GPT Image 2',     kind: 'image', provider: 'gpt',  upstream_model: 'gpt-image-2',       unit_points: 40, input_unit_points: 0,   output_unit_points: 0,   enabled: true },
-  { model_code: 'grok-imagine-video', name: 'Grok 视频生成',   kind: 'video', provider: 'grok', upstream_model: 'grok-imagine-video', unit_points: 20, input_unit_points: 0,   output_unit_points: 0,   enabled: true },
-  { model_code: 'grok-4.20-fast',    name: 'Grok 快速对话',   kind: 'text',  provider: 'grok', upstream_model: 'grok-4.20-fast',    unit_points: 0,  input_unit_points: 1,   output_unit_points: 3,   enabled: true },
-  { model_code: 'grok-4.20-auto',    name: 'Grok 自动对话',   kind: 'text',  provider: 'grok', upstream_model: 'grok-4.20-auto',    unit_points: 0,  input_unit_points: 1.5, output_unit_points: 4.5, enabled: true },
+  { model_code:'gpt-image-2',        name:'GPT Image 2',     kind:'image', provider:'gpt',  upstream_model:'gpt-image-2',        unit_points:40,  input_unit_points:0,   output_unit_points:0,   enabled:true },
+  { model_code:'grok-imagine-video', name:'Grok 视频生成',   kind:'video', provider:'grok', upstream_model:'grok-imagine-video', unit_points:20,  input_unit_points:0,   output_unit_points:0,   enabled:true },
+  { model_code:'grok-4.20-fast',     name:'Grok 快速对话',   kind:'text',  provider:'grok', upstream_model:'grok-4.20-fast',     unit_points:0,   input_unit_points:1,   output_unit_points:3,   enabled:true },
+  { model_code:'grok-4.20-auto',     name:'Grok 自动对话',   kind:'text',  provider:'grok', upstream_model:'grok-4.20-auto',     unit_points:0,   input_unit_points:1.5, output_unit_points:4.5, enabled:true },
 ];
 
-/* ─── helpers ─── */
+/* ─────────────────── helpers ─────────────────── */
 function fromValue(v: unknown): PriceRow[] {
-  if (Array.isArray(v) && v.length > 0) {
-    return v.map((r) => {
-      const row = r as Partial<PriceRow>;
-      return {
-        model_code:         String(row.model_code || ''),
-        name:               String(row.name || ''),
-        kind:               row.kind === 'text' ? 'text' : row.kind === 'video' ? 'video' : 'image',
-        provider:           String(row.provider || 'gpt'),
-        upstream_model:     String(row.upstream_model || ''),
-        unit_points:        Number(row.unit_points || 0) / 100,
-        input_unit_points:  Number(row.input_unit_points || 0) / 100,
-        output_unit_points: Number(row.output_unit_points || 0) / 100,
-        enabled:            row.enabled !== false,
-      };
-    });
-  }
-  return DEFAULT_ROWS;
+  if (!Array.isArray(v) || v.length === 0) return DEFAULT_ROWS;
+  return v.map((r: unknown) => {
+    const o = r as Partial<PriceRow>;
+    return {
+      model_code:         String(o.model_code || ''),
+      name:               String(o.name || ''),
+      kind:               o.kind === 'text' ? 'text' : o.kind === 'video' ? 'video' : 'image',
+      provider:           String(o.provider || 'gpt'),
+      upstream_model:     String(o.upstream_model || ''),
+      unit_points:        Number(o.unit_points || 0) / 100,
+      input_unit_points:  Number(o.input_unit_points || 0) / 100,
+      output_unit_points: Number(o.output_unit_points || 0) / 100,
+      enabled:            o.enabled !== false,
+    };
+  });
 }
 
-const numDisplay = (v: number) => (v === 0 ? '' : v);
-const parseNum   = (s: string) => s === '' ? 0 : Math.max(0, Number(s) || 0);
+const priceLabel = (r: PriceRow) =>
+  r.kind === 'text'
+    ? `${r.input_unit_points} / ${r.output_unit_points} 点/千Token`
+    : r.unit_points === 0 ? '免费' : `${r.unit_points} 点/次`;
 
-/* ══════════════════════════════════════════════
-   Page
-══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   Main page
+══════════════════════════════════════════════════════ */
 export default function ModelPricesPage() {
-  const qc       = useQueryClient();
-  const settings = useQuery({ queryKey: ['admin', 'system', 'settings'], queryFn: () => systemApi.get(), retry: 2 });
+  const qc   = useQueryClient();
+  const cfg  = useQuery({ queryKey:['admin','system','settings'], queryFn:()=>systemApi.get(), retry:2 });
 
-  const [rows, setRows]             = useState<PriceRow[]>(DEFAULT_ROWS);
-  const [dirty, setDirty]           = useState(false);
-  const [confirmDel, setConfirmDel] = useState<number | null>(null);
+  const [rows, setRows]     = useState<PriceRow[]>(DEFAULT_ROWS);
+  const [dirty, setDirty]   = useState(false);
+  const [editing, setEdit]  = useState<number | null>(null);   // index in rows, -1 = new
+  const [draft, setDraft]   = useState<PriceRow | null>(null);
+  const [delIdx, setDelIdx] = useState<number | null>(null);
 
   useEffect(() => {
-    if (settings.data) {
-      setRows(fromValue(settings.data['billing.model_prices']));
-      setDirty(false);
-    }
-  }, [settings.data]);
+    if (cfg.data) { setRows(fromValue(cfg.data['billing.model_prices'])); setDirty(false); }
+  }, [cfg.data]);
 
-  const upd = (idx: number, patch: Partial<PriceRow>) => {
-    setRows((p) => p.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
-    setDirty(true);
-  };
-
-  const del = (idx: number) => {
-    setRows((p) => p.filter((_, i) => i !== idx));
-    setConfirmDel(null);
-    setDirty(true);
-  };
-
-  const add = () => {
-    setRows((p) => [...p, { model_code: '', name: '', kind: 'image', provider: 'gpt', upstream_model: '', unit_points: 0, input_unit_points: 0, output_unit_points: 0, enabled: true }]);
-    setDirty(true);
-    setTimeout(() => document.getElementById('models-end')?.scrollIntoView({ behavior: 'smooth' }), 80);
-  };
-
-  const hasError = rows.some((r) => !r.model_code.trim() || !r.name.trim());
-
-  const save = useMutation({
+  /* save */
+  const saveMut = useMutation({
     mutationFn: () => systemApi.update({
-      'billing.model_prices': rows.map((r) => ({
+      'billing.model_prices': rows.map((r: PriceRow) => ({
         ...r,
         model_code:         r.model_code.trim(),
         name:               r.name.trim(),
         upstream_model:     r.upstream_model.trim(),
-        unit_points:        Math.round((Number(r.unit_points) || 0) * 100),
-        input_unit_points:  Math.round((Number(r.input_unit_points) || 0) * 100),
-        output_unit_points: Math.round((Number(r.output_unit_points) || 0) * 100),
+        unit_points:        Math.round((r.unit_points || 0) * 100),
+        input_unit_points:  Math.round((r.input_unit_points || 0) * 100),
+        output_unit_points: Math.round((r.output_unit_points || 0) * 100),
       })),
     }),
-    onSuccess: () => {
-      toast.success('模型价格已保存');
-      setDirty(false);
-      qc.invalidateQueries({ queryKey: ['admin', 'system'] });
-    },
+    onSuccess: () => { toast.success('已保存'); setDirty(false); qc.invalidateQueries({ queryKey:['admin','system'] }); },
     onError: (e: ApiError) => toast.error(e.message),
   });
 
-  /* summary */
-  const imgN   = rows.filter((r) => r.kind === 'image').length;
-  const vidN   = rows.filter((r) => r.kind === 'video').length;
-  const txtN   = rows.filter((r) => r.kind === 'text').length;
-  const onN    = rows.filter((r) => r.enabled).length;
+  /* edit helpers */
+  const openNew = () => {
+    setDraft({ model_code:'', name:'', kind:'image', provider:'gpt', upstream_model:'', unit_points:0, input_unit_points:0, output_unit_points:0, enabled:true });
+    setEdit(-1);
+  };
+  const openEdit = (i: number) => { setDraft({ ...rows[i] }); setEdit(i); };
+  const closeEdit = () => { setEdit(null); setDraft(null); };
+
+  const commitDraft = () => {
+    if (!draft || !draft.model_code.trim() || !draft.name.trim()) { toast.error('请填写模型编码和名称'); return; }
+    setRows((prev: PriceRow[]) => {
+      const next = [...prev];
+      if (editing === -1) next.push(draft);
+      else next[editing!] = draft;
+      return next;
+    });
+    setDirty(true);
+    closeEdit();
+  };
+
+  const del = (i: number) => { setRows((p: PriceRow[]) => p.filter((_: PriceRow, j: number) => j !== i)); setDirty(true); setDelIdx(null); };
+
+  const toggle = (i: number) => { setRows((p: PriceRow[]) => p.map((r: PriceRow, j: number) => j===i ? {...r, enabled:!r.enabled} : r)); setDirty(true); };
+
+  /* summary counts */
+  const imgN = rows.filter((r: PriceRow)=>r.kind==='image').length;
+  const vidN = rows.filter((r: PriceRow)=>r.kind==='video').length;
+  const txtN = rows.filter((r: PriceRow)=>r.kind==='text').length;
+  const onN  = rows.filter((r: PriceRow)=>r.enabled).length;
 
   return (
     <div className="page page-wide space-y-6">
 
-      {/* ── Header ── */}
+      {/* ── page header ─────────────────── */}
       <header className="page-header">
         <div>
           <h1 className="page-title">模型价格</h1>
           <p className="page-subtitle">配置前台可用模型、上游映射与计费单价</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn btn-outline btn-md" onClick={() => settings.refetch()} disabled={settings.isFetching}>
-            <RefreshCw size={14} className={settings.isFetching ? 'animate-spin' : ''} />
-            刷新
+          <button className="btn btn-outline btn-md" onClick={()=>cfg.refetch()} disabled={cfg.isFetching}>
+            <RefreshCw size={14} className={cfg.isFetching?'animate-spin':''}/> 刷新
           </button>
           <button
             className="btn btn-primary btn-md"
-            onClick={() => save.mutate()}
-            disabled={!dirty || save.isPending || hasError}
+            onClick={()=>saveMut.mutate()}
+            disabled={!dirty||saveMut.isPending}
           >
-            <Save size={14} />
-            {save.isPending ? '保存中…' : dirty ? '保存修改' : '已是最新'}
+            <Save size={14}/> {saveMut.isPending?'保存中…':'保存修改'}
           </button>
         </div>
       </header>
 
-      {/* ── Stats strip ── */}
+      {/* ── kpi strip ─────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: '全部', value: rows.length,    sub: `${onN} 启用`,  color: 'from-gia-500 to-gia-600' },
-          { label: '图片', value: imgN,           sub: '图像生成',     color: 'from-blue-400 to-blue-500' },
-          { label: '视频', value: vidN,           sub: '视频生成',     color: 'from-amber-400 to-amber-500' },
-          { label: '文字', value: txtN,           sub: '对话模型',     color: 'from-emerald-400 to-emerald-500' },
-        ].map(({ label, value, sub, color }) => (
+          { label:'全部模型', value:rows.length, sub:`${onN} 启用`,  accent:'#6366f1' },
+          { label:'图片模型', value:imgN,        sub:'image',         accent:'#3b82f6' },
+          { label:'视频模型', value:vidN,        sub:'video',         accent:'#f59e0b' },
+          { label:'文字模型', value:txtN,        sub:'text',          accent:'#10b981' },
+        ].map(({ label, value, sub, accent }) => (
           <div key={label} className="card overflow-hidden">
-            <div className={`h-1 w-full bg-gradient-to-r ${color}`} />
+            <div style={{ height:3, background:accent }} />
             <div className="px-5 py-4">
-              <div className="text-h2 font-semibold tabular-nums">{value}</div>
-              <div className="flex items-center justify-between mt-1">
+              <div className="text-2xl font-bold tabular-nums">{value}</div>
+              <div className="flex justify-between items-center mt-1.5">
                 <span className="text-small text-text-secondary">{label}</span>
-                <span className="text-tiny text-text-tertiary">{sub}</span>
+                <span className="text-tiny text-text-tertiary font-mono">{sub}</span>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── Error / Warn ── */}
-      {settings.isError && (
-        <div className="flex items-center justify-between rounded-lg border border-warning/40 bg-warning-soft px-4 py-3 text-small text-warning">
-          <span className="flex items-center gap-2"><AlertCircle size={14} />配置加载失败，当前显示默认模板</span>
-          <button className="btn btn-outline btn-sm" onClick={() => settings.refetch()}><RefreshCw size={12} />重试</button>
-        </div>
-      )}
-      {hasError && dirty && (
-        <div className="flex items-center gap-2.5 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-small text-danger">
-          <AlertCircle size={14} className="shrink-0" />
-          请先填写所有行的「模型编码」和「显示名称」
+      {/* ── alerts ─────────────────────────────────────── */}
+      {cfg.isError && (
+        <div className="flex items-center justify-between rounded-xl border border-warning/40 bg-warning-soft px-4 py-3 text-small text-warning">
+          <span className="flex items-center gap-2"><AlertCircle size={14}/>配置加载失败，显示默认模板</span>
+          <button className="btn btn-sm btn-outline" onClick={()=>cfg.refetch()}><RefreshCw size={12}/>重试</button>
         </div>
       )}
 
-      {/* ── Model list ── */}
-      {settings.isLoading ? (
-        <div className="card divide-y divide-border">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-4 px-6 py-4">
-              <div className="w-10 h-10 rounded-xl bg-surface-2 animate-pulse shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3.5 w-40 rounded-full bg-surface-2 animate-pulse" />
-                <div className="h-3 w-24 rounded-full bg-surface-2 animate-pulse" />
+      {/* ── model list ─────────────────────────────────── */}
+      <div className="card">
+        {/* list header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <span className="text-small font-semibold text-text-secondary uppercase tracking-wide">
+            模型列表 · {rows.length} 个
+          </span>
+          <button className="btn btn-primary btn-sm" onClick={openNew}>
+            <Plus size={13}/> 添加模型
+          </button>
+        </div>
+
+        {/* skeleton */}
+        {cfg.isLoading && (
+          <div className="divide-y divide-border">
+            {[0,1,2,3].map(i=>(
+              <div key={i} className="flex items-center gap-4 px-6 py-4">
+                <div className="w-10 h-10 rounded-xl bg-surface-2 animate-pulse shrink-0"/>
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-40 rounded bg-surface-2 animate-pulse"/>
+                  <div className="h-3 w-24 rounded bg-surface-2 animate-pulse"/>
+                </div>
+                <div className="h-6 w-20 rounded-full bg-surface-2 animate-pulse"/>
               </div>
-              <div className="h-3 w-16 rounded-full bg-surface-2 animate-pulse" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="card divide-y divide-border">
-          {/* Column header */}
-          <div className="grid items-center gap-3 px-6 py-3 bg-surface-2 rounded-t-[var(--radius-lg)] text-tiny text-text-tertiary font-medium uppercase tracking-wide"
-            style={{ gridTemplateColumns: '200px 160px minmax(0,1fr) 200px auto' }}>
-            <span>模型编码 / 名称</span>
-            <span>供应商 / 类型</span>
-            <span>上游模型映射</span>
-            <span>计费单价（点）</span>
-            <span />
+            ))}
           </div>
+        )}
 
-          {rows.length === 0 && (
-            <div className="py-16 text-center text-text-tertiary text-small">
-              暂无模型，点击下方「添加模型」开始配置
-            </div>
-          )}
+        {/* empty */}
+        {!cfg.isLoading && rows.length === 0 && (
+          <div className="py-20 text-center text-text-tertiary text-small">
+            暂无模型，点击「添加模型」开始配置
+          </div>
+        )}
 
-          {rows.map((row, idx) => {
-            const cfg    = KIND_CFG[row.kind] ?? KIND_CFG.image;
-            const KIcon  = cfg.Icon;
-            const isText = row.kind === 'text';
-            const rowErr = !row.model_code.trim() || !row.name.trim();
+        {/* rows */}
+        {!cfg.isLoading && (
+          <div className="divide-y divide-border">
+            {rows.map((row: PriceRow, i: number) => {
+              const kcfg   = KIND_CFG[row.kind as keyof typeof KIND_CFG] ?? KIND_CFG.image;
+              const KIcon  = kcfg.Icon;
+              const pcolor = PROVIDER_CLR[row.provider] ?? 'bg-surface-3 text-text-secondary';
 
-            return (
-              <div
-                key={idx}
-                className={`group grid items-center gap-3 px-6 py-4 transition-colors ${
-                  rowErr ? 'bg-danger-soft/30' : 'hover:bg-surface-2/60'
-                }`}
-                style={{ gridTemplateColumns: '200px 160px minmax(0,1fr) 200px auto' }}
-              >
-                {/* ① 模型编码 + 名称 */}
-                <div className="flex flex-col gap-1.5 min-w-0">
-                  <GhostInput
-                    value={row.model_code}
-                    onChange={(v) => upd(idx, { model_code: v })}
-                    placeholder="model-code"
-                    mono
-                    error={rowErr && !row.model_code.trim()}
-                  />
-                  <GhostInput
-                    value={row.name}
-                    onChange={(v) => upd(idx, { name: v })}
-                    placeholder="显示名称"
-                    sm
-                    muted
-                    error={rowErr && !row.name.trim()}
-                  />
-                </div>
+              return (
+                <div key={i} className="group flex items-center gap-4 px-6 py-4 hover:bg-surface-2/50 transition-colors">
 
-                {/* ② 供应商 + 类型 */}
-                <div className="flex flex-col gap-1.5">
-                  {/* provider badge-select */}
-                  <select
-                    value={row.provider}
-                    onChange={(e) => upd(idx, { provider: e.target.value })}
-                    className="appearance-none h-7 px-2.5 rounded-md text-tiny font-medium border border-transparent bg-surface-2 text-text-secondary hover:border-border focus:outline-none focus:border-gia-500 transition cursor-pointer w-fit"
-                  >
-                    {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                  {/* kind icon-select */}
-                  <select
-                    value={row.kind}
-                    onChange={(e) => upd(idx, { kind: e.target.value as PriceRow['kind'] })}
-                    className={`appearance-none h-7 px-2.5 rounded-md text-tiny font-medium border border-transparent ${cfg.bg} ${cfg.text} hover:border-border focus:outline-none focus:border-gia-500 transition cursor-pointer w-fit`}
-                  >
-                    <option value="image">图片</option>
-                    <option value="video">视频</option>
-                    <option value="text">文字</option>
-                  </select>
-                </div>
+                  {/* kind icon */}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${kcfg.cls}`}>
+                    <KIcon size={16}/>
+                  </div>
 
-                {/* ③ 上游模型 */}
-                <GhostInput
-                  value={row.upstream_model}
-                  onChange={(v) => upd(idx, { upstream_model: v })}
-                  placeholder="同上游模型名"
-                  mono
-                  muted
-                />
-
-                {/* ④ 计费 */}
-                <div className="flex items-center gap-2">
-                  {isText ? (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <span className="text-tiny text-text-tertiary shrink-0">输入</span>
-                        <PriceInput value={row.input_unit_points}  onChange={(v) => upd(idx, { input_unit_points: v })} />
-                      </div>
-                      <span className="text-text-tertiary text-tiny">/</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-tiny text-text-tertiary shrink-0">输出</span>
-                        <PriceInput value={row.output_unit_points} onChange={(v) => upd(idx, { output_unit_points: v })} />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <PriceInput value={row.unit_points} onChange={(v) => upd(idx, { unit_points: v })} />
-                      <span className="text-tiny text-text-tertiary shrink-0">点 / 次</span>
+                  {/* model info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-body font-medium text-text-primary">{row.model_code || '—'}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-tiny font-medium ${pcolor}`}>{row.provider}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-tiny font-medium ${kcfg.cls}`}>{kcfg.label}</span>
                     </div>
-                  )}
-                </div>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-small text-text-secondary truncate">{row.name}</span>
+                      {row.upstream_model && row.upstream_model !== row.model_code && (
+                        <span className="text-tiny text-text-tertiary font-mono">↗ {row.upstream_model}</span>
+                      )}
+                    </div>
+                  </div>
 
-                {/* ⑤ 状态 + 删除 */}
-                <div className="flex items-center gap-3 justify-end">
-                  {/* toggle switch */}
+                  {/* price badge */}
+                  <div className="text-small font-medium tabular-nums text-text-primary min-w-[120px] text-right shrink-0">
+                    {priceLabel(row)}
+                  </div>
+
+                  {/* status toggle */}
                   <button
                     type="button"
-                    role="switch"
-                    aria-checked={row.enabled}
-                    onClick={() => upd(idx, { enabled: !row.enabled })}
                     title={row.enabled ? '点击停用' : '点击启用'}
-                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                    onClick={() => toggle(i)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors focus:outline-none ${
                       row.enabled ? 'bg-gia-500' : 'bg-surface-3'
                     }`}
                   >
-                    <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                    <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform my-0.5 ${
                       row.enabled ? 'translate-x-4' : 'translate-x-0.5'
-                    }`} />
+                    }`}/>
                   </button>
 
-                  {/* delete with confirm */}
-                  {confirmDel === idx ? (
-                    <div className="flex items-center gap-1">
-                      <button
-                        className="btn btn-danger btn-icon btn-sm"
-                        onClick={() => del(idx)}
-                        title="确认删除"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                      <button
-                        className="btn btn-ghost btn-icon btn-sm text-text-tertiary"
-                        onClick={() => setConfirmDel(null)}
-                        title="取消"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ) : (
+                  {/* action buttons — visible on hover */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
-                      className="btn btn-ghost btn-icon btn-sm text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => setConfirmDel(idx)}
-                      title="删除此模型"
+                      className="btn btn-ghost btn-icon btn-sm text-text-secondary"
+                      onClick={() => openEdit(i)}
+                      title="编辑"
                     >
-                      <Trash2 size={14} />
+                      <Pencil size={14}/>
                     </button>
-                  )}
+                    {delIdx === i ? (
+                      <>
+                        <button className="btn btn-danger btn-icon btn-sm" onClick={()=>del(i)} title="确认删除">
+                          <Trash2 size={13}/>
+                        </button>
+                        <button className="btn btn-ghost btn-icon btn-sm text-text-tertiary" onClick={()=>setDelIdx(null)} title="取消">
+                          <X size={13}/>
+                        </button>
+                      </>
+                    ) : (
+                      <button className="btn btn-ghost btn-icon btn-sm text-text-tertiary" onClick={()=>setDelIdx(i)} title="删除">
+                        <Trash2 size={14}/>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-          <div id="models-end" />
-        </div>
+      {/* ── footer note ─────────────────────────────────── */}
+      <p className="text-tiny text-text-tertiary text-center pb-2">
+        单价 0 = 免费 · 文字模型按千 Token 分输入/输出计费 · 图片视频按次计费
+      </p>
+
+      {/* ══════════════════════════════════════════════
+          Edit Modal
+      ══════════════════════════════════════════════ */}
+      {editing !== null && draft && (
+        <EditModal
+          draft={draft}
+          isNew={editing === -1}
+          onChange={setDraft}
+          onConfirm={commitDraft}
+          onClose={closeEdit}
+        />
       )}
-
-      {/* ── Footer actions ── */}
-      <div className="flex items-center justify-between">
-        <button className="btn btn-outline btn-md" onClick={add}>
-          <Plus size={14} /> 添加模型
-        </button>
-        <p className="text-tiny text-text-tertiary">
-          共 {rows.length} 个模型 · {onN} 个已启用 · 单价 0 = 免费
-        </p>
-      </div>
-
-      {/* ── Field guide ── */}
-      <div className="card card-section bg-surface-2/60">
-        <p className="text-tiny text-text-tertiary uppercase tracking-wide mb-3">字段说明</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1.5 text-small text-text-secondary">
-          <div><span className="text-text-primary">模型编码</span> — 前端 / API 传入的 model 值</div>
-          <div><span className="text-text-primary">上游模型</span> — 实际转发给 OpenAI / Grok 的名称</div>
-          <div><span className="text-text-primary">单价</span> — 图片 / 视频每次消耗的积分，0 = 免费</div>
-          <div><span className="text-text-primary">输入 / 输出</span> — 文字按千 Token 分别计费</div>
-          <div><span className="text-text-primary">供应商</span> — gpt = OpenAI，grok = x.ai</div>
-          <div><span className="text-text-primary">状态开关</span> — 关闭后用户端不可见该模型</div>
-        </div>
-      </div>
-
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   Ghost Input — 默认无边框，交互时显现
-══════════════════════════════════════════════ */
-function GhostInput({
-  value, onChange, placeholder, mono, sm, muted, error,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  mono?: boolean;
-  sm?: boolean;
-  muted?: boolean;
-  error?: boolean;
-}) {
+/* ══════════════════════════════════════════════════════
+   Edit Modal
+══════════════════════════════════════════════════════ */
+interface EditModalProps {
+  draft:     PriceRow;
+  isNew:     boolean;
+  onChange:  (r: PriceRow) => void;
+  onConfirm: () => void;
+  onClose:   () => void;
+}
+function EditModal({ draft, isNew, onChange, onConfirm, onClose }: EditModalProps) {
+  const upd = (patch: Partial<PriceRow>) => onChange({ ...draft, ...patch });
+  const isText = draft.kind === 'text';
+  const ref = useRef<HTMLDivElement>(null);
+
+  /* close on backdrop click */
+  const onBackdrop = (e: { target: EventTarget | null; currentTarget: EventTarget | null }) => { if (e.target === e.currentTarget) onClose(); };
+  /* close on Escape */
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+
+  const hasErr = !draft.model_code.trim() || !draft.name.trim();
+
   return (
-    <input
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      spellCheck={false}
-      className={[
-        'w-full min-w-0 bg-transparent border-b transition-colors outline-none',
-        'placeholder:text-text-tertiary',
-        sm ? 'text-small py-0.5' : 'text-body py-0.5',
-        mono ? 'font-mono' : '',
-        muted ? 'text-text-secondary' : 'text-text-primary',
-        error
-          ? 'border-danger'
-          : 'border-transparent hover:border-border focus:border-gia-500',
-      ].join(' ')}
-    />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+      onClick={onBackdrop}
+    >
+      <div ref={ref} className="card w-full max-w-lg shadow-2xl animate-fade-up" onClick={e=>e.stopPropagation()}>
+        {/* modal header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <h2 className="text-heading font-semibold">{isNew ? '添加模型' : '编辑模型'}</h2>
+          <button className="btn btn-ghost btn-icon btn-sm text-text-tertiary" onClick={onClose}><X size={16}/></button>
+        </div>
+
+        {/* modal body */}
+        <div className="px-6 py-5 space-y-5">
+
+          {/* code + name */}
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="模型编码 *" error={!draft.model_code.trim()}>
+              <input
+                autoFocus
+                className="input font-mono"
+                value={draft.model_code}
+                onChange={e=>upd({ model_code: e.target.value })}
+                placeholder="gpt-image-2"
+              />
+            </Field>
+            <Field label="显示名称 *" error={!draft.name.trim()}>
+              <input
+                className="input"
+                value={draft.name}
+                onChange={e=>upd({ name: e.target.value })}
+                placeholder="GPT Image 2"
+              />
+            </Field>
+          </div>
+
+          {/* kind + provider */}
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="模型类型">
+              <select className="input" value={draft.kind} onChange={e=>upd({ kind: e.target.value as PriceRow['kind'] })}>
+                <option value="image">🖼 图片</option>
+                <option value="video">▶ 视频</option>
+                <option value="text">💬 文字</option>
+              </select>
+            </Field>
+            <Field label="供应商">
+              <select className="input" value={draft.provider} onChange={e=>upd({ provider: e.target.value })}>
+                <option value="gpt">gpt (OpenAI)</option>
+                <option value="grok">grok (x.ai)</option>
+              </select>
+            </Field>
+          </div>
+
+          {/* upstream */}
+          <Field label="上游模型映射">
+            <input
+              className="input font-mono"
+              value={draft.upstream_model}
+              onChange={e=>upd({ upstream_model: e.target.value })}
+              placeholder="留空则与编码相同"
+            />
+          </Field>
+
+          {/* pricing */}
+          {isText ? (
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="输入单价（点/千Token）">
+                <input type="number" className="input" min={0} step={0.1} value={draft.input_unit_points || ''}
+                  placeholder="0" onChange={e=>upd({ input_unit_points: Number(e.target.value)||0 })}/>
+              </Field>
+              <Field label="输出单价（点/千Token）">
+                <input type="number" className="input" min={0} step={0.1} value={draft.output_unit_points || ''}
+                  placeholder="0" onChange={e=>upd({ output_unit_points: Number(e.target.value)||0 })}/>
+              </Field>
+            </div>
+          ) : (
+            <Field label="单次价格（点/次）" hint="0 = 免费">
+              <input type="number" className="input" min={0} value={draft.unit_points || ''}
+                placeholder="0" onChange={e=>upd({ unit_points: Number(e.target.value)||0 })}/>
+            </Field>
+          )}
+
+          {/* enabled */}
+          <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+            <div>
+              <p className="text-body font-medium">启用状态</p>
+              <p className="text-tiny text-text-tertiary mt-0.5">关闭后用户端不可选择此模型</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={draft.enabled}
+              onClick={()=>upd({ enabled: !draft.enabled })}
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${draft.enabled?'bg-gia-500':'bg-surface-3'}`}
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow my-0.5 transition-transform ${draft.enabled?'translate-x-5':'translate-x-0.5'}`}/>
+            </button>
+          </div>
+        </div>
+
+        {/* modal footer */}
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-border bg-surface-2/50 rounded-b-[var(--radius-lg)]">
+          <button className="btn btn-outline btn-md" onClick={onClose}>取消</button>
+          <button className="btn btn-primary btn-md" onClick={onConfirm} disabled={hasErr}>
+            {isNew ? <><Plus size={14}/> 添加</> : <><Save size={14}/> 保存</>}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-/* ══════════════════════════════════════════════
-   Price Input — 数字输入框，最小化显示
-══════════════════════════════════════════════ */
-function PriceInput({
-  value, onChange,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-}) {
+/* ─── Field wrapper ─── */
+function Field({ label, children, error, hint }: { label: string; children: ReactNode; error?: boolean; hint?: string }) {
   return (
-    <input
-      type="number"
-      min={0}
-      step={0.1}
-      value={numDisplay(value)}
-      placeholder="0"
-      onChange={(e) => onChange(parseNum(e.target.value))}
-      className="w-16 min-w-0 bg-transparent border-b border-transparent hover:border-border focus:border-gia-500 transition-colors outline-none text-body tabular-nums text-center py-0.5 placeholder:text-text-tertiary"
-    />
+    <div className="space-y-1.5">
+      <label className={`block text-small font-medium ${error ? 'text-danger' : 'text-text-primary'}`}>{label}</label>
+      {children}
+      {hint && <p className="text-tiny text-text-tertiary">{hint}</p>}
+      {error && <p className="text-tiny text-danger">此项不能为空</p>}
+    </div>
   );
 }
