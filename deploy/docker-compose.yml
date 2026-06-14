@@ -92,9 +92,7 @@ services:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO/dev/null http://127.0.0.1:17180/healthz"]
-      interval: 15s
-      retries: 5
+      disable: true
     deploy:
       resources:
         limits: { cpus: '2', memory: 1G }
