@@ -293,6 +293,8 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 			s.markProviderQuotaLimited(ctx, acc, err.Error(), usageLimitResetAt(err))
 		} else if isTransientProviderPathError(t.Provider, err) {
 			s.pool.MarkTransientFailed(ctx, acc.ID, err.Error())
+		} else if isGPTWebSessionExpiredError(err) {
+			s.disableProviderAccount(ctx, acc, err.Error())
 		} else {
 			cooldown := providerCooldown(err)
 			s.markProviderFailed(ctx, acc, err.Error(), cooldown)
@@ -530,7 +532,7 @@ func (s *GenerationService) disableProviderAccount(ctx context.Context, acc *mod
 	}
 	acc.Status = model.AccountStatusDisabled
 	s.pool.Reload(acc.Provider)
-	logger.FromCtx(ctx).Warn("account.disabled_after_oauth_refresh_401", zap.Uint64("account_id", acc.ID), zap.String("provider", acc.Provider), zap.String("reason", truncate(reason, 240)))
+	logger.FromCtx(ctx).Warn("account.disabled_after_auth_failure", zap.Uint64("account_id", acc.ID), zap.String("provider", acc.Provider), zap.String("reason", truncate(reason, 240)))
 }
 
 func (s *GenerationService) markProviderQuotaLimited(ctx context.Context, acc *model.Account, reason string, until time.Time) {
@@ -1264,6 +1266,18 @@ func newULID() string {
 var _ = errors.New
 
 var usageLimitResetAtRe = regexp.MustCompile(`"resets_at"\s*:\s*([0-9]+)`)
+
+// isGPTWebSessionExpiredError detects a ChatGPT web session 403 that means
+// the OAuth access/session token is expired and the account must be re-credentialed.
+// The bootstrap request hits chat.openai.com without a valid session and gets
+// a 403 HTML page — this will never succeed without fresh tokens.
+func isGPTWebSessionExpiredError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "gpt image") && strings.Contains(msg, "web bootstrap 403")
+}
 
 func isFatalOAuthRefreshError(err error) bool {
 	if err == nil {
