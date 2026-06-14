@@ -129,13 +129,13 @@ export default function LogsPage() {
             <span className="stat-pill stat-pill-red"><span className="stat-pill-dot"/><span className="stat-pill-label">失败</span><span className="stat-pill-val">{failCount}</span></span>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            <div className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#fca5a5] bg-[#fff1f2] px-2.5 text-[12px]">
-              <span className="text-[#dc2626]">清除</span>
-              <input className="w-10 rounded border border-[#fca5a5] bg-white px-1.5 text-center text-[12px] outline-none"
+            <div className="purge-widget">
+              <span className="purge-widget-label">清除</span>
+              <input
                 value={purgeDays} inputMode="numeric"
                 onChange={(e) => setPurgeDays(e.target.value.replace(/\D/g, '').slice(0, 4))}
               />
-              <span className="text-[#dc2626]">天前</span>
+              <span className="purge-widget-label">天前</span>
               <button className="btn btn-danger btn-sm !h-6 !px-2" disabled={purge.isPending || purgeDayNum <= 0} onClick={() => setConfirmPurge(true)}>
                 <Trash2 size={12}/>
               </button>
@@ -152,7 +152,7 @@ export default function LogsPage() {
               value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
             />
           </div>
-          <div className="tabs" style={{border:'1px solid #eaecf0',borderRadius:8,padding:'2px',background:'#f5f7fa'}}>
+          <div className="tabs">
             {[['all','全部'],['chat','文字'],['image','图片'],['video','视频']].map(([k,label]) => (
               <button key={k} className="tab" aria-selected={kind===k} onClick={() => { setKind(k as typeof kind); setPage(1); }}>{label}</button>
             ))}
@@ -170,7 +170,7 @@ export default function LogsPage() {
       </div>
 
       <div className="list-page-body">
-        <div className="table-wrap overflow-hidden">
+        <div className="table-wrap">
         <table className="data-table text-small min-w-[960px]">
           <thead>
             <tr>
@@ -187,14 +187,33 @@ export default function LogsPage() {
             </tr>
           </thead>
           <tbody>
-            {list.isLoading && (
-              <tr>
-                <td colSpan={10} className="py-10 text-center text-text-tertiary">加载中...</td>
+            {list.isLoading && Array.from({ length: 6 }).map((_, i) => (
+              <tr key={i} className="table-skeleton">
+                {[42, 150, 150, 140, 160, 88, 80, 80, 80, 110].map((w, j) => (
+                  <td key={j} className={j === 0 ? 'sticky-l' : j === 9 ? 'sticky-r' : ''}>
+                    {j === 1 ? (
+                      <div className="skeleton-stack">
+                        <span style={{ width: w }} />
+                        <span style={{ width: 100 }} />
+                      </div>
+                    ) : (
+                      <span style={{ width: w }} />
+                    )}
+                  </td>
+                ))}
               </tr>
-            )}
+            ))}
             {!list.isLoading && items.length === 0 && (
               <tr>
-                <td colSpan={10} className="py-10 text-center text-text-tertiary">暂无生成记录</td>
+                <td colSpan={10}>
+                  <div className="empty-state">
+                    <div className="empty-state-icon" style={{ background: 'rgba(244,63,94,.08)', color: '#f43f5e' }}>
+                      <Eye size={24} />
+                    </div>
+                    <p className="empty-state-title">暂无生成记录</p>
+                    <p className="empty-state-desc">调整筛选条件，或等待用户发起新的生成任务。</p>
+                  </div>
+                </td>
               </tr>
             )}
             {items.map((row) => {
@@ -204,11 +223,12 @@ export default function LogsPage() {
               const isOpen = expanded === row.task_id;
               return (
                 <Fragment key={row.task_id}>
-                  <tr className="align-middle">
+                  <tr className={`align-middle ${isOpen ? 'table-row-expanded' : ''}`}>
                     <td className="sticky-l">
                       <button
-                        className="btn btn-outline btn-sm"
+                        className="btn btn-outline btn-sm gap-1"
                         onClick={() => setExpanded(isOpen ? null : row.task_id)}
+                        aria-expanded={isOpen}
                       >
                         {isOpen ? <ChevronDown size={13}/> : <ChevronRight size={13}/>}
                         {isOpen ? '收起' : '详情'}
@@ -242,8 +262,8 @@ export default function LogsPage() {
                     </td>
                   </tr>
                   {isOpen && (
-                    <tr>
-                      <td colSpan={10} className="bg-surface-2/60 p-0">
+                    <tr className="table-row-detail">
+                      <td colSpan={10}>
                         <div className="grid gap-3 p-4 lg:grid-cols-[1fr_1fr]">
                           <DetailBlock title="提示词" value={row.prompt || '-'} />
                           <DetailBlock title="错误信息" value={row.error || '-'} danger={Boolean(row.error)} />
@@ -314,8 +334,25 @@ function UpstreamDialog({ task, onClose }: { task: AdminGenerationLogItem; onClo
           <button className="modal-close" onClick={onClose}><X size={16}/></button>
         </div>
         <div className="modal-body max-h-[70vh] space-y-3 overflow-auto">
-          {q.isLoading && <div className="py-10 text-center text-text-tertiary">加载中...</div>}
-          {!q.isLoading && rows.length === 0 && <div className="py-10 text-center text-text-tertiary">暂无上游日志，新任务会自动记录。</div>}
+          {q.isLoading && (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border bg-surface-1 p-3 space-y-2">
+                  <div className="skeleton skeleton-text" style={{ width: '30%' }} />
+                  <div className="skeleton" style={{ height: 48 }} />
+                </div>
+              ))}
+            </div>
+          )}
+          {!q.isLoading && rows.length === 0 && (
+            <div className="empty-state-compact">
+              <div className="empty-state-icon" style={{ background: 'rgba(99,102,241,.08)', color: '#6366f1' }}>
+                <Eye size={20} />
+              </div>
+              <p className="empty-state-title">暂无上游日志</p>
+              <p className="empty-state-desc">新任务会自动记录上游请求与响应。</p>
+            </div>
+          )}
           {rows.map((row) => <UpstreamRow key={row.id} row={row} />)}
         </div>
       </div>

@@ -54,6 +54,21 @@ const NAV_GROUPS = [
   },
 ] as const;
 
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': '仪表盘',
+  '/accounts': 'Token 账号',
+  '/proxies': '代理管理',
+  '/users': '用户管理',
+  '/billing': '充值消费',
+  '/promo': '优惠码',
+  '/cdk': '兑换码 CDK',
+  '/model-prices': '模型价格',
+  '/billing-settings': '扣费设置',
+  '/recharge-packages': '充值套餐',
+  '/config': '系统配置',
+  '/logs': '请求日志',
+};
+
 export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen]     = useState(false);
@@ -78,6 +93,7 @@ export function AdminLayout() {
   const displayName = me?.nickname || me?.username || '管理员';
   const roleName    = me?.role_name || me?.role_code || '超级管理员';
   const initial     = displayName.slice(0, 1).toUpperCase();
+  const pageTitle   = PAGE_TITLES[location.pathname] ?? '管理后台';
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-bg">
@@ -88,8 +104,8 @@ export function AdminLayout() {
         mobileOpen ? 'fixed inset-y-0 left-0 z-40 shadow-2xl' : 'hidden lg:flex',
       )}>
         {/* logo */}
-        <div className="flex h-[64px] shrink-0 items-center gap-3 border-b border-border px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gia-gradient shadow-sm">
+        <div className="flex h-[64px] shrink-0 items-center gap-3 border-b border-border px-5 bg-gradient-to-r from-white to-indigo-50/30">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gia-gradient shadow-[0_2px_10px_rgba(99,102,241,.35)]">
             <BarChart2 size={16} className="text-white" />
           </div>
           <div>
@@ -112,17 +128,20 @@ export function AdminLayout() {
                     to={to}
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) => clsx(
-                      'group flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-[13.5px] font-medium transition-all',
+                      'group relative flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-[13.5px] font-medium transition-all duration-150',
                       isActive
-                        ? 'bg-gia-gradient text-white shadow-sm'
-                        : 'text-text-secondary hover:bg-surface-2 hover:text-text-primary',
+                        ? 'bg-gia-gradient text-white shadow-[0_2px_12px_rgba(99,102,241,.35)]'
+                        : 'text-text-secondary hover:bg-surface-2 hover:text-text-primary hover:translate-x-0.5',
                     )}
                   >
                     {({ isActive }) => (
                       <>
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white/80" />
+                        )}
                         <span className={clsx(
-                          'grid h-7 w-7 shrink-0 place-items-center rounded-md transition-all',
-                          isActive ? 'bg-white/20' : `${bg} ${color} group-hover:scale-105`,
+                          'grid h-7 w-7 shrink-0 place-items-center rounded-md transition-all duration-150',
+                          isActive ? 'bg-white/20' : `${bg} ${color} group-hover:scale-105 group-hover:shadow-sm`,
                         )}>
                           <Icon size={15} />
                         </span>
@@ -158,15 +177,16 @@ export function AdminLayout() {
           scrollbar-gutter:stable 保留滚动条空间，overscroll-none 禁止弹跳效果。 */}
       <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto h-screen [scrollbar-gutter:stable] overscroll-none">
         {/* topbar */}
-        <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border bg-white/97 px-6 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-3">
-            {/* mobile hamburger */}
             <button className="btn btn-ghost btn-icon btn-sm lg:hidden" onClick={() => setMobileOpen((v) => !v)} aria-label="菜单">
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
             <div className="flex items-center gap-2 text-tiny text-text-tertiary">
-              <BookOpen size={13} />
+              <BookOpen size={13} className="text-indigo-400" />
               <span>管理后台</span>
+              <span className="text-border-strong">/</span>
+              <span className="font-medium text-text-primary">{pageTitle}</span>
             </div>
           </div>
 
@@ -178,7 +198,10 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition hover:bg-surface-2"
+              className={clsx(
+                'flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-all duration-150',
+                menuOpen ? 'bg-surface-2 shadow-sm' : 'hover:bg-surface-2',
+              )}
             >
               <div className="grid h-7 w-7 place-items-center rounded-full bg-gia-gradient text-[12px] font-bold text-white shadow-sm">
                 {initial}
@@ -191,7 +214,7 @@ export function AdminLayout() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-2 z-50 w-[220px] overflow-hidden rounded-xl border border-border bg-surface-1 shadow-xl">
+              <div className="absolute right-0 top-full mt-2 z-50 w-[220px] overflow-hidden rounded-xl border border-border bg-surface-1 shadow-[0_12px_40px_rgba(0,0,0,.12)] animate-[fselFadeIn_.12s_ease]">
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gia-gradient text-white font-bold text-sm">
                     {initial}
