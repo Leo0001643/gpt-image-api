@@ -143,7 +143,7 @@ func (s *AccountTestService) decryptCredential(account *model.Account) (string, 
 	}
 	plain, err := s.aes.Decrypt(account.CredentialEnc)
 	if err != nil {
-		return "", fmt.Errorf("瑙ｅ瘑鍑瘉澶辫触: %w", err)
+		return "", fmt.Errorf("解密凭证失败: %w", err)
 	}
 	return strings.TrimSpace(string(plain)), nil
 }
@@ -794,7 +794,7 @@ func (s *AccountTestService) buildAuthHeader(account *model.Account) (string, er
 			return "", fmt.Errorf("瑙ｅ瘑 access_token 澶辫触: %w", err)
 		}
 		if at == "" {
-			return "", errors.New("OAuth 璐﹀彿鏈彇寰?access_token锛岃鍏堝埛鏂?RT")
+		return "", errors.New("OAuth 账号未取得 access_token，请先刷新 RT")
 		}
 		return "Bearer " + at, nil
 	case model.AuthTypeCookie:
@@ -804,7 +804,7 @@ func (s *AccountTestService) buildAuthHeader(account *model.Account) (string, er
 		}
 		return cred, nil
 	default:
-		return "", fmt.Errorf("鏈煡 auth_type: %s", account.AuthType)
+		return "", fmt.Errorf("未知 auth_type: %s", account.AuthType)
 	}
 }
 
@@ -830,10 +830,10 @@ func accountOAuthClientID(account *model.Account) string {
 
 func (s *AccountTestService) RefreshOAuth(ctx context.Context, account *model.Account) (*dto.AccountRefreshResp, error) {
 	if !account.IsOAuth() {
-		return nil, errcode.InvalidParam.WithMsg("浠?OAuth 璐﹀彿鏀寔鍒锋柊 RT")
+		return nil, errcode.InvalidParam.WithMsg("仅 OAuth 账号支持刷新 RT")
 	}
 	if account.Provider != model.ProviderGPT {
-		return nil, errcode.InvalidParam.WithMsg("浠呮敮鎸?OpenAI / GPT 璐﹀彿鍒锋柊 RT")
+		return nil, errcode.InvalidParam.WithMsg("仅支持 OpenAI / GPT 账号刷新 RT")
 	}
 
 	rt := ""
