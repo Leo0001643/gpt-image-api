@@ -877,7 +877,7 @@ func (s *GenerationService) cacheOneAsset(ctx context.Context, driver, cookie, r
 	}
 	ext := assetExt(source, resp.Header.Get("Content-Type"), thumb)
 	now := time.Now()
-	rel := path.Join("generated", now.Format("2006"), now.Format("01"), now.Format("02"), fmt.Sprintf("%s_%d%s%s", taskID, seq, map[bool]string{true: "_thumb", false: ""}[thumb], ext))
+	rel := assetRelPath(now, seq, thumb, ext)
 	root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
@@ -938,7 +938,7 @@ func (s *GenerationService) cacheDataURLAsset(ctx context.Context, driver, rawUR
 	}
 	ext := assetExt("", contentType, thumb)
 	now := time.Now()
-	rel := path.Join("generated", now.Format("2006"), now.Format("01"), now.Format("02"), fmt.Sprintf("%s_%d%s%s", taskID, seq, map[bool]string{true: "_thumb", false: ""}[thumb], ext))
+	rel := assetRelPath(now, seq, thumb, ext)
 	root := strings.TrimSpace(os.Getenv("GIA_STORAGE_ROOT"))
 	if root == "" {
 		root = "/app/storage/public"
@@ -1162,6 +1162,19 @@ func assetExt(source, contentType string, thumb bool) string {
 	default:
 		return ".bin"
 	}
+}
+
+// assetRelPath returns the relative storage path for a generated asset.
+// Format: YYYYMMDD/YYYYMMDDHHmmSS<seq04d>[_thumb].<ext>
+// e.g.  20260615/202606150208450001.png
+func assetRelPath(now time.Time, seq int, thumb bool, ext string) string {
+	dir := now.Format("20060102")
+	thumbSuffix := ""
+	if thumb {
+		thumbSuffix = "_thumb"
+	}
+	name := fmt.Sprintf("%s%04d%s%s", now.Format("20060102150405"), seq, thumbSuffix, ext)
+	return path.Join(dir, name)
 }
 
 func buildCookieForAssetDownload(cred string) string {

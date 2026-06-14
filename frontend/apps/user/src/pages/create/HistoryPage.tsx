@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
+  ChevronLeft, ChevronRight,
   Clock3, Copy, Download, ImageIcon, Images, Loader2,
   MoreHorizontal, Play, Trash2, Video as VideoIcon, X,
 } from 'lucide-react';
@@ -264,6 +265,7 @@ function TaskCard({ t, onPreview }: { t: GenerationTask; onPreview: () => void }
   const isVideo       = t.kind === 'video';
   const resolvedCover = useAuthedMediaUrl(cover);
   const error         = t.status === 3 ? t.error?.trim() || '生成失败' : '';
+  const imageCount    = (t.results?.length ?? 0);
 
   return (
     <article
@@ -314,6 +316,16 @@ function TaskCard({ t, onPreview }: { t: GenerationTask; onPreview: () => void }
             {STATUS_LABEL[t.status]}
           </span>
         </div>
+
+        {/* 多图数量角标 */}
+        {imageCount > 1 && (
+          <div className="absolute top-2 right-2">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/60 text-white text-[10px] font-medium">
+              <Images size={9} />
+              {imageCount}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 信息 */}
@@ -330,26 +342,38 @@ function TaskCard({ t, onPreview }: { t: GenerationTask; onPreview: () => void }
 
 /* ── 预览 Modal ── */
 function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: () => void }) {
-  const blobUrl    = useAuthedMediaUrl(preview.src);
-  const [copying,  setCopying]   = useState(false);
+  const [idx, setIdx]             = useState(0);
+  const total                     = preview.srcs.length;
+  const currentSrc                = preview.srcs[idx] ?? '';
+  const blobUrl                   = useAuthedMediaUrl(currentSrc);
+  const [copying,     setCopying]     = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  const goPrev = (e: React.MouseEvent) => { e.stopPropagation(); setIdx((i) => Math.max(0, i - 1)); };
+  const goNext = (e: React.MouseEvent) => { e.stopPropagation(); setIdx((i) => Math.min(total - 1, i + 1)); };
+
+  useEffect(() => { setIdx(0); }, [preview]);
+
   useEffect(() => {
-    const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') onClose(); };
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') { onClose(); return; }
+      if (ev.key === 'ArrowLeft')  setIdx((i) => Math.max(0, i - 1));
+      if (ev.key === 'ArrowRight') setIdx((i) => Math.min(total - 1, i + 1));
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, total]);
 
   const handleCopy = async () => {
     setCopying(true);
-    try { await navigator.clipboard.writeText(preview.src); }
+    try { await navigator.clipboard.writeText(currentSrc); }
     finally { setCopying(false); }
   };
 
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const file = await fetchAuthedFile(preview.src);
+      const file = await fetchAuthedFile(currentSrc);
       const url  = URL.createObjectURL(file.blob);
       const a    = document.createElement('a');
       a.href = url; a.download = file.filename;
@@ -370,25 +394,30 @@ function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: 
             <p className="truncate text-sm font-medium text-neutral-800">{preview.model}</p>
             <p className="text-xs text-neutral-400 mt-0.5">
               {fmtRelative(preview.created_at)} · {STATUS_LABEL[preview.status]} · {fmtPoints(preview.cost_points)} 点
+              {total > 1 && <span className="ml-1.5 text-[#002FA7] font-medium">{idx + 1} / {total}</span>}
             </p>
           </div>
           <div className="flex items-center gap-2 ml-4">
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:border-[#002FA7] hover:text-[#002FA7] transition"
-              onClick={handleCopy}
-              disabled={copying}
-            >
-              {copying ? <Loader2 size={13} className="animate-spin" /> : <Copy size={13} />}
-              复制链接
-            </button>
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:border-[#002FA7] hover:text-[#002FA7] transition"
-              onClick={handleDownload}
-              disabled={downloading}
-            >
-              {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-              下载
-            </button>
+            {currentSrc && (
+              <>
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:border-[#002FA7] hover:text-[#002FA7] transition"
+                  onClick={handleCopy}
+                  disabled={copying}
+                >
+                  {copying ? <Loader2 size={13} className="animate-spin" /> : <Copy size={13} />}
+                  复制链接
+                </button>
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:border-[#002FA7] hover:text-[#002FA7] transition"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                >
+                  {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                  下载
+                </button>
+              </>
+            )}
             <button
               className="w-8 h-8 rounded-lg border border-neutral-200 flex items-center justify-center text-neutral-500 hover:border-neutral-300 transition"
               onClick={onClose}
@@ -400,16 +429,49 @@ function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: 
 
         {/* 图片区域 */}
         <div className="bg-neutral-50 p-4">
-          <div className="flex max-h-[70vh] min-h-[320px] items-center justify-center overflow-auto rounded-xl bg-white border border-neutral-100">
+          <div className="relative flex max-h-[70vh] min-h-[320px] items-center justify-center overflow-auto rounded-xl bg-white border border-neutral-100">
             {preview.kind === 'video' ? (
               blobUrl
                 ? <video src={blobUrl} controls className="max-h-[70vh] w-full object-contain" />
                 : <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><Loader2 className="animate-spin" size={24} /><span className="text-sm">正在加载</span></div>
             ) : blobUrl
-              ? <img src={blobUrl} alt={preview.prompt || preview.model} className="max-h-[70vh] w-full object-contain" />
+              ? <img src={blobUrl} alt={preview.prompt || preview.model} className="max-h-[70vh] max-w-full object-contain" />
               : <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><Loader2 className="animate-spin" size={24} /><span className="text-sm">正在加载</span></div>
             }
+
+            {/* 左右翻页按钮 */}
+            {total > 1 && (
+              <>
+                <button
+                  className={clsx(
+                    'absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition',
+                    idx === 0 && 'opacity-30 pointer-events-none',
+                  )}
+                  onClick={goPrev}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  className={clsx(
+                    'absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition',
+                    idx === total - 1 && 'opacity-30 pointer-events-none',
+                  )}
+                  onClick={goNext}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </>
+            )}
           </div>
+
+          {/* 多图缩略图导航 */}
+          {total > 1 && (
+            <div className="mt-3 flex gap-2 justify-center flex-wrap">
+              {preview.srcs.map((src, i) => (
+                <ThumbNav key={i} src={src} active={i === idx} onClick={() => setIdx(i)} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 底部提示词 */}
@@ -420,6 +482,25 @@ function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: 
         )}
       </div>
     </div>
+  );
+}
+
+/* ── 缩略图导航 ── */
+function ThumbNav({ src, active, onClick }: { src: string; active: boolean; onClick: () => void }) {
+  const blobUrl = useAuthedMediaUrl(src);
+  return (
+    <button
+      className={clsx(
+        'w-12 h-12 rounded-lg overflow-hidden border-2 transition shrink-0',
+        active ? 'border-[#002FA7]' : 'border-transparent hover:border-neutral-300',
+      )}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+    >
+      {blobUrl
+        ? <img src={blobUrl} alt="" className="w-full h-full object-cover" />
+        : <div className="w-full h-full bg-neutral-100 grid place-items-center"><Loader2 size={10} className="animate-spin text-neutral-300" /></div>
+      }
+    </button>
   );
 }
 
@@ -512,13 +593,25 @@ function guessExt(contentType: string, src: string) {
 }
 
 function createPreview(t: GenerationTask): HistoryPreview {
-  const first = t.results?.[0];
-  return { kind: t.kind, status: t.status, model: t.model, prompt: t.prompt || '', cost_points: t.cost_points, created_at: t.created_at, error: t.error, src: first?.url || first?.thumb_url || '' };
+  const srcs = (t.results ?? [])
+    .map((r) => r.url || r.thumb_url || '')
+    .filter(Boolean);
+  return {
+    kind: t.kind,
+    status: t.status,
+    model: t.model,
+    prompt: t.prompt || '',
+    cost_points: t.cost_points,
+    created_at: t.created_at,
+    error: t.error,
+    srcs: srcs.length > 0 ? srcs : [''],
+  };
 }
 
 interface HistoryPreview {
   kind: 'image' | 'video' | 'chat';
   status: TaskStatus;
   model: string; prompt: string; cost_points: number; created_at: number;
-  error?: string; src: string;
+  error?: string;
+  srcs: string[];
 }

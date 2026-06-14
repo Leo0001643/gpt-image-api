@@ -328,7 +328,7 @@ export default function CreateImagePage() {
           {/* 图片网格 */}
           <div className={clsx(
             'grid gap-3',
-            count === 1 ? 'grid-cols-1 max-w-[480px]' : 'grid-cols-2',
+            results.length > 1 ? 'grid-cols-2' : (count === 1 ? 'grid-cols-1 max-w-[480px]' : 'grid-cols-2'),
           )}>
             {results.length > 0 ? (
               results.map((r, i) => (

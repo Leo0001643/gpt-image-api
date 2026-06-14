@@ -22,6 +22,8 @@ x-common-env: &common-env
   # 跨域 / 日志
   GIA_CORS_ORIGINS:     ${GIA_CORS_ORIGINS}
   GIA_LOG_DIR:          /app/logs
+  # 图片存储根目录（宿主机目录通过 bind mount 挂载到此路径）
+  GIA_STORAGE_ROOT:     /app/images
   TZ:                   Asia/Shanghai
 
 services:
@@ -87,7 +89,7 @@ services:
     expose: ["17180"]
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
-      - gia-storage:/app/storage
+      - /opt/gpt-image-api/images:/app/images
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -128,7 +130,7 @@ services:
     expose: ["17200"]
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
-      - gia-storage:/app/storage
+      - /opt/gpt-image-api/images:/app/images
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -147,7 +149,7 @@ services:
       GIA_NODE_ID: 4
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
-      - gia-storage:/app/storage
+      - /opt/gpt-image-api/images:/app/images
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -188,12 +190,12 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
       - /opt/gpt-image-api/logs/nginx:/var/log/nginx
+      - /opt/gpt-image-api/images:/srv/images:ro
     networks: [gia]
 
 volumes:
   gia-mysql-data:
   gia-redis-data:
-  gia-storage:
 
 networks:
   gia:
