@@ -30,6 +30,9 @@ func truncRemark(s string) string {
 	return s[:max] + "…"
 }
 
+// truncReason trims a reason string to fit the VARCHAR(255) reason column.
+func truncReason(s string) string { return truncRemark(s) }
+
 // Income 在事务中给用户加点 + 写入流水。
 func (r *WalletRepo) Income(ctx context.Context, userID uint64, biz, bizID string, points int64, remark string) (*model.WalletLog, error) {
 	if points <= 0 {
@@ -217,7 +220,7 @@ func (r *WalletRepo) RefundFrozenPart(ctx context.Context, userID uint64, taskID
 			TaskID:    taskID,
 			UserID:    userID,
 			Points:    points,
-			Reason:    reason,
+			Reason:    truncReason(reason),
 			Operator:  "system",
 			CreatedAt: time.Now().UTC(),
 		}).Error
@@ -265,7 +268,7 @@ func (r *WalletRepo) Refund(ctx context.Context, userID uint64, taskID, reason s
 			TaskID:    taskID,
 			UserID:    userID,
 			Points:    points,
-			Reason:    reason,
+			Reason:    truncReason(reason),
 			Operator:  "system",
 			CreatedAt: time.Now().UTC(),
 		}).Error
