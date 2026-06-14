@@ -21,6 +21,15 @@ func NewWalletRepo(db *gorm.DB) *WalletRepo { return &WalletRepo{db: db} }
 // ErrInsufficient 余额不足。
 var ErrInsufficient = errors.New("repo: insufficient points")
 
+// truncRemark trims a remark string to fit the VARCHAR(255) remark column.
+func truncRemark(s string) string {
+	const max = 250
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "…"
+}
+
 // Income 在事务中给用户加点 + 写入流水。
 func (r *WalletRepo) Income(ctx context.Context, userID uint64, biz, bizID string, points int64, remark string) (*model.WalletLog, error) {
 	if points <= 0 {
@@ -48,6 +57,7 @@ func (r *WalletRepo) Income(ctx context.Context, userID uint64, biz, bizID strin
 			PointsAfter:  after,
 		}
 		if remark != "" {
+			remark = truncRemark(remark)
 			log.Remark = &remark
 		}
 		return tx.Create(log).Error
@@ -99,6 +109,7 @@ func (r *WalletRepo) Adjust(ctx context.Context, userID uint64, biz, bizID strin
 			PointsAfter:  after,
 		}
 		if remark != "" {
+			remark = truncRemark(remark)
 			log.Remark = &remark
 		}
 		return tx.Create(log).Error
@@ -138,6 +149,7 @@ func (r *WalletRepo) Freeze(ctx context.Context, userID uint64, biz, bizID strin
 			PointsAfter:  after,
 		}
 		if remark != "" {
+			remark = truncRemark(remark)
 			log.Remark = &remark
 		}
 		return tx.Create(log).Error
@@ -187,7 +199,7 @@ func (r *WalletRepo) RefundFrozenPart(ctx context.Context, userID uint64, taskID
 			}).Error; err != nil {
 			return err
 		}
-		remarkCopy := reason
+		remarkCopy := truncRemark(reason)
 		log := &model.WalletLog{
 			UserID:       userID,
 			Direction:    1,
@@ -235,7 +247,7 @@ func (r *WalletRepo) Refund(ctx context.Context, userID uint64, taskID, reason s
 			}).Error; err != nil {
 			return err
 		}
-		remarkCopy := reason
+		remarkCopy := truncRemark(reason)
 		log := &model.WalletLog{
 			UserID:       userID,
 			Direction:    1,
