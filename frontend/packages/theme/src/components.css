@@ -935,17 +935,14 @@
   .data-table tbody tr:nth-child(even) td { background: #fafbff; }
   .data-table tbody tr:hover td {
     background: rgba(99, 102, 241, .05) !important;
-    box-shadow: inset 3px 0 0 #6366f1;
   }
   .data-table tbody tr:hover td.sticky-l,
   .data-table tbody tr:hover td.sticky-r { background: rgba(99, 102, 241, .05) !important; }
   .data-table tbody tr.table-row-expanded td {
     background: rgba(99, 102, 241, .03) !important;
-    box-shadow: inset 3px 0 0 #6366f1;
   }
   .data-table tbody tr.table-row-detail td {
     background: #f8faff !important;
-    box-shadow: inset 3px 0 0 rgba(99, 102, 241, .35);
     height: auto;
     padding: 0;
     border-bottom: 1px solid #e8ecff;
