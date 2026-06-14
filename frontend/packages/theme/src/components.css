@@ -505,29 +505,28 @@
   /* ── List page 布局（cambook 风格，负 margin 铺满内容区）──── */
   /* content area 有 padding: 24px，list-page 用 -24px 抵消，
      实现：吸顶头部 + 滚动表格 + 吸底分页 全宽贴边的效果 */
+  /* list-page fills the full viewport below the topbar (56px).
+     It is a fixed-height flex column so that:
+     - list-page-head never scrolls (flex-shrink:0 at the top)
+     - table-wrap is the ONLY scroll container (flex:1, overflow:auto)
+     - list-page-pager never scrolls (flex-shrink:0 at the bottom)
+     - thead sticky top:0 works because table-wrap has a fixed height */
   .list-page {
     margin-top: -24px;
+    margin-bottom: -24px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
   }
 
-  /* 吸顶头部：毛玻璃背景，贴边
-     top: 56px = topbar 高度，相对于 main（overflow-y:auto 滚动容器）。
-     内容区父 div 不能有 overflow-x:hidden，否则该 div 会成为新的滚动容器
-     导致 sticky 定位失效，并产生 56px 的额外空白。
-     z-index: 20 = 与 topbar 同层；低于 modal-backdrop (z-50/z-80)，
-     确保打开弹窗时 backdrop 能正确覆盖吸顶头部。 */
   .list-page-head {
-    position: sticky;
-    /* top: 56px = topbar 高度，相对于 main（overflow-y:auto 滚动容器）。
-       z-index 25 > pager(10): dropdown menus from filter row paint above sticky pager */
-    top: 56px;
+    flex-shrink: 0;
     z-index: 25;
     background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.07);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    will-change: transform;
-    transform: translateZ(0);
   }
 
   /* 标题行：图标 + 标题 + 统计徽章 + 操作按钮 */
@@ -549,21 +548,20 @@
     padding: 8px 24px 12px;
   }
 
-  /* 表格 + 分页器容器，延伸到底 */
+  /* Table + pager container — fills all space between head and bottom edge */
   .list-page-body {
-    margin-bottom: -24px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     background: #fff;
     border-top: 1px solid #eef0f8;
   }
 
-  /* 吸底分页器 */
+  /* Pinned pager — always visible at the bottom of list-page-body */
   .list-page-pager {
-    position: sticky;
-    bottom: 0;
-    /* z-index 10: below list-page-head(25) so filter dropdowns paint on top */
+    flex-shrink: 0;
     z-index: 10;
-    will-change: transform;
-    transform: translateZ(0);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -875,8 +873,15 @@
    ----------------------------------------------------------- */
 @layer components {
   /* ── table wrapper: horizontal scroll ── */
+  /* table-wrap is the sole scroll container for both axes.
+     flex:1 + min-height:0 gives it a fixed height inside list-page-body
+     so that thead sticky top:0 resolves correctly within this viewport. */
   .table-wrap {
+    flex: 1;
+    min-height: 0;
     overflow-x: auto;
+    overflow-y: auto;
+    overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -897,7 +902,9 @@
     white-space: nowrap;
     vertical-align: middle;
     user-select: none;
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 4;
   }
   /* th icon label */
   .data-table thead th .th-icon {
@@ -939,7 +946,7 @@
   .data-table tbody tr:nth-child(even) td.sticky-l { background: #fafbff; }
   .data-table thead th.sticky-l {
     background: linear-gradient(180deg, #f5f7ff 0%, #eef1ff 100%);
-    z-index: 4;
+    z-index: 6;
   }
   .data-table th.sticky-r,
   .data-table td.sticky-r {
@@ -956,7 +963,7 @@
   .data-table tbody tr:nth-child(even) td.sticky-r { background: #fafbff; }
   .data-table thead th.sticky-r {
     background: linear-gradient(180deg, #f5f7ff 0%, #eef1ff 100%);
-    z-index: 4;
+    z-index: 6;
   }
 
   /* Skeleton row for table loading state */

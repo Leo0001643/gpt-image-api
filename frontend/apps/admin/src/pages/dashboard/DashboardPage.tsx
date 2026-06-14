@@ -50,7 +50,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── dashboard body ─────────────────────────────── */}
-      <div style={{ padding: '20px 24px 32px', background: '#f5f7ff', minHeight: 'calc(100vh - 110px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ padding: '20px 24px 32px', background: '#f5f7ff', flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* ── Row 1: 4 gradient hero metric cards ─────── */}
         <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(4,1fr)' }}>

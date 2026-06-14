@@ -159,7 +159,7 @@ export default function ModelPricesPage() {
         </div>
       </div>
 
-      <div className="bg-white px-6 pt-5 pb-8 space-y-4">
+      <div className="bg-white px-6 pt-5 pb-8 space-y-4 flex-1 min-h-0 overflow-y-auto">
         {/* ── alerts ─────────────────────────────────────── */}
         {cfg.isError && (
           <div className="flex items-center justify-between rounded-xl border border-warning/40 bg-warning-soft px-4 py-3 text-small text-warning">

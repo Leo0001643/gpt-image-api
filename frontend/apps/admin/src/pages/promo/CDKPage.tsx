@@ -60,7 +60,7 @@ export default function CDKPage() {
           </div>
         </div>
       </div>
-      <div className="bg-white px-6 pt-5 pb-8 space-y-5">
+      <div className="bg-white px-6 pt-5 pb-8 space-y-5 flex-1 min-h-0 overflow-y-auto">
 
       <div className="overflow-hidden rounded-2xl border border-border shadow-sm">
         <div className="modal-header-grad mhg-amber">
