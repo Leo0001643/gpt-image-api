@@ -888,6 +888,29 @@ func (s *AccountTestService) RefreshOAuth(ctx context.Context, account *model.Ac
 		}, nil
 	}
 
+	// rt is NOT a JWT — it is an opaque value (e.g. __Secure-next-auth.session-token
+	// cookie). Such tokens cannot be exchanged via auth.openai.com/oauth/token.
+	// Check whether a usable access_token is already stored; if so, keep it.
+	// Otherwise instruct the admin to paste a fresh Access Token from the browser.
+	at := ""
+	if len(account.AccessTokenEnc) > 0 {
+		plain, _ := s.aes.Decrypt(account.AccessTokenEnc)
+		at = strings.TrimSpace(string(plain))
+	}
+	if isSessionJWT(at) {
+		exp, hasExp := jwtpayload.ExpUnixFromJWT(at)
+		if !hasExp || time.Now().Unix() < exp {
+			// Access token is still valid — nothing to do.
+			return &dto.AccountRefreshResp{OK: true, RefreshedAt: time.Now().Unix()}, nil
+		}
+	}
+	// Access token is expired or absent. The opaque session cookie cannot be
+	// used for OAuth2 token exchange. Inform the admin to re-enter the token.
+	return nil, errcode.InvalidParam.WithMsg(
+		"此账号使用的是 ChatGPT 网页 Session Cookie，不支持自动刷新 Token。" +
+			"请从浏览器重新获取最新的 Access Token（/api/auth/session 响应中的 accessToken 字段），" +
+			"然后编辑账号并更新 Access Token 字段。")
+
 	proxyURL, err := s.resolveProxyURL(ctx, account)
 	if err != nil {
 		return nil, errcode.Internal.Wrap(err)
