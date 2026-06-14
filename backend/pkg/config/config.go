@@ -3,6 +3,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -163,7 +164,7 @@ func loadInternal() (*Config, error) {
 	v.SetConfigName("config." + env)
 	if err := v.MergeInConfig(); err != nil {
 		var notFound viper.ConfigFileNotFoundError
-		if !asErr(err, &notFound) {
+		if !errors.As(err, &notFound) {
 			return nil, fmt.Errorf("merge env config: %w", err)
 		}
 	}
