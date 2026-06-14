@@ -310,7 +310,8 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 	ratio := webRatioFromSize(size, strParam(req.Params, "ratio", strParam(req.Params, "aspect_ratio", "1:1")))
 	prompt := webImagePromptV2(req.Prompt, ratio, size)
 	webModel := webImageModelSlug(req)
-	client, err := p.httpClient(req.ProxyURL)
+	// Use uTLS + forced HTTP/1.1 to bypass Cloudflare JA3/JA4 + JA4H detection.
+	client, err := p.webHttpClient(req.ProxyURL)
 	if err != nil {
 		return nil, err
 	}
@@ -1436,6 +1437,19 @@ func (p *Provider) httpClient(proxyURL string) (*http.Client, error) {
 		Timeout:  defaultTimeout,
 		Mode:     outbound.ModeUTLS,
 		Profile:  outbound.ProfileChrome,
+	})
+}
+
+// webHttpClient returns an HTTP client for chatgpt.com web requests.
+// It always uses uTLS (Chrome fingerprint) + forced HTTP/1.1 to pass
+// Cloudflare's JA3/JA4 and JA4H bot-detection checks, even without a proxy.
+func (p *Provider) webHttpClient(proxyURL string) (*http.Client, error) {
+	return outbound.NewClient(outbound.Options{
+		ProxyURL: proxyURL,
+		Timeout:  defaultTimeout,
+		Mode:     outbound.ModeUTLS,
+		Profile:  outbound.ProfileChrome,
+		ForceH1:  true,
 	})
 }
 

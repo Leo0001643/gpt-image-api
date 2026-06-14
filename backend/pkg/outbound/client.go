@@ -34,6 +34,11 @@ type Options struct {
 	Timeout  time.Duration
 	Mode     string
 	Profile  string
+	// ForceH1 forces HTTP/1.1 only in the TLS ALPN negotiation.
+	// Required for chatgpt.com: Go's http2.Transport emits SETTINGS frames
+	// that differ from Chrome's and are detected by Cloudflare's JA4H check.
+	// Forcing HTTP/1.1 avoids the application-layer fingerprint entirely.
+	ForceH1 bool
 }
 
 // NewClient creates a client with a consistent proxy and TLS stack.
@@ -65,6 +70,7 @@ func NewClient(opt Options) (*http.Client, error) {
 			proxyURL: pu,
 			profile:  profile,
 			timeout:  opt.Timeout,
+			forceH1:  opt.ForceH1,
 		},
 		Timeout: opt.Timeout,
 	}, nil
@@ -74,6 +80,7 @@ type utlsTransport struct {
 	proxyURL *url.URL
 	profile  string
 	timeout  time.Duration
+	forceH1  bool
 }
 
 func (t *utlsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -96,16 +103,46 @@ func (t *utlsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}()
 
 	serverName := req.URL.Hostname()
+	alpn := []string{"h2", "http/1.1"}
+	if t.forceH1 {
+		alpn = []string{"http/1.1"}
+	}
 	tlsConn := utls.UClient(conn, &utls.Config{
 		ServerName:         serverName,
 		InsecureSkipVerify: true, //nolint:gosec // Commercial proxies may MITM CONNECT targets.
 		MinVersion:         tls.VersionTLS12,
-		NextProtos:         []string{"h2", "http/1.1"},
+		NextProtos:         alpn,
 	}, t.clientHelloID())
+
+	// When forceH1=true we must explicitly overwrite the ALPN extension inside
+	// the Chrome preset's hardcoded ClientHello, because uTLS preset HelloIDs
+	// embed their own ALPN values that override Config.NextProtos.
+	if t.forceH1 {
+		if err := tlsConn.BuildHandshakeState(); err != nil {
+			_ = conn.Close()
+			return nil, fmt.Errorf("utls build handshake state: %w", err)
+		}
+		for _, ext := range tlsConn.Extensions {
+			if alpnExt, ok := ext.(*utls.ALPNExtension); ok {
+				alpnExt.AlpnProtocols = []string{"http/1.1"}
+			}
+		}
+	}
+
 	if err := tlsConn.HandshakeContext(req.Context()); err != nil {
 		return nil, fmt.Errorf("tls handshake to %s failed: %w", req.URL.Host, err)
 	}
-	if tlsConn.ConnectionState().NegotiatedProtocol == "h2" {
+
+	// Verify the server didn't ignore our forced h1 ALPN.
+	if t.forceH1 {
+		np := tlsConn.ConnectionState().NegotiatedProtocol
+		if np != "" && np != "http/1.1" {
+			_ = tlsConn.Close()
+			return nil, fmt.Errorf("expected http/1.1 but server negotiated %q", np)
+		}
+	}
+
+	if !t.forceH1 && tlsConn.ConnectionState().NegotiatedProtocol == "h2" {
 		h2Transport := &http2.Transport{}
 		cc, err := h2Transport.NewClientConn(tlsConn)
 		if err != nil {
