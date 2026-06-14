@@ -10,10 +10,9 @@ import {
   LogIn,
   LogOut,
   MessageCircle,
-  PanelLeft,
-  Search,
   Settings,
   Video,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -21,6 +20,7 @@ import clsx from 'clsx';
 import { useAuthStore } from '../stores/auth';
 import { useLoginGateStore } from '../stores/loginGate';
 import { toast } from '../stores/toast';
+import { fmtPoints } from '../lib/format';
 
 interface NavItem {
   to: string;
@@ -29,24 +29,24 @@ interface NavItem {
   authed?: boolean;
 }
 
-const APP_VERSION = 'v2.0.1';
+const NAV_PRIMARY: NavItem[] = [
+  { to: '/create/image', label: '图片创作', icon: Image },
+  { to: '/create/text',  label: '文字对话', icon: MessageCircle },
+  { to: '/create/video', label: '视频生成', icon: Video },
+  { to: '/history',      label: '生成历史', icon: Clock3,    authed: true },
+];
 
-const NAV_ITEMS: NavItem[] = [
-  { to: '/create/image', label: '图片', icon: Image },
-  { to: '/create/text', label: '文字', icon: MessageCircle },
-  { to: '/create/video', label: '视频', icon: Video },
-  { to: '/history', label: '历史', icon: Clock3, authed: true },
-  { to: '/billing', label: '充值', icon: CreditCard, authed: true },
-  { to: '/keys', label: '密钥', icon: FileKey2, authed: true },
-  { to: '/docs', label: '文档', icon: BookOpen },
-  { to: '/invite', label: '邀请', icon: Gift, authed: true },
-  { to: '/settings', label: '设置', icon: Settings, authed: true },
+const NAV_SECONDARY: NavItem[] = [
+  { to: '/billing',  label: '充值点数', icon: CreditCard, authed: true },
+  { to: '/keys',     label: 'API 密钥', icon: FileKey2,   authed: true },
+  { to: '/docs',     label: '接口文档', icon: BookOpen },
+  { to: '/invite',   label: '邀请好友', icon: Gift,       authed: true },
 ];
 
 export function AppLayout() {
-  const token = useAuthStore((s) => s.token);
-  const me = useAuthStore((s) => s.me);
-  const logout = useAuthStore((s) => s.logout);
+  const token    = useAuthStore((s) => s.token);
+  const me       = useAuthStore((s) => s.me);
+  const logout   = useAuthStore((s) => s.logout);
   const openGate = useLoginGateStore((s) => s.openGate);
   const navigate = useNavigate();
   const isAuthed = !!token;
@@ -60,85 +60,142 @@ export function AppLayout() {
   const handleNav = (item: NavItem, e: MouseEvent) => {
     if (item.authed && !isAuthed) {
       e.preventDefault();
-      openGate({ hint: `登录后即可使用“${item.label}”`, onLoggedIn: () => navigate(item.to) });
+      openGate({ hint: `登录后即可使用"${item.label}"`, onLoggedIn: () => navigate(item.to) });
     }
   };
 
-  return (
-    <div className="min-h-full bg-white text-neutral-950">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 border-r border-neutral-200 bg-white lg:flex lg:flex-col lg:items-center">
-        <button
-          type="button"
-          className="mt-3 grid h-8 w-8 place-items-center rounded-full text-neutral-700 hover:bg-neutral-100"
-          title="首页"
-          onClick={() => navigate('/create/image')}
-        >
-          <PanelLeft size={18} />
-        </button>
+  const avatarLetter = (me?.username || me?.email || 'U').slice(0, 1).toUpperCase();
+  const points = me?.points ?? 0;
 
-        <nav className="mt-6 flex flex-1 flex-col items-center gap-2">
-          {NAV_ITEMS.slice(0, 4).map((item) => <RailLink key={item.to} item={item} onClick={handleNav} />)}
-          <div className="my-2 h-px w-6 bg-neutral-200" />
-          {NAV_ITEMS.slice(4, 7).map((item) => <RailLink key={item.to} item={item} onClick={handleNav} />)}
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#F5F6FA] text-neutral-950">
+
+      {/* ═══════════════ 左侧导航栏 ═══════════════ */}
+      <aside className="hidden lg:flex flex-col w-[200px] shrink-0 h-full border-r border-neutral-200 bg-white z-40 overflow-hidden">
+
+        {/* Logo 区 */}
+        <div className="flex items-center gap-2.5 px-4 h-[60px] border-b border-neutral-100">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+               style={{ background: 'var(--gia-gradient)' }}>
+            <Zap size={16} className="text-white" fill="currentColor" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[14px] font-semibold text-neutral-900 leading-tight truncate">AI 创作平台</p>
+            <p className="text-[10px] text-neutral-400 leading-tight">Powered by GPT</p>
+          </div>
+        </div>
+
+        {/* 主导航 */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+          <p className="text-[10px] text-neutral-400 uppercase tracking-wider px-2 mb-2 font-medium">创作</p>
+          {NAV_PRIMARY.map((item) => (
+            <SidebarLink key={item.to} item={item} onClick={handleNav} />
+          ))}
+
+          <div className="my-3 h-px bg-neutral-100 mx-2" />
+
+          <p className="text-[10px] text-neutral-400 uppercase tracking-wider px-2 mb-2 font-medium">账户</p>
+          {NAV_SECONDARY.map((item) => (
+            <SidebarLink key={item.to} item={item} onClick={handleNav} />
+          ))}
         </nav>
 
-        <div className="mb-3 flex flex-col items-center gap-2">
-          {NAV_ITEMS.slice(7).map((item) => <RailLink key={item.to} item={item} onClick={handleNav} />)}
+        {/* 底部用户区 */}
+        <div className="border-t border-neutral-100 p-3">
           {isAuthed ? (
-            <>
+            <div className="space-y-1">
+              {/* 点数显示 */}
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-[#F0F4FF]">
+                <Zap size={13} className="text-[#002FA7] shrink-0" />
+                <span className="text-xs text-[#002FA7] font-medium flex-1 truncate">
+                  {fmtPoints(points)} 点可用
+                </span>
+              </div>
+              {/* 用户信息 */}
               <button
                 type="button"
-                className="grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-xs font-semibold text-white"
-                title={me?.username || me?.email || '我的账号'}
                 onClick={() => navigate('/settings')}
+                className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg hover:bg-neutral-50 transition text-left"
               >
-                {(me?.username || me?.email || 'U').slice(0, 1).toUpperCase()}
+                <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[12px] font-semibold text-white"
+                     style={{ background: 'var(--gia-gradient)' }}>
+                  {avatarLetter}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-neutral-800 truncate leading-tight">
+                    {me?.username || me?.email || '我的账号'}
+                  </p>
+                  <p className="text-[10px] text-neutral-400 leading-tight flex items-center gap-1">
+                    <Settings size={9} />
+                    账号设置
+                  </p>
+                </div>
               </button>
+              {/* 退出 */}
               <button
                 type="button"
-                className="grid h-8 w-8 place-items-center rounded-full text-neutral-600 hover:bg-neutral-100"
-                title="退出登录"
                 onClick={onLogout}
+                className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg hover:bg-red-50 text-neutral-500 hover:text-red-600 transition text-xs"
               >
-                <LogOut size={17} />
+                <LogOut size={13} />
+                退出登录
               </button>
-            </>
+            </div>
           ) : (
             <button
               type="button"
-              className="grid h-8 w-8 place-items-center rounded-full text-neutral-600 hover:bg-neutral-100"
-              title="登录"
               onClick={() => openGate({ hint: '登录后可保存作品和查看额度' })}
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-white transition hover:opacity-90 active:scale-[.98]"
+              style={{ background: 'var(--gia-gradient)' }}
             >
-              <LogIn size={17} />
+              <LogIn size={15} />
+              登录 / 注册
             </button>
           )}
         </div>
-        <div className="mb-2 flex flex-col items-center gap-1 text-[11px] text-neutral-400">
-          <span>{APP_VERSION}</span>
-        </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-neutral-200 bg-white/90 px-3 backdrop-blur lg:hidden">
-        <button className="grid h-9 w-9 place-items-center rounded-full hover:bg-neutral-100" onClick={() => navigate('/create/image')}>
-          <PanelLeft size={18} />
-        </button>
-        <div className="flex items-center gap-1">
-          {NAV_ITEMS.slice(0, 3).map((item) => <MobileMode key={item.to} item={item} onClick={handleNav} />)}
+      {/* ═══════════════ 移动端顶部 Header ═══════════════ */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-30 h-12 bg-white border-b border-neutral-200 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+               style={{ background: 'var(--gia-gradient)' }}>
+            <Zap size={13} className="text-white" fill="currentColor" />
+          </div>
+          <span className="text-sm font-semibold text-neutral-900">AI 创作平台</span>
         </div>
-        <button className="grid h-9 w-9 place-items-center rounded-full hover:bg-neutral-100" onClick={() => navigate('/history')}>
-          <Search size={18} />
-        </button>
-      </header>
+        <div className="flex items-center gap-1">
+          {[NAV_PRIMARY[0]!, NAV_PRIMARY[1]!, NAV_PRIMARY[2]!].map((item) => (
+            <MobileTab key={item.to} item={item} onClick={handleNav} />
+          ))}
+        </div>
+        {isAuthed ? (
+          <button onClick={() => navigate('/settings')}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-semibold text-white"
+            style={{ background: 'var(--gia-gradient)' }}>
+            {avatarLetter}
+          </button>
+        ) : (
+          <button onClick={() => openGate({})}
+            className="text-xs px-3 py-1.5 rounded-full font-medium text-white"
+            style={{ background: 'var(--gia-gradient)' }}>
+            登录
+          </button>
+        )}
+      </div>
 
-      <main className="min-h-screen lg:pl-14">
-        <Outlet />
+      {/* ═══════════════ 内容区 ═══════════════ */}
+      <main className="flex-1 overflow-hidden lg:overflow-auto pt-0 lg:pt-0">
+        <div className="h-full lg:h-auto pt-12 lg:pt-0 overflow-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
 }
 
-function RailLink({ item, onClick }: { item: NavItem; onClick: (item: NavItem, e: MouseEvent) => void }) {
+/* ── 侧边栏导航项 ── */
+function SidebarLink({ item, onClick }: { item: NavItem; onClick: (item: NavItem, e: MouseEvent) => void }) {
   const Icon = item.icon;
   return (
     <NavLink
@@ -147,17 +204,25 @@ function RailLink({ item, onClick }: { item: NavItem; onClick: (item: NavItem, e
       onClick={(e) => onClick(item, e)}
       className={({ isActive }) =>
         clsx(
-          'grid h-9 w-9 place-items-center rounded-full transition',
-          isActive ? 'bg-neutral-950 text-white' : 'text-neutral-650 hover:bg-neutral-100 hover:text-neutral-950',
+          'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-all duration-150',
+          isActive
+            ? 'text-[#002FA7] bg-[#EEF2FF] font-medium'
+            : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50',
         )
       }
     >
-      <Icon size={18} />
+      {({ isActive }) => (
+        <>
+          <Icon size={16} className={isActive ? 'text-[#002FA7]' : 'text-neutral-500'} />
+          <span>{item.label}</span>
+        </>
+      )}
     </NavLink>
   );
 }
 
-function MobileMode({ item, onClick }: { item: NavItem; onClick: (item: NavItem, e: MouseEvent) => void }) {
+/* ── 移动端 Tab ── */
+function MobileTab({ item, onClick }: { item: NavItem; onClick: (item: NavItem, e: MouseEvent) => void }) {
   const Icon = item.icon;
   return (
     <NavLink
@@ -165,12 +230,12 @@ function MobileMode({ item, onClick }: { item: NavItem; onClick: (item: NavItem,
       onClick={(e) => onClick(item, e)}
       className={({ isActive }) =>
         clsx(
-          'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm',
-          isActive ? 'bg-neutral-950 text-white' : 'text-neutral-700 hover:bg-neutral-100',
+          'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition',
+          isActive ? 'bg-[#002FA7] text-white font-medium' : 'text-neutral-600 hover:bg-neutral-100',
         )
       }
     >
-      <Icon size={15} />
+      <Icon size={13} />
       {item.label}
     </NavLink>
   );

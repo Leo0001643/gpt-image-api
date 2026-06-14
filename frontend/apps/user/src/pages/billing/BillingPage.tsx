@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Gift, Sparkles, Wallet } from 'lucide-react';
+import { CreditCard, Gift, Loader2, Sparkles, TrendingUp, Wallet, Zap } from 'lucide-react';
+import clsx from 'clsx';
 
 import { ApiError } from '../../lib/api';
 import { fmtBiz, fmtPoints, fmtTime, pointsClass } from '../../lib/format';
@@ -9,9 +10,9 @@ import { useAuthStore } from '../../stores/auth';
 import { toast } from '../../stores/toast';
 
 export default function BillingPage() {
-  const me = useAuthStore((s) => s.me);
+  const me        = useAuthStore((s) => s.me);
   const refreshMe = useAuthStore((s) => s.refreshMe);
-  const qc = useQueryClient();
+  const qc        = useQueryClient();
 
   const [page, setPage] = useState(1);
   const logsQ = useQuery({
@@ -32,146 +33,196 @@ export default function BillingPage() {
     onError: (e) => toast.error(e instanceof ApiError ? e.message : '兑换失败'),
   });
 
-  const stats = [
-    { label: '可用点数', value: fmtPoints(me?.points ?? 0), accent: true },
-    { label: '冻结点数', value: fmtPoints(me?.frozen_points ?? 0) },
-    { label: '当前套餐', value: me?.plan_code?.toUpperCase() ?? 'FREE' },
-    { label: '邀请码', value: me?.invite_code ?? '—' },
-  ];
-
-  const logs = logsQ.data?.list ?? [];
-  const total = logsQ.data?.total ?? 0;
-  const pageSize = logsQ.data?.page_size ?? 20;
+  const logs       = logsQ.data?.list ?? [];
+  const total      = logsQ.data?.total ?? 0;
+  const pageSize   = logsQ.data?.page_size ?? 20;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">余额明细</h1>
-          <p className="page-subtitle">点数变动、兑换码、充值套餐都在这里管理。</p>
-        </div>
-      </header>
+    <div className="min-h-screen" style={{ background: '#F5F6FA' }}>
+      <div className="max-w-4xl mx-auto px-5 py-6">
 
-      <div className="stat-grid mb-6">
-        {stats.map((s) => (
-          <div key={s.label} className={`stat-tile ${s.accent ? 'stat-tile-accent' : ''}`}>
-            <p className="stat-label">{s.label}</p>
-            <p className="stat-value">{s.value}</p>
+        {/* 页头 */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+               style={{ background: 'var(--gia-gradient)' }}>
+            <CreditCard size={17} className="text-white" />
           </div>
-        ))}
-      </div>
-
-      <section className="grid gap-4 mb-6 lg:grid-cols-2">
-        <div className="card card-section">
-          <header className="section-header mb-3">
-            <span className="section-title">
-              <Gift size={18} className="text-gia-500" />
-              兑换码 CDK
-            </span>
-          </header>
-          <p className="text-small text-text-secondary mb-4 leading-loose">
-            输入活动码或邀请码即可立刻到账点数；同一个兑换码不可重复使用。
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              className="input"
-              placeholder="例如：GPT2API-2026-WELCOME"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              maxLength={32}
-            />
-            <button
-              className="btn btn-primary btn-lg whitespace-nowrap"
-              disabled={code.trim().length < 4 || redeemMut.isPending}
-              onClick={() => redeemMut.mutate()}
-              type="button"
-            >
-              {redeemMut.isPending ? '兑换中…' : '立即兑换'}
-            </button>
+          <div>
+            <h1 className="text-[18px] font-semibold text-neutral-900 leading-tight">充值 & 余额</h1>
+            <p className="text-xs text-neutral-400 mt-0.5">管理你的点数、兑换码和消费记录</p>
           </div>
         </div>
 
-        <div className="card-tinted card-section">
-          <header className="section-header mb-3">
-            <span className="section-title">
-              <Sparkles size={18} className="text-gia-500" />
-              充值套餐
-            </span>
-            <span className="badge badge-gia">即将上线</span>
-          </header>
-          <p className="text-small text-text-secondary mb-4 leading-loose">
-            支付通道（微信 / 支付宝 / Stripe）正在开发中，当前请通过 CDK 或邀请获得点数。
-          </p>
-          <button className="btn btn-outline btn-md" disabled type="button">
-            敬请期待
-          </button>
-          <p className="mt-3 text-small text-text-tertiary leading-loose">
-            冻结点数不会按时间自动释放，它只会在任务成功结算时转为已消费，或在任务失败、超时后自动退款解冻。
-          </p>
-        </div>
-      </section>
-
-      <section className="card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
-          <span className="section-title">
-            <Wallet size={16} className="text-text-tertiary" />
-            最近交易
-          </span>
-          <span className="text-small text-text-tertiary">共 {total} 条</span>
-        </div>
-        <div className="divide-y divide-border">
-          {logsQ.isLoading && (
-            <p className="px-5 py-10 text-center text-text-tertiary text-small">加载中...</p>
-          )}
-          {!logsQ.isLoading && logs.length === 0 && (
-            <div className="empty-state">
-              <span className="empty-state-icon">
-                <Wallet size={22} />
-              </span>
-              <p className="empty-state-title">暂无流水记录</p>
-              <p className="empty-state-desc">兑换 CDK、生成图片或视频后，相关账单会在此呈现。</p>
-            </div>
-          )}
-          {logs.map((l) => (
-            <div key={l.id} className="list-row">
-              <div className="min-w-0">
-                <p className="font-medium text-text-primary truncate">
-                  {fmtBiz(l.biz_type)}
-                  {l.remark ? ` · ${l.remark}` : ''}
-                </p>
-                <p className="text-small text-text-tertiary mt-0.5">{fmtTime(l.created_at)}</p>
+        {/* KPI 卡片组 */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {/* 可用点数 - 主卡 */}
+          <div className="col-span-2 lg:col-span-1 rounded-2xl p-4 text-white relative overflow-hidden"
+               style={{ background: 'var(--gia-gradient)' }}>
+            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/10 -translate-y-6 translate-x-6" />
+            <div className="relative">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Zap size={13} className="text-white/80" />
+                <p className="text-xs text-white/80 font-medium">可用点数</p>
               </div>
-              <p className={`font-bold whitespace-nowrap ${pointsClass(l.direction)}`}>
-                {l.direction > 0 ? '+' : '-'} {fmtPoints(Math.abs(l.points))} 点
+              <p className="text-[26px] font-bold leading-tight tabular-nums">
+                {fmtPoints(me?.points ?? 0)}
               </p>
+              <p className="text-[11px] text-white/60 mt-1">点</p>
+            </div>
+          </div>
+
+          {[
+            { icon: TrendingUp, label: '冻结点数', value: fmtPoints(me?.frozen_points ?? 0), unit: '点', hint: '进行中的任务' },
+            { icon: Sparkles,   label: '当前套餐', value: me?.plan_code?.toUpperCase() ?? 'FREE', unit: '', hint: '订阅计划' },
+            { icon: Gift,       label: '邀请码',   value: me?.invite_code ?? '—', unit: '', hint: '分享给好友' },
+          ].map(({ icon: Icon, label, value, unit, hint }) => (
+            <div key={label} className="rounded-2xl bg-white border border-neutral-200 p-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Icon size={13} className="text-neutral-400" />
+                <p className="text-xs text-neutral-400 font-medium">{label}</p>
+              </div>
+              <p className="text-[20px] font-bold text-neutral-900 leading-tight truncate tabular-nums">{value}</p>
+              {unit && <p className="text-[11px] text-neutral-400 mt-1">{unit}</p>}
+              <p className="text-[10px] text-neutral-300 mt-1">{hint}</p>
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-4 text-sm">
-          <span className="text-text-tertiary">
-            第 {page} / {totalPages} 页，共 {total} 条
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="btn btn-outline btn-md"
-              disabled={page <= 1 || logsQ.isFetching}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              type="button"
-            >
-              上一页
-            </button>
-            <button
-              className="btn btn-outline btn-md"
-              disabled={page >= totalPages || logsQ.isFetching}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              type="button"
-            >
-              下一页
+
+        {/* 功能卡片区 */}
+        <div className="grid gap-4 mb-6 lg:grid-cols-2">
+          {/* 兑换码 */}
+          <div className="rounded-2xl bg-white border border-neutral-200 p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <Gift size={16} className="text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="text-[14px] font-semibold text-neutral-900">兑换码 CDK</h2>
+                <p className="text-[11px] text-neutral-400">输入兑换码立即到账</p>
+              </div>
+            </div>
+            <p className="text-xs text-neutral-500 mb-4 leading-relaxed">
+              输入活动码或邀请码即可立刻到账点数，同一个兑换码不可重复使用。
+            </p>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 h-10 px-3 rounded-xl border border-neutral-200 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:border-[#002FA7] focus:ring-2 focus:ring-[#002FA7]/10 transition bg-neutral-50 focus:bg-white uppercase"
+                placeholder="GPT2API-2026-XXXXXX"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                maxLength={32}
+                onKeyDown={(e) => e.key === 'Enter' && code.trim().length >= 4 && !redeemMut.isPending && redeemMut.mutate()}
+              />
+              <button
+                className="h-10 px-4 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition whitespace-nowrap flex items-center gap-1.5 hover:opacity-90"
+                style={{ background: 'var(--gia-gradient)' }}
+                disabled={code.trim().length < 4 || redeemMut.isPending}
+                onClick={() => redeemMut.mutate()}
+                type="button"
+              >
+                {redeemMut.isPending ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+                兑换
+              </button>
+            </div>
+          </div>
+
+          {/* 充值套餐 */}
+          <div className="rounded-2xl border border-dashed border-neutral-200 bg-gradient-to-br from-[#F0F4FF] to-white p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] flex items-center justify-center shrink-0">
+                <Sparkles size={16} className="text-[#002FA7]" />
+              </div>
+              <div>
+                <h2 className="text-[14px] font-semibold text-neutral-900">充值套餐</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#002FA7] text-white font-medium">即将上线</span>
+              </div>
+            </div>
+            <p className="text-xs text-neutral-500 mb-4 leading-relaxed">
+              微信 / 支付宝 / Stripe 支付通道正在开发中，当前请通过 CDK 兑换码获得点数。
+            </p>
+            <button className="h-9 px-4 rounded-xl border border-neutral-200 text-sm text-neutral-400 cursor-not-allowed bg-white" disabled>
+              敬请期待
             </button>
           </div>
         </div>
-      </section>
+
+        {/* 交易记录 */}
+        <div className="rounded-2xl bg-white border border-neutral-200 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+            <div className="flex items-center gap-2">
+              <Wallet size={15} className="text-neutral-400" />
+              <span className="text-sm font-semibold text-neutral-800">消费记录</span>
+            </div>
+            <span className="text-xs text-neutral-400">共 {total} 条</span>
+          </div>
+
+          {logsQ.isLoading && (
+            <div className="flex items-center justify-center gap-2 py-12 text-neutral-400">
+              <Loader2 size={18} className="animate-spin" />
+              <span className="text-sm">加载中…</span>
+            </div>
+          )}
+
+          {!logsQ.isLoading && logs.length === 0 && (
+            <div className="flex flex-col items-center py-12 gap-2 text-neutral-400">
+              <div className="w-12 h-12 rounded-2xl border border-dashed border-neutral-200 grid place-items-center">
+                <Wallet size={20} strokeWidth={1.5} className="text-neutral-300" />
+              </div>
+              <p className="text-sm font-medium text-neutral-500 mt-1">暂无消费记录</p>
+              <p className="text-xs text-neutral-400">生成图片或视频后，相关账单会在此呈现</p>
+            </div>
+          )}
+
+          {logs.length > 0 && (
+            <div className="divide-y divide-neutral-100">
+              {logs.map((l) => (
+                <div key={l.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-neutral-50 transition">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-neutral-800 truncate">
+                      {fmtBiz(l.biz_type)}
+                      {l.remark ? <span className="text-neutral-400 font-normal"> · {l.remark}</span> : ''}
+                    </p>
+                    <p className="text-xs text-neutral-400 mt-0.5">{fmtTime(l.created_at)}</p>
+                  </div>
+                  <p className={clsx('text-sm font-bold whitespace-nowrap ml-4 tabular-nums', pointsClass(l.direction))}>
+                    {l.direction > 0 ? '+' : '-'}{fmtPoints(Math.abs(l.points))} 点
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 分页 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 border-t border-neutral-100 px-5 py-4">
+              <span className="text-xs text-neutral-400">第 {page} / {totalPages} 页</span>
+              <div className="flex items-center gap-2">
+                <button
+                  className={clsx(
+                    'px-3 py-1.5 rounded-lg border text-xs transition',
+                    page <= 1 || logsQ.isFetching
+                      ? 'border-neutral-200 text-neutral-300 cursor-not-allowed'
+                      : 'border-neutral-200 text-neutral-600 hover:border-[#002FA7] hover:text-[#002FA7]',
+                  )}
+                  disabled={page <= 1 || logsQ.isFetching}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >上一页</button>
+                <button
+                  className={clsx(
+                    'px-3 py-1.5 rounded-lg border text-xs transition',
+                    page >= totalPages || logsQ.isFetching
+                      ? 'border-neutral-200 text-neutral-300 cursor-not-allowed'
+                      : 'border-neutral-200 text-neutral-600 hover:border-[#002FA7] hover:text-[#002FA7]',
+                  )}
+                  disabled={page >= totalPages || logsQ.isFetching}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >下一页</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
