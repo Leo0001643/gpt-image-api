@@ -538,14 +538,14 @@ export default function TokenAccountsPage() {
                         <Activity size={13} className={testMut.isPending && testMut.variables === item.id ? 'animate-pulse' : ''}/>
                         {testMut.isPending && testMut.variables === item.id ? '测试中' : '测试'}
                       </button>
-                      {isOAuth && (
+                      {isOAuth && item.has_refresh_token && (
                         <button
                           className="btn btn-outline btn-xs"
                           onClick={() => refreshOAuthMut.mutate(item.id)}
                           disabled={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id}
                         >
                           <RotateCw size={13} className={refreshOAuthMut.isPending && refreshOAuthMut.variables === item.id ? 'animate-spin' : ''}/>
-                          刷新
+                          刷新 RT
                         </button>
                       )}
                       <button className="btn btn-outline btn-action-edit btn-xs" onClick={() => setEditTarget(item)}>

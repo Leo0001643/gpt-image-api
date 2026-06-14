@@ -852,7 +852,9 @@ func (s *AccountTestService) RefreshOAuth(ctx context.Context, account *model.Ac
 		rt = cred
 	}
 	if rt == "" {
-		return nil, errcode.InvalidParam.WithMsg("账号未配置 refresh_token")
+		return nil, errcode.InvalidParam.WithMsg(
+			"此账号未配置 Refresh Token，无法自动刷新。" +
+				"若使用 ChatGPT 网页 Session Token，请直接在编辑页面手动更新 Access Token。")
 	}
 
 	// If "rt" is itself a JWT it is a session token / access token, NOT an
