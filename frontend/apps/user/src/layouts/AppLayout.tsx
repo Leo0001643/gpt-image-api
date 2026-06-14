@@ -1,5 +1,5 @@
-import type { MouseEvent } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Suspense, type MouseEvent } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Clock3,
@@ -49,6 +49,7 @@ export function AppLayout() {
   const logout   = useAuthStore((s) => s.logout);
   const openGate = useLoginGateStore((s) => s.openGate);
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuthed = !!token;
 
   const onLogout = async () => {
@@ -185,11 +186,37 @@ export function AppLayout() {
       </div>
 
       {/* ═══════════════ 内容区 ═══════════════ */}
-      <main className="flex-1 overflow-hidden lg:overflow-auto pt-0 lg:pt-0">
-        <div className="h-full lg:h-auto pt-12 lg:pt-0 overflow-auto">
-          <Outlet />
-        </div>
+      <main className="flex-1 min-w-0 overflow-hidden">
+        {/* Suspense 在内容区内部，侧边栏始终可见 */}
+        <Suspense fallback={<PageSkeleton />}>
+          {/* key 变化时触发 CSS 入场动画 */}
+          <div key={location.pathname} className="page-enter h-full pt-12 lg:pt-0 overflow-auto">
+            <Outlet />
+          </div>
+        </Suspense>
       </main>
+    </div>
+  );
+}
+
+/* ── 页面骨架屏（仅在内容区显示，侧边栏不受影响） ── */
+function PageSkeleton() {
+  return (
+    <div className="h-full pt-12 lg:pt-0 overflow-hidden p-6 space-y-4 animate-pulse">
+      {/* 模拟页头 */}
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-neutral-100" />
+        <div className="space-y-1.5">
+          <div className="h-4 w-32 rounded-lg bg-neutral-100" />
+          <div className="h-3 w-20 rounded-lg bg-neutral-100" />
+        </div>
+      </div>
+      {/* 模拟内容卡片 */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 mt-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="aspect-square rounded-2xl bg-neutral-100" />
+        ))}
+      </div>
     </div>
   );
 }

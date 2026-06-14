@@ -23,35 +23,36 @@ export default function App() {
     <>
       <Toaster />
       <LoginGate />
-      <Suspense fallback={<LoadingScreen />}>
-        <Routes>
-          {/* 独立的全屏品牌登录/注册页（保留兜底入口） */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+      <Routes>
+        {/* 登录/注册页：独立全屏，使用自己的 Suspense */}
+        <Route element={
+          <Suspense fallback={<LoadingScreen />}>
+            <AuthLayout />
+          </Suspense>
+        }>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Route>
+
+        {/* 主应用：AppLayout 内部自己处理 Suspense，侧边栏始终可见 */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Navigate to="/create/image" replace />} />
+          <Route path="/create/image" element={<CreateStudioPage />} />
+          <Route path="/create/text" element={<CreateStudioPage />} />
+          <Route path="/create/video" element={<CreateStudioPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+
+          <Route element={<RequireAuth />}>
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/billing" element={<BillingPage />} />
+            <Route path="/keys" element={<KeysPage />} />
+            <Route path="/invite" element={<InvitePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
+        </Route>
 
-          {/* 主应用：未登录也可浏览创作页 / 调用说明 */}
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/create/image" replace />} />
-            <Route path="/create/image" element={<CreateStudioPage />} />
-            <Route path="/create/text" element={<CreateStudioPage />} />
-            <Route path="/create/video" element={<CreateStudioPage />} />
-            <Route path="/docs" element={<DocsPage />} />
-
-            {/* 受保护：未登录将弹浮层并退回首页 */}
-            <Route element={<RequireAuth />}>
-              <Route path="/history" element={<HistoryPage />} />
-              <Route path="/billing" element={<BillingPage />} />
-              <Route path="/keys" element={<KeysPage />} />
-              <Route path="/invite" element={<InvitePage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
-          </Route>
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }
