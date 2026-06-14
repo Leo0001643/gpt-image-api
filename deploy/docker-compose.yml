@@ -111,6 +111,7 @@ services:
     expose: ["17188"]
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
+      - /opt/gpt-image-api/images:/app/images:ro
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }

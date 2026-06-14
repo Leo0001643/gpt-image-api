@@ -199,7 +199,13 @@ export default function HistoryPage() {
           <>
             <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr))]">
               {items.map((t) => (
-                <TaskCard key={t.task_id} t={t} onPreview={() => setPreview(createPreview(t))} />
+                <TaskCard
+                  key={t.task_id}
+                  t={t}
+                  onPreview={t.status === 2 && (t.results?.length ?? 0) > 0
+                    ? () => setPreview(createPreview(t))
+                    : undefined}
+                />
               ))}
             </div>
 
@@ -259,21 +265,27 @@ export default function HistoryPage() {
 }
 
 /* ── 任务卡片 ── */
-function TaskCard({ t, onPreview }: { t: GenerationTask; onPreview: () => void }) {
+function TaskCard({ t, onPreview }: { t: GenerationTask; onPreview?: () => void }) {
   const primary       = t.results?.[0];
   const cover         = primary?.thumb_url || primary?.url || '';
   const isVideo       = t.kind === 'video';
-  const resolvedCover = useAuthedMediaUrl(cover);
+  const { url: resolvedCover } = useAuthedMediaUrl(cover);
   const error         = t.status === 3 ? t.error?.trim() || '生成失败' : '';
   const imageCount    = (t.results?.length ?? 0);
+  const clickable     = !!onPreview;
 
   return (
     <article
-      className="group overflow-hidden rounded-2xl bg-white border border-neutral-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-      role="button"
-      tabIndex={0}
-      onClick={onPreview}
-      onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') onPreview(); }}
+      className={clsx(
+        'group overflow-hidden rounded-2xl bg-white border border-neutral-200 shadow-sm transition-all duration-200',
+        clickable
+          ? 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
+          : 'cursor-default',
+      )}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? onPreview : undefined}
+      onKeyDown={clickable ? (ev) => { if (ev.key === 'Enter' || ev.key === ' ') onPreview?.(); } : undefined}
     >
       {/* 封面 */}
       <div className="relative aspect-square overflow-hidden bg-neutral-100">
@@ -345,7 +357,7 @@ function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: 
   const [idx, setIdx]             = useState(0);
   const total                     = preview.srcs.length;
   const currentSrc                = preview.srcs[idx] ?? '';
-  const blobUrl                   = useAuthedMediaUrl(currentSrc);
+  const { url: blobUrl, loading: mediaLoading } = useAuthedMediaUrl(currentSrc);
   const [copying,     setCopying]     = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -433,10 +445,14 @@ function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: 
             {preview.kind === 'video' ? (
               blobUrl
                 ? <video src={blobUrl} controls className="max-h-[70vh] w-full object-contain" />
-                : <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><Loader2 className="animate-spin" size={24} /><span className="text-sm">正在加载</span></div>
+                : mediaLoading
+                  ? <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><Loader2 className="animate-spin" size={24} /><span className="text-sm">正在加载</span></div>
+                  : <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><VideoIcon size={28} strokeWidth={1.5} /><span className="text-sm">视频加载失败</span></div>
             ) : blobUrl
               ? <img src={blobUrl} alt={preview.prompt || preview.model} className="max-h-[70vh] max-w-full object-contain" />
-              : <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><Loader2 className="animate-spin" size={24} /><span className="text-sm">正在加载</span></div>
+              : mediaLoading
+                ? <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><Loader2 className="animate-spin" size={24} /><span className="text-sm">正在加载</span></div>
+                : <div className="flex flex-col items-center gap-2 py-16 text-neutral-400"><ImageIcon size={28} strokeWidth={1.5} /><span className="text-sm">图片加载失败</span><span className="text-xs text-neutral-300">文件可能已过期或不存在</span></div>
             }
 
             {/* 左右翻页按钮 */}
@@ -487,7 +503,7 @@ function PreviewModal({ preview, onClose }: { preview: HistoryPreview; onClose: 
 
 /* ── 缩略图导航 ── */
 function ThumbNav({ src, active, onClick }: { src: string; active: boolean; onClick: () => void }) {
-  const blobUrl = useAuthedMediaUrl(src);
+  const { url: blobUrl, loading } = useAuthedMediaUrl(src);
   return (
     <button
       className={clsx(
@@ -498,7 +514,12 @@ function ThumbNav({ src, active, onClick }: { src: string; active: boolean; onCl
     >
       {blobUrl
         ? <img src={blobUrl} alt="" className="w-full h-full object-cover" />
-        : <div className="w-full h-full bg-neutral-100 grid place-items-center"><Loader2 size={10} className="animate-spin text-neutral-300" /></div>
+        : <div className="w-full h-full bg-neutral-100 grid place-items-center">
+            {loading
+              ? <Loader2 size={10} className="animate-spin text-neutral-300" />
+              : <ImageIcon size={10} className="text-neutral-300" />
+            }
+          </div>
       }
     </button>
   );
@@ -541,12 +562,14 @@ function DeleteConfirmDialog({ scope, loading, onClose, onConfirm }: {
 }
 
 /* ── hooks / utils ── */
-function useAuthedMediaUrl(src?: string) {
-  const [url, setUrl] = useState<string>('');
+function useAuthedMediaUrl(src?: string): { url: string; loading: boolean } {
+  const [url,     setUrl]     = useState<string>('');
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
-    if (!src) { setUrl(''); return; }
-    if (src.startsWith('data:')) { setUrl(src); return; }
+    if (!src) { setUrl(''); setLoading(false); return; }
+    if (src.startsWith('data:')) { setUrl(src); setLoading(false); return; }
     let alive = true; let objectUrl = '';
+    setLoading(true);
     (async () => {
       try {
         const token = loadToken();
@@ -559,10 +582,11 @@ function useAuthedMediaUrl(src?: string) {
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
       } catch { if (alive) setUrl(''); }
+      finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [src]);
-  return url;
+  return { url, loading };
 }
 
 async function fetchAuthedFile(src: string) {
