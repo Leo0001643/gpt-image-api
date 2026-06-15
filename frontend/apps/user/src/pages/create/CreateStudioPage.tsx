@@ -238,6 +238,14 @@ export default function CreateStudioPage() {
     queryKey: ['gen.history', 'studio', token, historyPageSize],
     enabled: !!token,
     queryFn: () => genApi.history({ kind: 'media', page: 1, page_size: historyPageSize }),
+    // Auto-refresh when history contains in-progress tasks from a previous session.
+    // The active-task pollRef only tracks the current-session task; tasks reopened
+    // from history (status 0 or 1) would otherwise stay stuck until a page reload.
+    refetchInterval: (query) => {
+      if (pollRef.current) return false; // current-session poll is handling updates
+      const list = (query.state.data as { list?: { status: number }[] } | undefined)?.list ?? [];
+      return list.some((t) => t.status === 0 || t.status === 1) ? 2000 : false;
+    },
   });
 
   const deleteHistory = useMutation({

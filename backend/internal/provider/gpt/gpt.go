@@ -336,6 +336,8 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 		logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.bootstrap", Method: "GET", URL: base + "/", Error: err.Error()})
 		return nil, err
 	}
+	// Mimic natural browser pacing: pause between page load and first API call.
+	webHumanDelay(ctx)
 	reqs, err := p.webRequirements(ctx, client, base, fp, req.Credential)
 	if err != nil {
 		logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.requirements", Method: "POST", URL: base + "/backend-api/sentinel/chat-requirements", Error: err.Error()})
@@ -348,6 +350,8 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 		URL:      base + "/backend-api/sentinel/chat-requirements",
 		Meta:     map[string]any{"has_token": reqs.Token != "", "has_proof_token": reqs.ProofToken != "", "has_so_token": reqs.SOToken != ""},
 	})
+	// Pause between sentinel token fetch and first conversation API call.
+	webHumanDelay(ctx)
 	refs := make([]webUploadMeta, 0, len(req.RefAssets))
 	for i, ref := range req.RefAssets {
 		meta, err := p.webUploadImage(ctx, client, base, fp, req.Credential, strings.TrimSpace(ref), fmt.Sprintf("image_%d.png", i+1))
@@ -397,6 +401,11 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 		)
 
 		for mi, webModel := range modelsToTry {
+			// On model fallback (mi > 0) add a short pause before retrying with
+			// the next candidate – avoids rapid consecutive conversation attempts.
+			if mi > 0 {
+				webHumanDelay(ctx)
+			}
 			conduit, err := p.webPrepareImageConversation(ctx, client, base, fp, req.Credential, reqs, prompt, webModel, refs)
 			if err != nil {
 				logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.prepare", Method: "POST", URL: base + "/backend-api/f/conversation/prepare", Error: err.Error(), Meta: map[string]any{"web_model": webModel}})
@@ -908,6 +917,21 @@ func newWebFP(credential string) webFP {
 func stableDeviceID(credential string) string {
 	h := sha3.Sum256([]byte("oai-device-v1:" + credential))
 	return fmt.Sprintf("%x-%x-%x-%x-%x", h[0:4], h[4:6], h[6:8], h[8:10], h[10:16])
+}
+
+// webHumanDelay inserts a short randomised pause (800 ms – 2.5 s) between
+// consecutive ChatGPT web API calls.  Real browsers introduce natural latency
+// between requests (DOM rendering, user think-time, etc.).  A machine that
+// fires back-to-back requests with zero gap is a strong bot signal detected by
+// Cloudflare's behavioural analysis layer.
+func webHumanDelay(ctx context.Context) {
+	ms := 800 + rand.Intn(1700) // 800–2499 ms
+	t := time.NewTimer(time.Duration(ms) * time.Millisecond)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+	case <-t.C:
+	}
 }
 
 func (p *Provider) webBootstrap(ctx context.Context, client *http.Client, base string, fp webFP) error {

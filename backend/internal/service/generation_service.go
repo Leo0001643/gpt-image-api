@@ -1450,6 +1450,12 @@ func retryableProviderError(err error) bool {
 		isUsageLimitReachedError(err) ||
 		strings.Contains(msg, "http 429") ||
 		strings.Contains(msg, "too many requests") ||
+		// Network-level transient failures: worth retrying once (may succeed on a
+		// fresh TCP connection).  The account cooldown logic handles persistent bans.
+		strings.Contains(msg, "connection reset") ||
+		strings.Contains(msg, "connection refused") ||
+		strings.Contains(msg, "i/o timeout") ||
+		strings.Contains(msg, "eof") ||
 		isGrokRetryableForbiddenError(msg)
 }
 
@@ -1515,10 +1521,15 @@ func providerCooldown(err error) time.Duration {
 	case strings.Contains(msg, "http 403"), strings.Contains(msg, "forbidden"),
 		strings.Contains(msg, "cloudflare"), strings.Contains(msg, "just a moment"),
 		strings.Contains(msg, "anti-bot"), strings.Contains(msg, "request rejected"),
-		// ChatGPT web "Unusual activity has been detected from your device"
-		// must rest the account for several hours or the ban persists.
+		// ChatGPT "Unusual activity detected" — account needs a multi-hour rest.
 		strings.Contains(msg, "unusual activity"):
 		return 2 * time.Hour
+	// TCP-level rejection: IP blocked or transient network error.
+	// A shorter cooldown lets us retry on a potential new connection while not
+	// hammering the endpoint too frequently.
+	case strings.Contains(msg, "connection reset"), strings.Contains(msg, "connection refused"),
+		strings.Contains(msg, "i/o timeout"), strings.Contains(msg, "eof"):
+		return 15 * time.Minute
 	default:
 		return 10 * time.Minute
 	}
