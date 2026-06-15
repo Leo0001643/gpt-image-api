@@ -1514,9 +1514,10 @@ func providerCooldown(err error) time.Duration {
 		return 30 * time.Minute
 	case strings.Contains(msg, "http 403"), strings.Contains(msg, "forbidden"),
 		strings.Contains(msg, "cloudflare"), strings.Contains(msg, "just a moment"),
-		strings.Contains(msg, "anti-bot"), strings.Contains(msg, "request rejected"):
-		return 2 * time.Hour
-	case strings.Contains(msg, "anti-bot"), strings.Contains(msg, "request rejected"):
+		strings.Contains(msg, "anti-bot"), strings.Contains(msg, "request rejected"),
+		// ChatGPT web "Unusual activity has been detected from your device"
+		// must rest the account for several hours or the ban persists.
+		strings.Contains(msg, "unusual activity"):
 		return 2 * time.Hour
 	default:
 		return 10 * time.Minute
