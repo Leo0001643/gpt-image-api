@@ -74,9 +74,11 @@ func main() {
 			DB:       deps.Cfg.Redis.DB,
 		},
 		asynq.Config{
-			Concurrency: 16,
+			// gen 队列并发固定为 8（内部 pickWithWait 会等待空闲账号，避免立即失败）
+			Concurrency: 20,
 			Queues: map[string]int{
 				"critical": 6,
+				"gen":      8,
 				"default":  3,
 				"low":      1,
 			},

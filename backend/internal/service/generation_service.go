@@ -183,7 +183,11 @@ func (s *GenerationService) dispatch(t *model.GenerationTask) {
 		if t.Kind == "video" {
 			taskType = "gen:video"
 		}
-		task := asynq.NewTask(taskType, payload, asynq.Queue("default"), asynq.MaxRetry(0))
+		task := asynq.NewTask(taskType, payload,
+			asynq.Queue("gen"),
+			asynq.MaxRetry(0),
+			asynq.Timeout(30*time.Minute),
+		)
 		if _, err := s.asynqClient.Enqueue(task); err != nil {
 			logger.L().Warn("gen.dispatch.enqueue_failed",
 				zap.String("task", t.TaskID),
@@ -247,12 +251,19 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 		}
 	}
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		picked, err := s.pickAccountForTask(ctx, t, params)
-		if err != nil {
+		// 首次 pick 带等待（账号全忙时最多等 25 分钟），重试时只 pick 一次（此时 lastErr 非空）。
+		var picked *model.Account
+		var pickErr error
+		if attempt == 1 {
+			picked, pickErr = s.pickWithWait(ctx, t, params)
+		} else {
+			picked, pickErr = s.pickAccountForTask(ctx, t, params)
+		}
+		if pickErr != nil {
 			if lastErr != nil {
 				s.failTask(ctx, t, fmt.Sprintf("provider call: %v", lastErr))
 			} else {
-				s.failTask(ctx, t, fmt.Sprintf("pick account: %v", err))
+				s.failTask(ctx, t, fmt.Sprintf("pick account: %v", pickErr))
 			}
 			return
 		}
@@ -472,6 +483,51 @@ func (s *GenerationService) providerCredential(ctx context.Context, acc *model.A
 		return "", fmt.Errorf("account credential is empty")
 	}
 	return cred, nil
+}
+
+// pickWithWait 持续尝试拾取账号，若当前所有账号均被占用则等待后重试，直至超时。
+// 对于"暂无可用账号"（所有账号 busy）做短间隔重试；对于"池为空"则立即放弃。
+func (s *GenerationService) pickWithWait(ctx context.Context, t *model.GenerationTask, params map[string]any) (*model.Account, error) {
+	const (
+		maxWait  = 25 * time.Minute
+		interval = 15 * time.Second
+	)
+	deadline := time.Now().Add(maxWait)
+	waited := time.Duration(0)
+	log := logger.L().With(zap.String("task", t.TaskID))
+
+	for {
+		// 先检查是否已被取消
+		if fresh, err := s.repo.GetByTaskID(ctx, t.TaskID); err == nil && fresh.Status == model.GenStatusCancelled {
+			return nil, errcode.InvalidParam.WithMsg("任务已取消")
+		}
+
+		acc, err := s.pickAccountForTask(ctx, t, params)
+		if err == nil {
+			return acc, nil
+		}
+
+		// 如果不是"暂无可用账号"（即池本身为空或其他错误），直接返回
+		if err != errcode.NoAvailableAcc {
+			return nil, err
+		}
+
+		// 超时则放弃
+		if time.Now().After(deadline) {
+			return nil, err
+		}
+
+		log.Info("gen.pick.waiting_for_account",
+			zap.Duration("waited", waited),
+			zap.Duration("max_wait", maxWait),
+		)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(interval):
+			waited += interval
+		}
+	}
 }
 
 func (s *GenerationService) pickAccountForTask(ctx context.Context, t *model.GenerationTask, params map[string]any) (*model.Account, error) {
@@ -1299,11 +1355,14 @@ func (s *GenerationService) ReapStaleTasks(ctx context.Context, userID uint64) {
 		return
 	}
 	now := time.Now().UTC()
-	cutoff := now.Add(-1 * time.Hour)
+	// running 任务（已被 worker 拾取）超过 2h 视为卡死；
+	// pending 任务（等待账号中）超过 3h 视为永久无法调度。
+	runningCutoff := now.Add(-2 * time.Hour)
+	pendingCutoff := now.Add(-3 * time.Hour)
 	var tasks []*model.GenerationTask
 	q := s.db.WithContext(ctx).
 		Where("deleted_at IS NULL AND status IN ?", []int8{model.GenStatusPending, model.GenStatusRunning}).
-		Where("(started_at IS NOT NULL AND started_at < ?) OR (started_at IS NULL AND created_at < ?)", cutoff, cutoff).
+		Where("(started_at IS NOT NULL AND started_at < ?) OR (started_at IS NULL AND created_at < ?)", runningCutoff, pendingCutoff).
 		Order("id ASC").
 		Limit(200)
 	if userID > 0 {
