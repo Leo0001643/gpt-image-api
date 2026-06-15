@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -28,12 +29,13 @@ import (
 
 // Deps 启动后向业务层注入的依赖集合。
 type Deps struct {
-	Cfg     *config.Config
-	DB      *gorm.DB
-	Redis   *redis.Client
-	JWT     *jwtx.Manager
-	Limiter *ratelimit.Limiter
-	AES     *crypto.AESGCM
+	Cfg         *config.Config
+	DB          *gorm.DB
+	Redis       *redis.Client
+	JWT         *jwtx.Manager
+	Limiter     *ratelimit.Limiter
+	AES         *crypto.AESGCM
+	AsynqClient *asynq.Client
 }
 
 // Init 完整初始化（config / logger / mysql / redis / jwt / aes / snowflake）。
@@ -92,13 +94,24 @@ func Init(serviceName string) (*Deps, error) {
 		limiter = ratelimit.New(rdb)
 	}
 
+	var asynqClient *asynq.Client
+	if rdb != nil {
+		asynqOpt := asynq.RedisClientOpt{
+			Addr:     cfg.Redis.Addr,
+			Password: cfg.Redis.Password,
+			DB:       cfg.Redis.DB,
+		}
+		asynqClient = asynq.NewClient(asynqOpt)
+	}
+
 	return &Deps{
-		Cfg:     cfg,
-		DB:      db,
-		Redis:   rdb,
-		JWT:     jwtMgr,
-		Limiter: limiter,
-		AES:     aes,
+		Cfg:         cfg,
+		DB:          db,
+		Redis:       rdb,
+		JWT:         jwtMgr,
+		Limiter:     limiter,
+		AES:         aes,
+		AsynqClient: asynqClient,
 	}, nil
 }
 

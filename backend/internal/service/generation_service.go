@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -37,17 +38,28 @@ import (
 
 const codexOAuthClientID = "app_EMoamEEZ73f0CkXaXp7hrann"
 
+// GenTaskPayload asynq 任务 payload。
+type GenTaskPayload struct {
+	TaskID string `json:"task_id"`
+}
+
 // GenerationService 生成调度服务。
 type GenerationService struct {
-	db        *gorm.DB
-	repo      *repo.GenerationRepo
-	pool      *AccountPool
-	billing   *BillingService
-	providers map[string]provider.Provider // key: "gpt" / "grok"
-	priceFn   PriceFunc
-	aes       *crypto.AESGCM // 用于解密 account.credential_enc
-	proxySvc  *ProxyService
-	cfg       *SystemConfigService
+	db          *gorm.DB
+	repo        *repo.GenerationRepo
+	pool        *AccountPool
+	billing     *BillingService
+	providers   map[string]provider.Provider // key: "gpt" / "grok"
+	priceFn     PriceFunc
+	aes         *crypto.AESGCM // 用于解密 account.credential_enc
+	proxySvc    *ProxyService
+	cfg         *SystemConfigService
+	asynqClient *asynq.Client // 可选；非 nil 时改为异步入队
+}
+
+// SetAsynqClient 设置 asynq 客户端，使 Create() 改为异步入队。
+func (s *GenerationService) SetAsynqClient(c *asynq.Client) {
+	s.asynqClient = c
 }
 
 // PriceFunc 模型计费：返回单次成本（点 *100）。
@@ -159,12 +171,43 @@ func (s *GenerationService) Create(ctx context.Context, req CreateRequest) (*mod
 		}
 	}
 
-	go s.runTask(context.Background(), t)
+	s.dispatch(t)
 	return t, nil
+}
+
+// dispatch 将任务投递给 worker（有 asynq 客户端）或在本进程后台跑（降级）。
+func (s *GenerationService) dispatch(t *model.GenerationTask) {
+	if s.asynqClient != nil {
+		payload, _ := json.Marshal(GenTaskPayload{TaskID: t.TaskID})
+		taskType := "gen:image"
+		if t.Kind == "video" {
+			taskType = "gen:video"
+		}
+		task := asynq.NewTask(taskType, payload, asynq.Queue("default"), asynq.MaxRetry(0))
+		if _, err := s.asynqClient.Enqueue(task); err != nil {
+			logger.L().Warn("gen.dispatch.enqueue_failed",
+				zap.String("task", t.TaskID),
+				zap.Error(err),
+			)
+			// 回退到 goroutine
+			go s.runTask(context.Background(), t)
+		}
+		return
+	}
+	go s.runTask(context.Background(), t)
+}
+
+// RunTask 供 worker 调用的公开入口。
+func (s *GenerationService) RunTask(ctx context.Context, t *model.GenerationTask) {
+	s.runTask(ctx, t)
 }
 
 // runTask 后台执行：取池中账号 → 调 provider → 结算 / 退款。
 func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask) {
+	// 若任务已被取消（用户点了停止），直接退出，退款在 CancelTask 中已完成。
+	if fresh, err := s.repo.GetByTaskID(ctx, t.TaskID); err == nil && fresh.Status == model.GenStatusCancelled {
+		return
+	}
 	log := logger.L().With(zap.String("task", t.TaskID))
 
 	prov, ok := s.providers[t.Provider]
@@ -1219,6 +1262,33 @@ func (s *GenerationService) failTask(ctx context.Context, t *model.GenerationTas
 			logger.FromCtx(ctx).Warn("gen.fail.refund", zap.Error(err))
 		}
 	}
+}
+
+// CancelTask 用户主动取消任务：仅限 pending/running，成功后退款。
+func (s *GenerationService) CancelTask(ctx context.Context, taskID string, userID uint64) error {
+	t, err := s.repo.GetByTaskID(ctx, taskID)
+	if err != nil {
+		return errcode.InvalidParam.WithMsg("任务不存在")
+	}
+	if t.UserID != userID {
+		return errcode.Forbidden.WithMsg("无权操作")
+	}
+	if t.Status != model.GenStatusPending && t.Status != model.GenStatusRunning {
+		return errcode.InvalidParam.WithMsg("任务已完成，无法取消")
+	}
+	updated, err := s.repo.SetCancelled(ctx, taskID)
+	if err != nil {
+		return errcode.DBError.Wrap(err)
+	}
+	if !updated {
+		return errcode.InvalidParam.WithMsg("任务状态已变化，无法取消")
+	}
+	if t.CostPoints > 0 {
+		if rfErr := s.billing.FailRefund(ctx, taskID, "已取消"); rfErr != nil {
+			logger.L().Warn("gen.cancel.refund_failed", zap.String("task", taskID), zap.Error(rfErr))
+		}
+	}
+	return nil
 }
 
 // ReapStaleTasks closes tasks that were left pending/running after a restart or

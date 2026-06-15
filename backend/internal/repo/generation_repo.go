@@ -263,6 +263,19 @@ func (r *GenerationRepo) SetFailed(ctx context.Context, taskID, reason string) e
 		}).Error
 }
 
+// SetCancelled 取消任务（仅限 pending/running 状态）。返回是否实际更新了行。
+func (r *GenerationRepo) SetCancelled(ctx context.Context, taskID string) (bool, error) {
+	now := time.Now().UTC()
+	res := r.db.WithContext(ctx).Model(&model.GenerationTask{}).
+		Where("task_id = ? AND status IN ?", taskID, []int8{model.GenStatusPending, model.GenStatusRunning}).
+		Updates(map[string]any{
+			"status":      model.GenStatusCancelled,
+			"error":       "已取消",
+			"finished_at": now,
+		})
+	return res.RowsAffected > 0, res.Error
+}
+
 // UpdateCost updates final task cost after usage-based billing.
 func (r *GenerationRepo) UpdateCost(ctx context.Context, taskID string, cost int64) error {
 	if cost < 0 {

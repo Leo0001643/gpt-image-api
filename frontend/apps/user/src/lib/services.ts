@@ -101,4 +101,6 @@ export const genApi = {
     }),
   deleteHistory: (scope: 'before_3d' | 'before_7d' | 'failed' | 'all') =>
     request<{ deleted: number }>({ method: 'DELETE', url: '/gen/history', params: { scope } }),
+  cancelTask: (taskId: string) =>
+    request<{ cancelled: boolean }>({ method: 'DELETE', url: `/gen/tasks/${taskId}` }),
 };

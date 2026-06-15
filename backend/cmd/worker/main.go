@@ -6,13 +6,16 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"go.uber.org/zap"
 
 	"github.com/gpt-image-api/backend/internal/bootstrap"
+	"github.com/gpt-image-api/backend/internal/provider/factory"
 	"github.com/gpt-image-api/backend/internal/repo"
 	"github.com/gpt-image-api/backend/internal/service"
 	"github.com/gpt-image-api/backend/pkg/logger"
@@ -41,9 +44,26 @@ func main() {
 		logger.L().Fatal("worker requires redis")
 	}
 
+	// 构建 GenerationService 供 gen:image / gen:video handler 使用
+	var genSvc *service.GenerationService
 	if deps.DB != nil {
-		sysCfgSvc := service.NewSystemConfigService(repo.NewSystemConfigRepo(deps.DB))
-		proxySvc := service.NewProxyService(repo.NewProxyRepo(deps.DB), deps.AES)
+		accountRepo := repo.NewAccountRepo(deps.DB)
+		genRepo := repo.NewGenerationRepo(deps.DB)
+		walletRepo := repo.NewWalletRepo(deps.DB)
+		sysCfgRepo := repo.NewSystemConfigRepo(deps.DB)
+		proxyRepo := repo.NewProxyRepo(deps.DB)
+
+		sysCfgSvc := service.NewSystemConfigService(sysCfgRepo)
+		proxySvc := service.NewProxyService(proxyRepo, deps.AES)
+		billingSvc := service.NewBillingService(deps.DB, walletRepo)
+		pool := service.NewAccountPool(accountRepo, 30*time.Second)
+		providers := factory.Build()
+
+		genSvc = service.NewGenerationService(
+			deps.DB, genRepo, pool, billingSvc, providers,
+			service.ConfigPriceFn(sysCfgSvc), deps.AES, proxySvc, sysCfgSvc,
+		)
+
 		service.NewGrokCFRefreshService(sysCfgSvc, proxySvc).Start(context.Background())
 	}
 
@@ -72,11 +92,35 @@ func main() {
 
 	mux := asynq.NewServeMux()
 
-	// TODO Sprint 5+: 注册具体任务 handler
 	mux.HandleFunc(TaskPoolHealth, func(ctx context.Context, t *asynq.Task) error {
 		logger.FromCtx(ctx).Info("pool health tick", zap.String("task", t.Type()))
 		return nil
 	})
+
+	// gen:image / gen:video — 由 GenerationService.RunTask 负责执行
+	makeGenHandler := func(kind string) asynq.HandlerFunc {
+		return func(ctx context.Context, t *asynq.Task) error {
+			if genSvc == nil {
+				return nil
+			}
+			var payload service.GenTaskPayload
+			if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+				return err
+			}
+			task, err := repo.NewGenerationRepo(deps.DB).GetByTaskID(ctx, payload.TaskID)
+			if err != nil {
+				logger.FromCtx(ctx).Warn("gen worker: task not found",
+					zap.String("task_id", payload.TaskID), zap.Error(err))
+				return nil // 不重试
+			}
+			logger.FromCtx(ctx).Info("gen worker: start",
+				zap.String("task_id", task.TaskID), zap.String("kind", kind))
+			genSvc.RunTask(ctx, task)
+			return nil
+		}
+	}
+	mux.HandleFunc(TaskGenImage, makeGenHandler("image"))
+	mux.HandleFunc(TaskGenVideo, makeGenHandler("video"))
 
 	go func() {
 		if err := srv.Run(mux); err != nil {

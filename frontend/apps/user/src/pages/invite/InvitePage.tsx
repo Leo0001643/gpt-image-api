@@ -3,16 +3,54 @@ import { Copy, Share2, Users } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth';
 import { toast } from '../../stores/toast';
 
+async function writeClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    // Fall through to the legacy path for non-HTTPS or restricted browser contexts.
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    if (!document.execCommand('copy')) {
+      throw new Error('copy command failed');
+    }
+  } finally {
+    textarea.remove();
+  }
+}
+
 export default function InvitePage() {
   const me = useAuthStore((s) => s.me);
-  const code = me?.invite_code ?? '—';
+  const code = me?.invite_code?.trim() ?? '';
+  const displayCode = code || '—';
   const link =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/register?invite=${code}`
-      : `https://gpt2api.example/register?invite=${code}`;
+    code && typeof window !== 'undefined'
+      ? `${window.location.origin}/register?invite=${encodeURIComponent(code)}`
+      : '—';
 
-  const copy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => toast.success(`${label}已复制`));
+  const copy = async (text: string, label: string) => {
+    if (!code) {
+      toast.info('邀请码加载中，请稍后再试');
+      return;
+    }
+
+    try {
+      await writeClipboard(text);
+      toast.success(`${label}已复制`);
+    } catch {
+      toast.error(`复制失败，请手动复制${label}`);
+    }
   };
 
   return (
@@ -28,7 +66,7 @@ export default function InvitePage() {
         <div className="space-y-4 min-w-0">
           <div>
             <p className="text-overline mb-1">你的专属邀请码</p>
-            <p className="font-mono text-display gradient-text break-all leading-tight">{code}</p>
+            <p className="font-mono text-display gradient-text break-all leading-tight">{displayCode}</p>
           </div>
           <div>
             <p className="text-overline mb-1">邀请链接</p>

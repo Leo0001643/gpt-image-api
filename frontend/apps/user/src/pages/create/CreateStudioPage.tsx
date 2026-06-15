@@ -16,6 +16,7 @@ import {
   Paperclip,
   Play,
   Sparkles,
+  Square,
   Trash2,
   Video,
   X,
@@ -281,6 +282,18 @@ export default function CreateStudioPage() {
     onError: (e) => toast.error(e instanceof ApiError ? e.message : '生成失败'),
   });
 
+  const cancelTask = useMutation({
+    mutationFn: (taskId: string) => genApi.cancelTask(taskId),
+    onSuccess: (_, taskId) => {
+      if (pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null; }
+      setTask((prev) => prev && prev.task_id === taskId ? { ...prev, status: 5 } : prev);
+      toast.info('已停止生成');
+      void refreshMe();
+      qc.invalidateQueries({ queryKey: ['gen.history'] });
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : '停止失败'),
+  });
+
   const inProgress = task && (task.status === 0 || task.status === 1);
   const resultItems = useMemo(() => {
     const visible = (item: GenerationTask) => (item.kind === 'image' || item.kind === 'video') && item.status !== 3;
@@ -309,11 +322,12 @@ export default function CreateStudioPage() {
       try {
         const fresh = await genApi.getTask(taskId);
         setTask(fresh);
-        if ([2, 3, 4].includes(fresh.status)) {
+        if ([2, 3, 4, 5].includes(fresh.status)) {
           if (pollRef.current) window.clearInterval(pollRef.current);
           pollRef.current = null;
           if (fresh.status === 2) toast.success('生成完成');
           else if (fresh.status === 3) toast.error(fresh.error || '生成失败');
+          else if (fresh.status === 5) toast.info('已停止生成');
           else toast.info('已退款');
           await refreshMe();
           qc.invalidateQueries({ queryKey: ['gen.history'] });
@@ -431,15 +445,27 @@ export default function CreateStudioPage() {
               <button className="grid h-8 w-8 place-items-center rounded-full text-neutral-600 hover:bg-neutral-100" title="语音输入" type="button">
                 <Mic size={18} />
               </button>
-              <button
-                type="button"
-                onClick={submit}
-                disabled={!!inProgress || createImage.isPending || createVideo.isPending || createText.isPending}
-                className="grid h-10 w-10 place-items-center rounded-full bg-neutral-950 text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-                title="生成"
-              >
-                {inProgress || createImage.isPending || createVideo.isPending || createText.isPending ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={19} />}
-              </button>
+              {inProgress ? (
+                <button
+                  type="button"
+                  onClick={() => task && cancelTask.mutate(task.task_id)}
+                  disabled={cancelTask.isPending}
+                  className="grid h-10 w-10 place-items-center rounded-full bg-red-500 text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-neutral-300"
+                  title="停止生成"
+                >
+                  {cancelTask.isPending ? <Loader2 size={18} className="animate-spin" /> : <Square size={15} fill="currentColor" />}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={submit}
+                  disabled={createImage.isPending || createVideo.isPending || createText.isPending}
+                  className="grid h-10 w-10 place-items-center rounded-full bg-neutral-950 text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+                  title="生成"
+                >
+                  {createImage.isPending || createVideo.isPending || createText.isPending ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={19} />}
+                </button>
+              )}
             </div>
           </div>
           {attachments.length > 0 && (

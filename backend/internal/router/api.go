@@ -47,6 +47,9 @@ func MountAPI(r *gin.Engine, deps *bootstrap.Deps) {
 	pool := service.NewAccountPool(accountRepo, 30*time.Second)
 	providers := factory.Build()
 	genSvc := service.NewGenerationService(deps.DB, genRepo, pool, billingSvc, providers, service.ConfigPriceFn(sysCfgSvc), deps.AES, proxySvc, sysCfgSvc)
+	if deps.AsynqClient != nil {
+		genSvc.SetAsynqClient(deps.AsynqClient)
+	}
 	chatSvc := service.NewChatService(deps.DB, genRepo, pool, billingSvc, sysCfgSvc, deps.AES, proxySvc)
 
 	authH := handler.NewAuthHandler(authSvc, userSvc)
@@ -97,6 +100,7 @@ func MountAPI(r *gin.Engine, deps *bootstrap.Deps) {
 			gen.POST("/text", genH.CreateText)
 			gen.POST("/video", genH.CreateVideo)
 			gen.GET("/tasks/:task_id", genH.Get)
+			gen.DELETE("/tasks/:task_id", genH.CancelTask)
 			gen.GET("/history", genH.List)
 			gen.DELETE("/history", genH.DeleteHistory)
 		}

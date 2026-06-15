@@ -52,6 +52,9 @@ func MountOpenAI(r *gin.Engine, deps *bootstrap.Deps) {
 	pool := service.NewAccountPool(accountRepo, 30*time.Second)
 	providers := factory.Build()
 	genSvc := service.NewGenerationService(deps.DB, genRepo, pool, billingSvc, providers, service.ConfigPriceFn(sysCfgSvc), deps.AES, proxySvc, sysCfgSvc)
+	if deps.AsynqClient != nil {
+		genSvc.SetAsynqClient(deps.AsynqClient)
+	}
 	chatSvc := service.NewChatService(deps.DB, genRepo, pool, billingSvc, sysCfgSvc, deps.AES, proxySvc)
 	openaiH := handler.NewOpenAIHandler(genSvc, chatSvc, genRepo)
 

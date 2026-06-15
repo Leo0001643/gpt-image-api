@@ -10,6 +10,7 @@ const (
 	GenStatusSucceeded = 2
 	GenStatusFailed    = 3
 	GenStatusRefunded  = 4
+	GenStatusCancelled = 5
 )
 
 // GenerationTask 生成任务（不区分 image / video，由 kind 区分）。

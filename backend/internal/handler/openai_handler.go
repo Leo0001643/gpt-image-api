@@ -2,7 +2,9 @@
 package handler
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -382,9 +384,43 @@ func bindImageReq(c *gin.Context) (*imageReq, error) {
 		req.Async = parseBool(c.PostForm("async"))
 		req.Images = c.PostFormArray("images")
 		req.RefAssets = c.PostFormArray("ref_assets")
-		if req.Image == "" && len(req.Images) == 0 {
-			if _, _, err := c.Request.FormFile("image"); err == nil {
-				return nil, fmt.Errorf("multipart file upload is not supported yet; use image URL or images[] URL")
+		// Single image file upload: read bytes → base64 data URI.
+		if req.Image == "" {
+			if f, fh, err := c.Request.FormFile("image"); err == nil {
+				defer f.Close()
+				raw, rerr := io.ReadAll(io.LimitReader(f, 20<<20))
+				if rerr != nil {
+					return nil, fmt.Errorf("read uploaded image: %w", rerr)
+				}
+				if len(raw) == 0 {
+					return nil, fmt.Errorf("uploaded image is empty")
+				}
+				mime := fh.Header.Get("Content-Type")
+				if !strings.HasPrefix(mime, "image/") {
+					mime = http.DetectContentType(raw)
+				}
+				req.Image = "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(raw)
+			}
+		}
+		// images[] file uploads: same approach, append to req.Images.
+		if mf := c.Request.MultipartForm; mf != nil {
+			for _, key := range []string{"images", "images[]"} {
+				for _, fh := range mf.File[key] {
+					f, oerr := fh.Open()
+					if oerr != nil {
+						continue
+					}
+					raw, rerr := io.ReadAll(io.LimitReader(f, 20<<20))
+					f.Close()
+					if rerr != nil || len(raw) == 0 {
+						continue
+					}
+					mime := fh.Header.Get("Content-Type")
+					if !strings.HasPrefix(mime, "image/") {
+						mime = http.DetectContentType(raw)
+					}
+					req.Images = append(req.Images, "data:"+mime+";base64,"+base64.StdEncoding.EncodeToString(raw))
+				}
 			}
 		}
 		return req, nil

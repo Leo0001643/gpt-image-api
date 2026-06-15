@@ -616,3 +616,14 @@ func fallbackString(v, fallback string) string {
 	}
 	return fallback
 }
+
+// CancelTask DELETE /api/v1/gen/tasks/:task_id
+func (h *GenerationHandler) CancelTask(c *gin.Context) {
+	userID := middleware.MustUID(c)
+	taskID := c.Param("task_id")
+	if err := h.svc.CancelTask(c.Request.Context(), taskID, userID); err != nil {
+		response.Fail(c, err)
+		return
+	}
+	response.OK(c, gin.H{"cancelled": true})
+}
