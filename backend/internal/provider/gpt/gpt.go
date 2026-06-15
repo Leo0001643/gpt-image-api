@@ -309,7 +309,6 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 	size := imageSize(req.Params, "1024x1024")
 	ratio := webRatioFromSize(size, strParam(req.Params, "ratio", strParam(req.Params, "aspect_ratio", "1:1")))
 	prompt := webImagePromptV2(req.Prompt, ratio, size)
-	webModel := webImageModelSlug(req)
 	// Use uTLS + forced HTTP/1.1 to bypass Cloudflare JA3/JA4 + JA4H detection.
 	client, err := p.webHttpClient(req.ProxyURL)
 	if err != nil {
@@ -317,15 +316,20 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 	}
 	fp := newWebFP()
 	start := time.Now()
+
+	// Model candidate list: explicit override → Pro chain → Plus → Free fallback.
+	// The first model that produces a non-empty SSE response is used for all images.
+	modelCandidates := webImageModelCandidates(req)
+
 	logUpstream(ctx, req, provider.UpstreamLogEntry{
 		Provider: "gpt",
 		Stage:    "web.start",
 		Meta: map[string]any{
-			"route":     "chatgpt_web",
-			"model":     webModel,
-			"ratio":     ratio,
-			"count":     count,
-			"ref_count": len(req.RefAssets),
+			"route":            "chatgpt_web",
+			"model_candidates": modelCandidates,
+			"ratio":            ratio,
+			"count":            count,
+			"ref_count":        len(req.RefAssets),
 		},
 	})
 	if err := p.webBootstrap(ctx, client, base, fp); err != nil {
@@ -370,34 +374,101 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 	width, height := parseSize(size)
 	assets := make([]provider.Asset, 0, count)
 	lastDiag := ""
+
+	// Probe which model the account can use, then generate all images with that model.
+	activeModel := modelCandidates[0]
+	modelConfirmed := false
+
 	for i := 0; i < count && len(assets) < count; i++ {
-		conduit, err := p.webPrepareImageConversation(ctx, client, base, fp, req.Credential, reqs, prompt, webModel, refs)
-		if err != nil {
-			logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.prepare", Method: "POST", URL: base + "/backend-api/f/conversation/prepare", Error: err.Error()})
-			return nil, err
+		// On the first image, iterate through model candidates until one responds.
+		// On subsequent images, skip probing and use the confirmed model directly.
+		modelsToTry := modelCandidates
+		if modelConfirmed {
+			modelsToTry = []string{activeModel}
 		}
-		logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.prepare", Method: "POST", URL: base + "/backend-api/f/conversation/prepare", Meta: map[string]any{"has_conduit": conduit != ""}})
-		conversationID, fileIDs, sedimentIDs, directURLs, lastText, err := p.webStartImageGeneration(ctx, client, base, fp, req.Credential, reqs, conduit, prompt, webModel, refs)
-		if err != nil {
-			logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.conversation", Method: "POST", URL: base + "/backend-api/f/conversation", Error: err.Error()})
-			return nil, err
+
+		var (
+			conversationID string
+			fileIDs        []string
+			sedimentIDs    []string
+			directURLs     []string
+			lastText       string
+			usedModel      string
+		)
+
+		for mi, webModel := range modelsToTry {
+			conduit, err := p.webPrepareImageConversation(ctx, client, base, fp, req.Credential, reqs, prompt, webModel, refs)
+			if err != nil {
+				logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.prepare", Method: "POST", URL: base + "/backend-api/f/conversation/prepare", Error: err.Error(), Meta: map[string]any{"web_model": webModel}})
+				return nil, err
+			}
+			logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.prepare", Method: "POST", URL: base + "/backend-api/f/conversation/prepare", Meta: map[string]any{"has_conduit": conduit != "", "web_model": webModel}})
+
+			cid, fids, sids, dURLs, txt, err := p.webStartImageGeneration(ctx, client, base, fp, req.Credential, reqs, conduit, prompt, webModel, refs)
+			if err != nil {
+				logUpstream(ctx, req, provider.UpstreamLogEntry{Provider: "gpt", Stage: "web.conversation", Method: "POST", URL: base + "/backend-api/f/conversation", Error: err.Error(), Meta: map[string]any{"web_model": webModel}})
+				return nil, err
+			}
+			fids, sids, dURLs = filterWebGeneratedAssetIDs(fids, sids, dURLs, refs)
+			logUpstream(ctx, req, provider.UpstreamLogEntry{
+				Provider:        "gpt",
+				Stage:           "web.conversation",
+				Method:          "POST",
+				URL:             base + "/backend-api/f/conversation",
+				ResponseExcerpt: txt,
+				Meta: map[string]any{
+					"conversation_id": cid,
+					"file_ids":        fids,
+					"sediment_ids":    sids,
+					"direct_urls":     len(dURLs),
+					"text_empty":      txt == "",
+					"web_model":       webModel,
+					"model_index":     mi,
+				},
+			})
+
+			// Quick probe: if the SSE returned a conversation but no content at all
+			// (no text, no files, no URLs), this model tier is not available for the
+			// account. Skip to the next candidate instead of polling for 9 minutes.
+			isProbeEmpty := cid != "" && len(fids) == 0 && len(sids) == 0 && len(dURLs) == 0 && txt == ""
+			if isProbeEmpty && mi < len(modelsToTry)-1 {
+				logUpstream(ctx, req, provider.UpstreamLogEntry{
+					Provider: "gpt",
+					Stage:    "web.model_fallback",
+					Meta: map[string]any{
+						"skipped_model": webModel,
+						"next_model":    modelsToTry[mi+1],
+						"reason":        "empty_sse_response",
+					},
+				})
+				// Do a single quick poll to confirm before giving up on this model.
+				pfids, psids, pdURLs, _ := p.webConversationImageIDs(ctx, client, base, fp, req.Credential, cid, refs)
+				if len(pfids)+len(psids)+len(pdURLs) == 0 {
+					continue // confirmed empty – try next model
+				}
+				// Quick poll found something; use this model.
+				addUniqueString(&fids, pfids...)
+				addUniqueString(&sids, psids...)
+				addUniqueString(&dURLs, pdURLs...)
+			}
+
+			conversationID, fileIDs, sedimentIDs, directURLs, lastText, usedModel = cid, fids, sids, dURLs, txt, webModel
+			if !modelConfirmed {
+				activeModel = webModel
+				modelConfirmed = true
+			}
+			break
 		}
-		fileIDs, sedimentIDs, directURLs = filterWebGeneratedAssetIDs(fileIDs, sedimentIDs, directURLs, refs)
-		logUpstream(ctx, req, provider.UpstreamLogEntry{
-			Provider:        "gpt",
-			Stage:           "web.conversation",
-			Method:          "POST",
-			URL:             base + "/backend-api/f/conversation",
-			ResponseExcerpt: lastText,
-			Meta: map[string]any{
-				"conversation_id": conversationID,
-				"file_ids":        fileIDs,
-				"sediment_ids":    sedimentIDs,
-				"direct_urls":     len(directURLs),
-				"text_empty":      lastText == "",
-				"web_model":       webModel,
-			},
-		})
+
+		if usedModel == "" {
+			// All model candidates produced empty SSE – use last candidate for full poll.
+			usedModel = modelsToTry[len(modelsToTry)-1]
+			if !modelConfirmed {
+				activeModel = usedModel
+				modelConfirmed = true
+			}
+		}
+
 		var urls, downloadErrs []string
 		deadline := time.Now().Add(9 * time.Minute)
 		pollCount := 0
@@ -428,6 +499,7 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 						"direct_urls":     len(directURLs),
 						"resolved_urls":   len(urls),
 						"download_errors": len(downloadErrs),
+						"web_model":       usedModel,
 					},
 				})
 			}
@@ -454,7 +526,7 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 					Width:  width,
 					Height: height,
 					Mime:   mime,
-					Meta:   map[string]any{"provider_route": "chatgpt_web", "size": "1K", "ratio": ratio},
+					Meta:   map[string]any{"provider_route": "chatgpt_web", "size": "1K", "ratio": ratio, "web_model": usedModel},
 				})
 				if len(assets) >= count {
 					break
@@ -492,6 +564,7 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 				"resolved_urls":   len(urls),
 				"download_errors": downloadErrs,
 				"asset_count":     len(assets),
+				"web_model":       usedModel,
 			},
 		})
 		if len(assets) == 0 && conversationID == "" && lastText != "" {
@@ -1622,15 +1695,30 @@ func imageQuality(params map[string]any) string {
 	}
 }
 
-func webImageModelSlug(req *provider.Request) string {
+// webImageModelCandidates returns the ordered list of ChatGPT web models to try.
+//
+// Priority:
+//   - Explicit override via request param "web_model" → only that model (no fallback)
+//   - Auto mode:
+//     1. gpt-5-5-thinking  (ChatGPT Pro)
+//     2. gpt-4o            (ChatGPT Plus / Pro)
+//     3. gpt-4o-mini       (Free / fallback)
+//
+// The first model whose SSE response is non-empty is used for all subsequent images.
+// Non-empty means: conversationID obtained AND (text ≠ "" OR file_ids > 0 OR sediment_ids > 0).
+func webImageModelCandidates(req *provider.Request) []string {
 	if req != nil {
 		if v := strParam(req.Params, "web_model", ""); v != "" {
-			return v
+			return []string{v}
 		}
 	}
-	// gpt-4o works for both Plus and Pro accounts.
-	// Pro accounts may override via web_model param (e.g. "gpt-5-5-thinking").
-	return "gpt-4o"
+	return []string{"gpt-5-5-thinking", "gpt-4o", "gpt-4o-mini"}
+}
+
+// webImageModelSlug is kept for backward compatibility but is no longer called internally.
+func webImageModelSlug(req *provider.Request) string {
+	c := webImageModelCandidates(req)
+	return c[0]
 }
 
 func webBaseHeaders(fp webFP, token, path string) map[string]string {
