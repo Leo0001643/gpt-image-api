@@ -268,8 +268,11 @@ func (s *GenerationService) runTask(ctx context.Context, t *model.GenerationTask
 			return
 		}
 		acc = picked
-		if err := s.repo.SetRunning(ctx, t.TaskID, acc.ID); err != nil {
-			log.Warn("set running failed", zap.Error(err))
+		if ok, err := s.repo.SetRunning(ctx, t.TaskID, acc.ID); err != nil || !ok {
+			// 任务已被外部修改（取消/终止），释放账号并中止执行
+			log.Warn("gen.task.set_running_skipped", zap.Error(err), zap.Bool("ok", ok))
+			releaseAcc(acc)
+			return
 		}
 
 		provReq := &provider.Request{
@@ -497,9 +500,11 @@ func (s *GenerationService) pickWithWait(ctx context.Context, t *model.Generatio
 	log := logger.L().With(zap.String("task", t.TaskID))
 
 	for {
-		// 先检查是否已被取消
-		if fresh, err := s.repo.GetByTaskID(ctx, t.TaskID); err == nil && fresh.Status == model.GenStatusCancelled {
-			return nil, errcode.InvalidParam.WithMsg("任务已取消")
+		// 检查任务是否已被外部终止（取消/手动失败等）
+		if fresh, err := s.repo.GetByTaskID(ctx, t.TaskID); err == nil {
+			if fresh.Status != model.GenStatusPending && fresh.Status != model.GenStatusRunning {
+				return nil, errcode.InvalidParam.WithMsg("任务已取消或终止")
+			}
 		}
 
 		acc, err := s.pickAccountForTask(ctx, t, params)

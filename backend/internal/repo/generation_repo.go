@@ -203,17 +203,21 @@ func (r *GenerationRepo) GetByIdem(ctx context.Context, userID uint64, idem stri
 	return &t, nil
 }
 
-// SetRunning 标记任务进入运行态。
-func (r *GenerationRepo) SetRunning(ctx context.Context, taskID string, accountID uint64) error {
+// SetRunning 标记任务进入运行态，返回 (true, nil) 表示成功，(false, nil) 表示任务已被外部修改无需运行。
+func (r *GenerationRepo) SetRunning(ctx context.Context, taskID string, accountID uint64) (bool, error) {
 	now := time.Now().UTC()
-	return r.db.WithContext(ctx).Model(&model.GenerationTask{}).
+	tx := r.db.WithContext(ctx).Model(&model.GenerationTask{}).
 		Where("task_id = ? AND status = ?", taskID, model.GenStatusPending).
 		Updates(map[string]any{
 			"status":     model.GenStatusRunning,
 			"account_id": accountID,
 			"started_at": now,
 			"progress":   5,
-		}).Error
+		})
+	if tx.Error != nil {
+		return false, tx.Error
+	}
+	return tx.RowsAffected > 0, nil
 }
 
 // UpdateProgress 更新进度（0-100）。

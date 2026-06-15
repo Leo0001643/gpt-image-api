@@ -500,7 +500,7 @@ func (s *ChatService) prepare(ctx context.Context, req ChatCallRequest, modelCod
 			return nil, nil, err
 		}
 	}
-	if err := s.repo.SetRunning(ctx, taskID, acc.ID); err != nil {
+	if _, err := s.repo.SetRunning(ctx, taskID, acc.ID); err != nil {
 		logger.FromCtx(ctx).Warn("chat.set_running", zap.Error(err))
 	}
 	return t, acc, nil
