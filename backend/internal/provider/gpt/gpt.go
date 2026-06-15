@@ -394,6 +394,8 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 				"file_ids":        fileIDs,
 				"sediment_ids":    sedimentIDs,
 				"direct_urls":     len(directURLs),
+				"text_empty":      lastText == "",
+				"web_model":       webModel,
 			},
 		})
 		var urls, downloadErrs []string
@@ -1626,7 +1628,9 @@ func webImageModelSlug(req *provider.Request) string {
 			return v
 		}
 	}
-	return "gpt-5-5-thinking"
+	// gpt-4o works for both Plus and Pro accounts.
+	// Pro accounts may override via web_model param (e.g. "gpt-5-5-thinking").
+	return "gpt-4o"
 }
 
 func webBaseHeaders(fp webFP, token, path string) map[string]string {
