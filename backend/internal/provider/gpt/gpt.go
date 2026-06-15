@@ -314,7 +314,7 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 	if err != nil {
 		return nil, err
 	}
-	fp := newWebFP()
+	fp := newWebFP(req.Credential)
 	start := time.Now()
 
 	// Model candidate list: explicit override → Pro chain → Plus → Free fallback.
@@ -881,15 +881,33 @@ type webFP struct {
 	SecCHUA       string
 }
 
-func newWebFP() webFP {
+// newWebFP builds a browser fingerprint for a ChatGPT web request.
+//
+// credential is the account's OAuth access token.  We derive a stable
+// DeviceID from it so that every request for the same account presents the
+// same OAI-Device-Id header – exactly like a real browser.  A random device
+// ID on every request is one of the strongest bot signals Cloudflare / ChatGPT
+// can act on.
+//
+// SessionID remains fresh per generation request (mimics a new browser tab /
+// session), which is realistic and avoids session-replay detection.
+func newWebFP(credential string) webFP {
 	return webFP{
 		UserAgent:     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0",
-		DeviceID:      uuid.NewString(),
+		DeviceID:      stableDeviceID(credential),
 		SessionID:     uuid.NewString(),
 		ClientVersion: "prod-be885abbfcfe7b1f511e88b3003d9ee44757fbad",
 		BuildNumber:   "5955942",
 		SecCHUA:       `"Microsoft Edge";v="143", "Chromium";v="143", "Not A(Brand";v="24"`,
 	}
+}
+
+// stableDeviceID derives a deterministic UUID-format device ID from an account
+// credential.  Identical credential → identical ID, which is the expected
+// browser behaviour (device ID doesn't change between requests).
+func stableDeviceID(credential string) string {
+	h := sha3.Sum256([]byte("oai-device-v1:" + credential))
+	return fmt.Sprintf("%x-%x-%x-%x-%x", h[0:4], h[4:6], h[6:8], h[8:10], h[10:16])
 }
 
 func (p *Provider) webBootstrap(ctx context.Context, client *http.Client, base string, fp webFP) error {

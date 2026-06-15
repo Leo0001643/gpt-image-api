@@ -15,7 +15,7 @@ import type { GenerationTask, TaskStatus } from '../../lib/types';
 const PAGE_SIZE = 24;
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
-  0: '排队中', 1: '生成中', 2: '已完成', 3: '失败', 4: '已退款', 5: '已取消',
+  0: '准备中', 1: '生成中', 2: '已完成', 3: '失败', 4: '已退款', 5: '已取消',
 };
 
 const STATUS_STYLE: Record<TaskStatus, string> = {

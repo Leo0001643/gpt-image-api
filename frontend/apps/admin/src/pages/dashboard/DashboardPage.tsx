@@ -474,7 +474,7 @@ function statusConfig(s: number): { text: string; bg: string; color: string } {
   if (s === 3) return { text: '失败', bg: 'rgba(239,68,68,.1)', color: '#dc2626' };
   if (s === 4) return { text: '已退款', bg: 'rgba(245,158,11,.1)', color: '#d97706' };
   if (s === 1) return { text: '运行中', bg: 'rgba(59,130,246,.1)', color: '#2563eb' };
-  return { text: '排队中', bg: 'rgba(156,163,175,.1)', color: '#6b7280' };
+  return { text: '准备中', bg: 'rgba(156,163,175,.1)', color: '#6b7280' };
 }
 
 function percent(v?: number) { return v == null ? '—' : `${Math.round(v * 100)}%`; }

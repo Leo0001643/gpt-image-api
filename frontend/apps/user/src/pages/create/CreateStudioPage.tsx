@@ -882,7 +882,7 @@ function statusText(status: number) {
   if (status === 3) return '失败';
   if (status === 4) return '已退款';
   if (status === 1) return '生成中';
-  return '排队中';
+  return '准备中';
 }
 
 function modelsByKind(models: PublicModel[] | undefined, kind: PublicModel['kind'], fallback: SelectModel[]): SelectModel[] {
