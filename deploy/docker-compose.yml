@@ -90,8 +90,6 @@ services:
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
       - /opt/gpt-image-api/images:/app/images
-    extra_hosts:
-      - "host.docker.internal:host-gateway"   # allows proxy on host to be reached
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -134,8 +132,6 @@ services:
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
       - /opt/gpt-image-api/images:/app/images
-    extra_hosts:
-      - "host.docker.internal:host-gateway"   # allows proxy on host to be reached
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -155,8 +151,6 @@ services:
     volumes:
       - /opt/gpt-image-api/logs:/app/logs
       - /opt/gpt-image-api/images:/app/images
-    extra_hosts:
-      - "host.docker.internal:host-gateway"   # allows proxy on host to be reached
     depends_on:
       mysql:  { condition: service_healthy }
       redis:  { condition: service_healthy }
