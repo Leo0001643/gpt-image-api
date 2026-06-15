@@ -305,7 +305,9 @@ export default function CreateStudioPage() {
   const inProgress = task && (task.status === 0 || task.status === 1);
   const resultItems = useMemo(() => {
     const visible = (item: GenerationTask) => (item.kind === 'image' || item.kind === 'video') && item.status !== 3;
-    const current = task?.results?.length && visible(task) ? [task] : [];
+    // Include the current task even when it has no results yet (status 0/1), so
+    // that polling updates propagate to the card without requiring a full refetch.
+    const current = task && visible(task) ? [task] : [];
     const rest = (history.data?.list ?? []).filter(visible);
     return [...current, ...rest].filter((item, idx, arr) => arr.findIndex((x) => x.task_id === item.task_id) === idx);
   }, [history.data?.list, task]);
@@ -763,7 +765,7 @@ function WorkCard({ item, onOpen }: { item: GenerationTask; onOpen: (preview: { 
         style={{ aspectRatio: mediaRatio }}
         className={clsx(
           'relative grid w-full place-items-center overflow-hidden text-neutral-400 transition-[height]',
-          !original && item.status === 1 && 'bg-white',
+          !original && (item.status === 0 || item.status === 1) && 'bg-white',
           canOpen && 'group cursor-zoom-in',
         )}
       >
@@ -791,7 +793,7 @@ function WorkCard({ item, onOpen }: { item: GenerationTask; onOpen: (preview: { 
           ) : (
             <img src={original} alt="" className="h-full w-full object-cover" loading="lazy" onLoad={(e) => setRatioFromImage(e.currentTarget)} />
           )
-        ) : item.status === 1 ? (
+        ) : (item.status === 0 || item.status === 1) ? (
           <GeneratingDots />
         ) : (
           <div className="flex flex-col items-center gap-2 text-sm">
