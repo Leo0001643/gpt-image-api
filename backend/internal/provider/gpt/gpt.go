@@ -436,30 +436,57 @@ func (p *Provider) generateImage2Web(ctx context.Context, req *provider.Request)
 				},
 			})
 
-			// Quick probe: if the SSE returned a conversation but no content at all
-			// (no text, no files, no URLs), this model tier is not available for the
-			// account. Skip to the next candidate instead of polling for 9 minutes.
-			isProbeEmpty := cid != "" && len(fids) == 0 && len(sids) == 0 && len(dURLs) == 0 && txt == ""
-			if isProbeEmpty && mi < len(modelsToTry)-1 {
+		// Quick probe: if the SSE returned a conversation but no content at all
+		// (no text, no files, no URLs), this model tier is not available for the
+		// account. Skip to the next candidate instead of polling for 9 minutes.
+		isProbeEmpty := cid != "" && len(fids) == 0 && len(sids) == 0 && len(dURLs) == 0 && txt == ""
+		if isProbeEmpty && mi < len(modelsToTry)-1 {
+			logUpstream(ctx, req, provider.UpstreamLogEntry{
+				Provider: "gpt",
+				Stage:    "web.model_fallback",
+				Meta: map[string]any{
+					"skipped_model": webModel,
+					"next_model":    modelsToTry[mi+1],
+					"reason":        "empty_sse_response",
+				},
+			})
+			// Do a single quick poll to confirm before giving up on this model.
+			pfids, psids, pdURLs, _ := p.webConversationImageIDs(ctx, client, base, fp, req.Credential, cid, refs)
+			if len(pfids)+len(psids)+len(pdURLs) == 0 {
+				continue // confirmed empty – try next model
+			}
+			// Quick poll found something; use this model.
+			addUniqueString(&fids, pfids...)
+			addUniqueString(&sids, psids...)
+			addUniqueString(&dURLs, pdURLs...)
+		}
+
+		// SSE returned text but no image assets yet. This happens with
+		// gpt-5-5-thinking (thinking chain precedes image generation) OR when the
+		// account tier cannot generate images with this model (e.g. Plus account
+		// using gpt-5-5-thinking). Do a 2-minute probe: if images appear the model
+		// is working fine; if not, fall back to the next candidate rather than
+		// blocking the full 9-minute poll window.
+		hasTextNoAssets := cid != "" && len(fids) == 0 && len(sids) == 0 && len(dURLs) == 0 && txt != ""
+		if hasTextNoAssets && mi < len(modelsToTry)-1 {
+			pfids, psids, pdURLs, _ := p.webPollImageResults(ctx, client, base, fp, req.Credential, cid, 2*time.Minute, refs)
+			if len(pfids)+len(psids)+len(pdURLs) == 0 {
 				logUpstream(ctx, req, provider.UpstreamLogEntry{
 					Provider: "gpt",
 					Stage:    "web.model_fallback",
 					Meta: map[string]any{
 						"skipped_model": webModel,
 						"next_model":    modelsToTry[mi+1],
-						"reason":        "empty_sse_response",
+						"reason":        "no_image_after_text_probe",
 					},
 				})
-				// Do a single quick poll to confirm before giving up on this model.
-				pfids, psids, pdURLs, _ := p.webConversationImageIDs(ctx, client, base, fp, req.Credential, cid, refs)
-				if len(pfids)+len(psids)+len(pdURLs) == 0 {
-					continue // confirmed empty – try next model
-				}
-				// Quick poll found something; use this model.
-				addUniqueString(&fids, pfids...)
-				addUniqueString(&sids, psids...)
-				addUniqueString(&dURLs, pdURLs...)
+				continue // try next model
 			}
+			// Probe found images; commit to this model for the full poll.
+			addUniqueString(&fids, pfids...)
+			addUniqueString(&sids, psids...)
+			addUniqueWebAssetURLs(&dURLs, pdURLs...)
+		}
 
 			conversationID, fileIDs, sedimentIDs, directURLs, lastText, usedModel = cid, fids, sids, dURLs, txt, webModel
 			if !modelConfirmed {
