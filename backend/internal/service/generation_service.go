@@ -599,18 +599,29 @@ func (s *GenerationService) markProviderFailed(ctx context.Context, acc *model.A
 	if acc == nil {
 		return
 	}
+
+	// Hard bans (unusual activity 403, Cloudflare blocks, etc.) are identified by
+	// a long desired cooldown (≥ 1 h). They must be applied immediately and
+	// unconditionally — the circuit-breaker threshold and system-config override
+	// must NOT suppress them, because repeated retries make the account ban worse.
+	hardBan := desiredCooldown >= time.Hour
+
 	threshold := int64(3)
 	cooldown := desiredCooldown
 	if s.cfg != nil {
 		threshold = s.cfg.CircuitFailureThreshold(ctx)
-		if desiredCooldown > 0 {
+		// Allow system config to override cooldown only for soft throttling.
+		// Hard-ban durations (≥ 1 h) are always respected as-is.
+		if !hardBan && desiredCooldown > 0 {
 			if sec := s.cfg.CircuitCooldownSeconds(ctx); sec > 0 {
 				cooldown = time.Duration(sec) * time.Second
 			}
 		}
 	}
 	acc.ErrorCount++
-	if threshold > 1 && int64(acc.ErrorCount) < threshold {
+	// Suppress cooldown until the circuit-breaker threshold is reached, but
+	// only for soft/transient errors. Hard bans are always applied immediately.
+	if !hardBan && threshold > 1 && int64(acc.ErrorCount) < threshold {
 		cooldown = 0
 	}
 	s.pool.MarkFailed(ctx, acc.ID, reason, cooldown)
